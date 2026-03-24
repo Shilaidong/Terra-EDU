@@ -12,6 +12,7 @@ import type {
   StudentRecord,
   Task,
   TimelineLane,
+  User,
   UserRole,
 } from "@/lib/types";
 
@@ -53,8 +54,33 @@ export async function getUserRecordByEmail(email: string) {
     name: String(data.name),
     role: data.role as UserRole,
     profileId: "",
-    avatar: getStore().users.find((user) => user.email === email)?.avatar ?? "",
+    avatar: String(data.avatar ?? getStore().users.find((user) => user.email === email)?.avatar ?? ""),
   };
+}
+
+export async function getCurrentUserData(session: SessionPayload) {
+  const supabase = getSupabaseAdminClient();
+  const fallbackUser = getUserById(session.userId);
+
+  if (!supabase) {
+    return fallbackUser;
+  }
+
+  const { data } = await supabase.from("users").select("*").eq("id", session.userId).maybeSingle();
+
+  if (!data) {
+    return fallbackUser;
+  }
+
+  return {
+    id: String(data.id),
+    email: String(data.email),
+    password: fallbackUser?.password ?? "",
+    name: String(data.name),
+    role: data.role as UserRole,
+    profileId: fallbackUser?.profileId ?? "",
+    avatar: String(data.avatar ?? fallbackUser?.avatar ?? session.avatar ?? ""),
+  } satisfies User;
 }
 
 export async function getCurrentStudentData(session: SessionPayload) {
@@ -440,6 +466,21 @@ export function updateStudentProfile(
   return student;
 }
 
+export function updateUserProfile(
+  userId: string,
+  input: Partial<Pick<User, "name" | "avatar">>
+) {
+  const user = getStore().users.find((item) => item.id === userId);
+
+  if (!user) {
+    return null;
+  }
+
+  Object.assign(user, input);
+  void persistAppUser(user.id, user.name, user.email, user.role, user.avatar);
+  return user;
+}
+
 export function createContentItem(input: Omit<ContentItem, "id">) {
   const item: ContentItem = {
     id: crypto.randomUUID(),
@@ -788,7 +829,8 @@ async function persistAppUser(
   userId: string,
   name: string,
   email: string,
-  role: UserRole
+  role: UserRole,
+  avatar?: string
 ) {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
@@ -798,6 +840,7 @@ async function persistAppUser(
     name,
     email,
     role,
+    avatar: avatar ?? null,
   });
 }
 

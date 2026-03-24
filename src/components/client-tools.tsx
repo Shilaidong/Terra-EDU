@@ -1015,6 +1015,77 @@ export function StudentProfileEditor({
   );
 }
 
+export function ParentProfileEditor({
+  userId,
+  defaultName,
+  defaultAvatar,
+}: {
+  userId: string;
+  defaultName: string;
+  defaultAvatar: string;
+}) {
+  const [name, setName] = useState(defaultName);
+  const [avatar, setAvatar] = useState(defaultAvatar);
+  const [message, setMessage] = useState("");
+  const router = useRouter();
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        await jsonFetch("/api/parent/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            name,
+            avatar,
+          }),
+        });
+        setMessage("Parent profile updated.");
+        router.refresh();
+      }}
+    >
+      <div>
+        <p className="text-sm font-semibold text-secondary">Avatar</p>
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+          {avatarPresets.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              onClick={() => setAvatar(preset.value)}
+              className={cn(
+                "flex items-center justify-center rounded-3xl border bg-white p-4 transition-all",
+                avatar === preset.value
+                  ? "border-primary shadow-terra ring-2 ring-primary/20"
+                  : "border-black/5 hover:border-primary/30"
+              )}
+              aria-label={preset.label}
+            >
+              <img alt={preset.label} src={preset.value} className="h-24 w-24 rounded-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <input
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder="Your display name"
+      />
+
+      <div className="flex items-center gap-3">
+        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
+          Save Profile
+        </button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
 export function AiRecommendationPanel({
   studentId,
   page,

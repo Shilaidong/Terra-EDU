@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   const student = session.role === "student" ? await getCurrentStudentData(session) : null;
   const nextSession = {
     ...session,
-    avatar: student?.avatar,
+    avatar: student?.avatar ?? session.avatar,
   };
   await setSession(nextSession);
 

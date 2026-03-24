@@ -33,8 +33,7 @@ export interface TerraStore {
 
 const avatars = {
   student: avatarPresetValues[0],
-  parent:
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80",
+  parent: avatarPresetValues[2],
   consultant: avatarPresetValues[1],
   child: getDefaultStudentAvatar(),
 };

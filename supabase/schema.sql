@@ -5,6 +5,7 @@ create table if not exists users (
   email text not null unique,
   role text not null check (role in ('student', 'parent', 'consultant')),
   name text not null,
+  avatar text,
   created_at timestamptz not null default now()
 );
 

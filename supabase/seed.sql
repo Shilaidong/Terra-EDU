@@ -1,8 +1,8 @@
-insert into users (id, email, role, name)
+insert into users (id, email, role, name, avatar)
 values
-  ('11111111-1111-1111-1111-111111111111', 'student@terra.edu', 'student', 'Amara Chen'),
-  ('22222222-2222-2222-2222-222222222222', 'parent@terra.edu', 'parent', 'Li Wei'),
-  ('33333333-3333-3333-3333-333333333333', 'consultant@terra.edu', 'consultant', 'Sofia Martinez')
+  ('11111111-1111-1111-1111-111111111111', 'student@terra.edu', 'student', 'Amara Chen', '/api/assets/avatar/a1.png'),
+  ('22222222-2222-2222-2222-222222222222', 'parent@terra.edu', 'parent', 'Li Wei', '/api/assets/avatar/a3.png'),
+  ('33333333-3333-3333-3333-333333333333', 'consultant@terra.edu', 'consultant', 'Sofia Martinez', '/api/assets/avatar/a2.png')
 on conflict (id) do nothing;
 
 insert into profiles (user_id, school, grade_or_title, bio)

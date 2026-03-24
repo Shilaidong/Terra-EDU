@@ -67,6 +67,7 @@ function authenticateWithDemo(input: {
       role: user.role,
       name: user.name,
       email: user.email,
+      avatar: user.avatar,
       authSource: "demo",
     },
   };
@@ -113,6 +114,7 @@ async function authenticateWithSupabase(input: {
       role: appUser.role,
       name: appUser.name,
       email: appUser.email,
+      avatar: appUser.avatar,
       authSource: "supabase",
       authUserId: user.id,
     },
