@@ -146,9 +146,11 @@ export function LogoutButton() {
 export function TaskStatusControl({
   taskId,
   status,
+  endpointBase = "/api/student/tasks",
 }: {
   taskId: string;
   status: Task["status"];
+  endpointBase?: string;
 }) {
   const [value, setValue] = useState(status);
   const [pending, setPending] = useState(false);
@@ -164,7 +166,7 @@ export function TaskStatusControl({
         setPending(true);
 
         try {
-          await jsonFetch(`/api/student/tasks/${taskId}`, {
+          await jsonFetch(`${endpointBase}/${taskId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: nextValue }),
@@ -392,9 +394,11 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
 export function TaskDeleteButton({
   taskId,
   title,
+  endpointBase = "/api/student/tasks",
 }: {
   taskId: string;
   title: string;
+  endpointBase?: string;
 }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
@@ -414,7 +418,7 @@ export function TaskDeleteButton({
           setMessage("");
 
           try {
-            await jsonFetch(`/api/student/tasks/${taskId}`, {
+            await jsonFetch(`${endpointBase}/${taskId}`, {
               method: "DELETE",
             });
             router.refresh();
@@ -520,8 +524,10 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
 
 export function MilestoneEditorControls({
   milestone,
+  endpointBase = "/api/student/milestones",
 }: {
   milestone: Pick<Milestone, "id" | "title" | "eventDate" | "status">;
+  endpointBase?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(milestone.title);
@@ -541,7 +547,7 @@ export function MilestoneEditorControls({
           setMessage("");
 
           try {
-            await jsonFetch(`/api/student/milestones/${milestone.id}`, {
+            await jsonFetch(`${endpointBase}/${milestone.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ title, eventDate, status }),
@@ -612,7 +618,7 @@ export function MilestoneEditorControls({
       >
         Edit
       </button>
-      <MilestoneDeleteButton milestoneId={milestone.id} title={milestone.title} />
+      <MilestoneDeleteButton milestoneId={milestone.id} title={milestone.title} endpointBase={endpointBase} />
     </div>
   );
 }
@@ -620,9 +626,11 @@ export function MilestoneEditorControls({
 export function MilestoneDeleteButton({
   milestoneId,
   title,
+  endpointBase = "/api/student/milestones",
 }: {
   milestoneId: string;
   title: string;
+  endpointBase?: string;
 }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
@@ -642,7 +650,7 @@ export function MilestoneDeleteButton({
           setMessage("");
 
           try {
-            await jsonFetch(`/api/student/milestones/${milestoneId}`, {
+            await jsonFetch(`${endpointBase}/${milestoneId}`, {
               method: "DELETE",
             });
             router.refresh();
@@ -725,8 +733,10 @@ export function CheckInComposer({ studentId }: { studentId: string }) {
 
 export function CheckInEditorControls({
   checkIn,
+  endpointBase = "/api/student/checkins",
 }: {
   checkIn: Pick<CheckInRecord, "id" | "curriculum" | "chapter" | "mastery" | "date" | "notes">;
+  endpointBase?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [curriculum, setCurriculum] = useState(checkIn.curriculum);
@@ -748,7 +758,7 @@ export function CheckInEditorControls({
           setMessage("");
 
           try {
-            await jsonFetch(`/api/student/checkins/${checkIn.id}`, {
+            await jsonFetch(`${endpointBase}/${checkIn.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -846,7 +856,11 @@ export function CheckInEditorControls({
       >
         Edit
       </button>
-      <CheckInDeleteButton checkInId={checkIn.id} title={`${checkIn.curriculum} · ${checkIn.chapter}`} />
+      <CheckInDeleteButton
+        checkInId={checkIn.id}
+        title={`${checkIn.curriculum} · ${checkIn.chapter}`}
+        endpointBase={endpointBase}
+      />
     </div>
   );
 }
@@ -854,9 +868,11 @@ export function CheckInEditorControls({
 export function CheckInDeleteButton({
   checkInId,
   title,
+  endpointBase = "/api/student/checkins",
 }: {
   checkInId: string;
   title: string;
+  endpointBase?: string;
 }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
@@ -876,7 +892,7 @@ export function CheckInDeleteButton({
           setMessage("");
 
           try {
-            await jsonFetch(`/api/student/checkins/${checkInId}`, {
+            await jsonFetch(`${endpointBase}/${checkInId}`, {
               method: "DELETE",
             });
             router.refresh();
@@ -1210,9 +1226,15 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
 }
 
 export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
+  const today = getTodayString();
   const [title, setTitle] = useState("Schedule final essay review");
   const [description, setDescription] = useState("Lock the advisor review slot and collect the latest draft.");
+  const [timelineLane, setTimelineLane] = useState<TimelineLane>("application_progress");
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(addDays(today, 5));
+  const [priority, setPriority] = useState<Task["priority"]>("High");
   const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
   const router = useRouter();
 
   return (
@@ -1220,22 +1242,41 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
       className="space-y-3"
       onSubmit={async (event) => {
         event.preventDefault();
-        await jsonFetch("/api/consultant/tasks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentId,
-            title,
-            description,
-            dueLabel: "Created by consultant",
-            dueDate: new Date().toISOString().slice(0, 10),
-            category: "Advisor",
-            priority: "High",
-            ownerRole: "consultant",
-          }),
-        });
-        setMessage("Task created and audit logged.");
-        router.refresh();
+        if (endDate < startDate) {
+          setMessage("End date needs to be on or after the start date.");
+          return;
+        }
+
+        setPending(true);
+        setMessage("");
+
+        try {
+          await jsonFetch("/api/consultant/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentId,
+              title,
+              description,
+              timelineLane,
+              startDate,
+              endDate,
+              priority,
+            }),
+          });
+          setMessage("Task created and audit logged.");
+          setTitle("");
+          setDescription("");
+          setTimelineLane("application_progress");
+          setStartDate(today);
+          setEndDate(addDays(today, 5));
+          setPriority("High");
+          router.refresh();
+        } catch (submissionError) {
+          setMessage(submissionError instanceof Error ? submissionError.message : "Task creation failed.");
+        } finally {
+          setPending(false);
+        }
       }}
     >
       <input
@@ -1249,13 +1290,342 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
         onChange={(event) => setDescription(event.target.value)}
         className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
       />
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="text-sm font-semibold text-secondary">
+          Timeline lane
+          <select
+            value={timelineLane}
+            onChange={(event) => setTimelineLane(event.target.value as TimelineLane)}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          >
+            {timelineLaneOptions.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-secondary">
+          Priority
+          <select
+            value={priority}
+            onChange={(event) => setPriority(event.target.value as Task["priority"])}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          >
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </label>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="text-sm font-semibold text-secondary">
+          Start date
+          <input
+            type="date"
+            value={startDate}
+            onChange={(event) => setStartDate(event.target.value)}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          />
+        </label>
+        <label className="text-sm font-semibold text-secondary">
+          End date
+          <input
+            type="date"
+            value={endDate}
+            onChange={(event) => setEndDate(event.target.value)}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          />
+        </label>
+      </div>
       <div className="flex items-center gap-3">
-        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-          Add Task
+        <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
+          {pending ? "Adding..." : "Add Task"}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
+  );
+}
+
+export function ConsultantMilestoneComposer({ studentId }: { studentId: string }) {
+  const [title, setTitle] = useState("Application fee deadline");
+  const [eventDate, setEventDate] = useState(getTodayString());
+  const [status, setStatus] = useState<Milestone["status"]>("upcoming");
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
+
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setPending(true);
+        setMessage("");
+
+        try {
+          await jsonFetch("/api/consultant/milestones", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentId, title, eventDate, status }),
+          });
+          setMessage("Deadline created.");
+          setTitle("");
+          setEventDate(getTodayString());
+          setStatus("upcoming");
+          router.refresh();
+        } catch (submissionError) {
+          setMessage(submissionError instanceof Error ? submissionError.message : "Deadline creation failed.");
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <input
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder="Deadline title"
+      />
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="text-sm font-semibold text-secondary">
+          Date
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(event) => setEventDate(event.target.value)}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          />
+        </label>
+        <label className="text-sm font-semibold text-secondary">
+          Status
+          <select
+            value={status}
+            onChange={(event) => setStatus(event.target.value as Milestone["status"])}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          >
+            <option value="upcoming">upcoming</option>
+            <option value="done">done</option>
+          </select>
+        </label>
+      </div>
+      <div className="flex items-center gap-3">
+        <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
+          {pending ? "Adding..." : "Add Deadline"}
+        </button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+export function ConsultantStudentProfileEditor({
+  studentId,
+  defaultName,
+  defaultGrade,
+  defaultSchool,
+  defaultCountries,
+  defaultDreamSchools,
+  defaultMajor,
+  defaultAvatar,
+}: {
+  studentId: string;
+  defaultName: string;
+  defaultGrade: string;
+  defaultSchool: string;
+  defaultCountries: string[];
+  defaultDreamSchools: string[];
+  defaultMajor: string;
+  defaultAvatar: string;
+}) {
+  const [name, setName] = useState(defaultName);
+  const [grade, setGrade] = useState(defaultGrade);
+  const [schoolName, setSchoolName] = useState(defaultSchool);
+  const [countries, setCountries] = useState(defaultCountries.join(", "));
+  const [schools, setSchools] = useState(defaultDreamSchools.join(", "));
+  const [major, setMajor] = useState(defaultMajor);
+  const [avatar, setAvatar] = useState(defaultAvatar);
+  const [message, setMessage] = useState("");
+  const router = useRouter();
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        await jsonFetch(`/api/consultant/students/${studentId}/profile`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            grade,
+            school: schoolName,
+            targetCountries: countries.split(",").map((value) => value.trim()).filter(Boolean),
+            dreamSchools: schools.split(",").map((value) => value.trim()).filter(Boolean),
+            intendedMajor: major,
+            avatar,
+          }),
+        });
+        setMessage("Student profile updated.");
+        router.refresh();
+      }}
+    >
+      <div>
+        <p className="text-sm font-semibold text-secondary">Avatar</p>
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+          {avatarPresets.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              onClick={() => setAvatar(preset.value)}
+              className={cn(
+                "flex items-center justify-center rounded-3xl border bg-white p-4 transition-all",
+                avatar === preset.value
+                  ? "border-primary shadow-terra ring-2 ring-primary/20"
+                  : "border-black/5 hover:border-primary/30"
+              )}
+              aria-label={preset.label}
+            >
+              <img alt={preset.label} src={preset.value} className="h-20 w-20 rounded-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <input value={name} onChange={(event) => setName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Student name" />
+        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current grade" />
+      </div>
+      <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current school" />
+      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Target countries" />
+      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Dream schools" />
+      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Intended major" />
+      <div className="flex items-center gap-3">
+        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">Save Student Profile</button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+export function ConsultantNoteComposer({ studentId }: { studentId: string }) {
+  const [title, setTitle] = useState("Advisor follow-up");
+  const [summary, setSummary] = useState("Needs a tighter deadline plan for essays and more consistent review rhythm.");
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
+
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setPending(true);
+        setMessage("");
+
+        try {
+          await jsonFetch("/api/consultant/notes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentId, title, summary }),
+          });
+          setMessage("Advisor note saved.");
+          setTitle("");
+          setSummary("");
+          router.refresh();
+        } catch (submissionError) {
+          setMessage(submissionError instanceof Error ? submissionError.message : "Note creation failed.");
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <input
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder="Note title"
+      />
+      <textarea
+        value={summary}
+        onChange={(event) => setSummary(event.target.value)}
+        className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder="Consultant note summary"
+      />
+      <div className="flex items-center gap-3">
+        <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
+          {pending ? "Saving..." : "Add Note"}
+        </button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+export function ConsultantStudentPicker({
+  students,
+  currentStudentId,
+}: {
+  students: {
+    id: string;
+    name: string;
+    grade: string;
+    school: string;
+    completion: number;
+    phase: string;
+  }[];
+  currentStudentId: string;
+}) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = useDeferredValue(query).trim().toLowerCase();
+
+  const filteredStudents = students.filter((student) => {
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return [student.name, student.grade, student.school, student.phase]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedQuery);
+  });
+
+  return (
+    <div className="space-y-4">
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder="Search students"
+      />
+      <div className="space-y-3">
+        {filteredStudents.map((student) => (
+          <a
+            key={student.id}
+            href={`/consultant/students/${student.id}`}
+            className={cn(
+              "block rounded-2xl border px-4 py-4 transition-all",
+              student.id === currentStudentId
+                ? "border-primary bg-primary/5 shadow-terra"
+                : "border-black/5 bg-white hover:border-primary/30"
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-bold text-foreground">{student.name}</p>
+                <p className="mt-1 text-sm text-secondary">
+                  {student.grade} · {student.school}
+                </p>
+              </div>
+              <div className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-bold text-primary">
+                {student.completion}%
+              </div>
+            </div>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-outline">{student.phase}</p>
+          </a>
+        ))}
+      </div>
+    </div>
   );
 }
 

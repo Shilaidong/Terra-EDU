@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
 import { BriefcaseBusiness } from "lucide-react";
 
 import { ConsultantTaskComposer, LogoutButton } from "@/components/client-tools";
@@ -56,6 +57,9 @@ export default async function ConsultantStudentsPage() {
                           <p className="text-xs text-secondary">
                             {student.grade} · {student.school}
                           </p>
+                          <Link href={`/consultant/students/${student.id}`} className="mt-1 inline-block text-xs font-bold text-primary">
+                            Open workspace
+                          </Link>
                         </div>
                       </div>
                     </td>

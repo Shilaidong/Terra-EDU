@@ -10,33 +10,23 @@ const schema = z.object({
   studentId: z.string(),
   title: z.string().min(1),
   description: z.string().min(1),
-  dueLabel: z.string().min(1),
-  dueDate: z.string().min(1),
-  category: z.string().min(1),
+  timelineLane: z.enum(["standardized_exams", "application_progress", "activities", "competitions"]),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
   priority: z.enum(["Low", "Medium", "High"]),
-  ownerRole: z.enum(["consultant"]),
 });
 
-function inferTimelineLane(category: string): TimelineLane {
-  const normalized = category.toLowerCase();
-
-  if (normalized.includes("exam") || normalized.includes("ielts") || normalized.includes("toefl")) {
-    return "standardized_exams";
+function getLaneCategory(lane: TimelineLane) {
+  switch (lane) {
+    case "standardized_exams":
+      return "Exams";
+    case "activities":
+      return "Activities";
+    case "competitions":
+      return "Competition";
+    default:
+      return "Application";
   }
-
-  if (normalized.includes("competition")) {
-    return "competitions";
-  }
-
-  if (normalized.includes("document") || normalized.includes("material") || normalized.includes("deadline") || normalized.includes("finance")) {
-    return "application_progress";
-  }
-
-  if (normalized.includes("activity") || normalized.includes("research")) {
-    return "activities";
-  }
-
-  return "application_progress";
 }
 
 export async function POST(request: Request) {
@@ -72,9 +62,10 @@ export async function POST(request: Request) {
 
   const task = createTask({
     ...parsed.data,
-    startDate: parsed.data.dueDate,
-    endDate: parsed.data.dueDate,
-    timelineLane: inferTimelineLane(parsed.data.category),
+    dueLabel: `Consultant scheduled · ${parsed.data.endDate}`,
+    dueDate: parsed.data.endDate,
+    category: getLaneCategory(parsed.data.timelineLane),
+    ownerRole: "consultant",
     status: "pending",
   });
 

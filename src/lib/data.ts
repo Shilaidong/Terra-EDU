@@ -537,6 +537,7 @@ export function createAdvisorNote(input: Omit<AdvisorNote, "id">) {
   };
 
   getStore().advisorNotes.unshift(note);
+  void persistAdvisorNote(note);
   return note;
 }
 
@@ -904,6 +905,20 @@ async function persistContentItem(item: ContentItem) {
     difficulty: item.difficulty,
     status: item.status,
     source: item.source,
+  });
+}
+
+async function persistAdvisorNote(note: AdvisorNote) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("advisor_notes").upsert({
+    id: note.id,
+    student_id: note.studentId,
+    consultant_id: note.consultantId,
+    title: note.title,
+    summary: note.summary,
+    created_at: note.createdAt,
   });
 }
 
