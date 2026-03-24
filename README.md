@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Terra Edu
 
-## Getting Started
+Terra Edu is a launch-ready Next.js web app built from the Stitch UI designs in [`/Users/shi/projects/edu-platform/UIDESIGN`](/Users/shi/projects/edu-platform/UIDESIGN). It ships a warm Terra visual system, student/parent/consultant role portals, traceable API routes, and mock-first data storage that can later move to Supabase.
 
-First, run the development server:
+## What is live
+
+- Marketing landing page and login page
+- Student pages: dashboard, timeline, check-ins, explore, settings
+- Parent page: dashboard
+- Consultant pages: students, content, analytics
+- Placeholder pages for undeclared-but-visible navigation routes so there are no dead links
+- Structured write APIs with `trace_id`, `decision_id`, actor, page, latency, and result
+- AI endpoints for recommendation summaries and student Q&A in practical launch mode
+
+## Demo accounts
+
+- Student: `student@terra.edu` / `terra123`
+- Parent: `parent@terra.edu` / `terra123`
+- Consultant: `consultant@terra.edu` / `terra123`
+
+## Auth modes
+
+- `TERRA_AUTH_MODE=auto`: try Supabase Auth first when fully configured, otherwise fall back to demo auth
+- `TERRA_AUTH_MODE=demo`: always use built-in demo accounts
+- `TERRA_AUTH_MODE=supabase`: require real Supabase email/password login
+- `NEXT_PUBLIC_TERRA_AUTH_MODE` should usually match `TERRA_AUTH_MODE`
+
+If you want the three demo accounts to exist in Supabase Auth too, run:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run setup:supabase-auth
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## Build checks
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run lint
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Copy [`.env.example`](/Users/shi/projects/edu-platform/terra-edu/.env.example) to `.env.local`.
 
-## Deploy on Vercel
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TERRA_AUTH_MODE`
+- `NEXT_PUBLIC_TERRA_AUTH_MODE`
+- `SENTRY_DSN`
+- `NEXT_PUBLIC_SENTRY_DSN`
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
+- `SENTRY_AUTH_TOKEN`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The current implementation runs fully in mock/demo mode if these are not set. Supabase support is scaffolded via [`src/lib/supabase.ts`](/Users/shi/projects/edu-platform/terra-edu/src/lib/supabase.ts).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Logging and future AI bug fixing
+
+All write routes return:
+
+- `success`
+- `entity_id`
+- `trace_id`
+- `decision_id`
+- `message`
+
+Audit logs are stored in the in-memory launch store and rendered in the UI on key pages. The main write handlers live under:
+
+- [`src/app/api/auth/login/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/auth/login/route.ts)
+- [`src/app/api/student/checkins/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/student/checkins/route.ts)
+- [`src/app/api/student/profile/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/student/profile/route.ts)
+- [`src/app/api/student/tasks/[taskId]/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/student/tasks/[taskId]/route.ts)
+- [`src/app/api/consultant/tasks/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/consultant/tasks/route.ts)
+- [`src/app/api/content/items/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/content/items/route.ts)
+- [`src/app/api/content/import/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/content/import/route.ts)
+- [`src/app/api/ai/recommendations/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/ai/recommendations/route.ts)
+- [`src/app/api/ai/chat/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/ai/chat/route.ts)
+
+Shared observability helpers live in:
+
+- [`src/lib/observability.ts`](/Users/shi/projects/edu-platform/terra-edu/src/lib/observability.ts)
+- [`src/lib/store.ts`](/Users/shi/projects/edu-platform/terra-edu/src/lib/store.ts)
+
+Production-prep assets live in:
+
+- [`src/lib/env.ts`](/Users/shi/projects/edu-platform/terra-edu/src/lib/env.ts)
+- [`src/app/api/health/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/health/route.ts)
+- [`src/app/api/diagnostics/route.ts`](/Users/shi/projects/edu-platform/terra-edu/src/app/api/diagnostics/route.ts)
+- [`supabase/schema.sql`](/Users/shi/projects/edu-platform/terra-edu/supabase/schema.sql)
+- [`supabase/seed.sql`](/Users/shi/projects/edu-platform/terra-edu/supabase/seed.sql)
+- [`instrumentation.ts`](/Users/shi/projects/edu-platform/terra-edu/instrumentation.ts)
+- [`instrumentation-client.ts`](/Users/shi/projects/edu-platform/terra-edu/instrumentation-client.ts)
+- [`sentry.server.config.ts`](/Users/shi/projects/edu-platform/terra-edu/sentry.server.config.ts)
+- [`sentry.edge.config.ts`](/Users/shi/projects/edu-platform/terra-edu/sentry.edge.config.ts)
+
+## Current limitations
+
+- Data persistence is in-memory for this first implementation. Restarting the server resets demo data.
+- Supabase and Sentry environment wiring are scaffolded but not activated without credentials.
+- `xlsx` currently introduces one high-severity `npm audit` warning through its dependency chain; review before production rollout.

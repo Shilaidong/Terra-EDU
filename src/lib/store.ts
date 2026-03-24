@@ -1,0 +1,392 @@
+import type {
+  AdvisorNote,
+  AiArtifact,
+  AnalyticsSnapshot,
+  AuditLog,
+  CheckInRecord,
+  ContentItem,
+  Milestone,
+  Profile,
+  StudentRecord,
+  Task,
+  User,
+} from "@/lib/types";
+import { avatarPresetValues, getDefaultStudentAvatar } from "@/lib/avatar-presets";
+
+declare global {
+  var __terraStore: TerraStore | undefined;
+}
+
+export interface TerraStore {
+  users: User[];
+  profiles: Profile[];
+  students: StudentRecord[];
+  tasks: Task[];
+  milestones: Milestone[];
+  checkIns: CheckInRecord[];
+  contentItems: ContentItem[];
+  advisorNotes: AdvisorNote[];
+  analyticsSnapshots: AnalyticsSnapshot[];
+  aiArtifacts: AiArtifact[];
+  auditLogs: AuditLog[];
+}
+
+const avatars = {
+  student: avatarPresetValues[0],
+  parent:
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80",
+  consultant: avatarPresetValues[1],
+  child: getDefaultStudentAvatar(),
+};
+
+function seedStore(): TerraStore {
+  return {
+    users: [
+      {
+        id: "11111111-1111-1111-1111-111111111111",
+        email: "student@terra.edu",
+        password: "terra123",
+        name: "Amara Chen",
+        role: "student",
+        profileId: "profile_student_1",
+        avatar: avatars.student,
+      },
+      {
+        id: "22222222-2222-2222-2222-222222222222",
+        email: "parent@terra.edu",
+        password: "terra123",
+        name: "Li Wei",
+        role: "parent",
+        profileId: "profile_parent_1",
+        avatar: avatars.parent,
+      },
+      {
+        id: "33333333-3333-3333-3333-333333333333",
+        email: "consultant@terra.edu",
+        password: "terra123",
+        name: "Sofia Martinez",
+        role: "consultant",
+        profileId: "profile_consultant_1",
+        avatar: avatars.consultant,
+      },
+    ],
+    profiles: [
+      {
+        id: "profile_student_1",
+        school: "Westside Academy",
+        gradeOrTitle: "Grade 11 Student",
+        bio: "Ambitious environmental engineering applicant balancing STEM depth and extracurricular leadership.",
+      },
+      {
+        id: "profile_parent_1",
+        school: "Parent Account",
+        gradeOrTitle: "Family Oversight",
+        bio: "Monitoring academic progress and consultant follow-ups.",
+      },
+      {
+        id: "profile_consultant_1",
+        school: "Terra Edu",
+        gradeOrTitle: "Senior Admissions Consultant",
+        bio: "Managing a cohort of international applicants across the US and UK.",
+      },
+    ],
+    students: [
+      {
+        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        userId: "11111111-1111-1111-1111-111111111111",
+        name: "Amara Chen",
+        grade: "Grade 11",
+        school: "Westside Academy",
+        phase: "Research",
+        targetCountries: ["USA", "United Kingdom"],
+        dreamSchools: ["Stanford University", "UCL London"],
+        intendedMajor: "Environmental Engineering",
+        completion: 68,
+        checkInStreak: 18,
+        masteryAverage: 4.1,
+        avatar: avatars.child,
+      },
+      {
+        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        userId: "student_managed_2",
+        name: "Elena Park",
+        grade: "Grade 12",
+        school: "Maple Leaf International",
+        phase: "Application",
+        targetCountries: ["Netherlands", "Canada"],
+        dreamSchools: ["University of Amsterdam", "University of Toronto"],
+        intendedMajor: "Economics",
+        completion: 82,
+        checkInStreak: 14,
+        masteryAverage: 3.8,
+        avatar: avatars.student,
+      },
+      {
+        id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+        userId: "student_managed_3",
+        name: "Noah Kim",
+        grade: "Grade 10",
+        school: "Brighton High",
+        phase: "Planning",
+        targetCountries: ["USA"],
+        dreamSchools: ["UC Berkeley"],
+        intendedMajor: "Computer Science",
+        completion: 41,
+        checkInStreak: 7,
+        masteryAverage: 4.3,
+        avatar: avatars.consultant,
+      },
+    ],
+    tasks: [
+      {
+        id: "44444444-4444-4444-4444-444444444441",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "Upload IELTS results",
+        description: "Finalize the score report and upload it to the application hub.",
+        startDate: "2026-03-24",
+        endDate: "2026-03-26",
+        timelineLane: "standardized_exams",
+        dueLabel: "Due by 5:00 PM",
+        dueDate: "2026-03-26",
+        category: "Documents",
+        priority: "High",
+        status: "pending",
+        ownerRole: "student",
+      },
+      {
+        id: "44444444-4444-4444-4444-444444444442",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "Review Personal Statement draft",
+        description: "Prepare advisor comments and next revision notes.",
+        startDate: "2026-03-25",
+        endDate: "2026-03-27",
+        timelineLane: "application_progress",
+        dueLabel: "Advisor session at 2 PM",
+        dueDate: "2026-03-27",
+        category: "Essay",
+        priority: "High",
+        status: "in_progress",
+        ownerRole: "consultant",
+      },
+      {
+        id: "44444444-4444-4444-4444-444444444443",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "Confirm housing deposit",
+        description: "Verify payment readiness and supporting documents.",
+        startDate: "2026-03-27",
+        endDate: "2026-03-29",
+        timelineLane: "application_progress",
+        dueLabel: "Priority: High",
+        dueDate: "2026-03-29",
+        category: "Finance",
+        priority: "High",
+        status: "pending",
+        ownerRole: "student",
+      },
+      {
+        id: "44444444-4444-4444-4444-444444444444",
+        studentId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        title: "Finalize scholarship essay",
+        description: "Submit final draft for University of Amsterdam scholarship.",
+        startDate: "2026-03-24",
+        endDate: "2026-03-25",
+        timelineLane: "application_progress",
+        dueLabel: "48 hours left",
+        dueDate: "2026-03-25",
+        category: "Essay",
+        priority: "High",
+        status: "pending",
+        ownerRole: "student",
+      },
+      {
+        id: "44444444-4444-4444-4444-444444444445",
+        studentId: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+        title: "Complete profile baseline",
+        description: "Finish course, activity, and target school baseline.",
+        startDate: "2026-03-24",
+        endDate: "2026-03-30",
+        timelineLane: "activities",
+        dueLabel: "This week",
+        dueDate: "2026-03-30",
+        category: "Planning",
+        priority: "Medium",
+        status: "in_progress",
+        ownerRole: "consultant",
+      },
+    ],
+    milestones: [
+      {
+        id: "55555555-5555-5555-5555-555555555551",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "IELTS Final Submission",
+        eventDate: "2026-04-02",
+        dateLabel: "Apr 02",
+        status: "upcoming",
+        type: "deadline",
+      },
+      {
+        id: "55555555-5555-5555-5555-555555555552",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "College Essay Draft",
+        eventDate: "2026-04-10",
+        dateLabel: "Apr 10",
+        status: "upcoming",
+        type: "deadline",
+      },
+      {
+        id: "55555555-5555-5555-5555-555555555553",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "STEM Competition Result",
+        eventDate: "2026-05-03",
+        dateLabel: "May 03",
+        status: "upcoming",
+        type: "deadline",
+      },
+      {
+        id: "55555555-5555-5555-5555-555555555554",
+        studentId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+        title: "Amsterdam Scholarship",
+        eventDate: "2026-03-28",
+        dateLabel: "Mar 28",
+        status: "upcoming",
+        type: "deadline",
+      },
+    ],
+    checkIns: [
+      {
+        id: "66666666-6666-6666-6666-666666666661",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        curriculum: "AP Physics",
+        chapter: "Electromagnetism",
+        mastery: 4,
+        date: "2026-03-24",
+        notes: "Conceptually solid, needs more timed practice.",
+      },
+      {
+        id: "66666666-6666-6666-6666-666666666662",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        curriculum: "AP Calculus",
+        chapter: "Series & Convergence",
+        mastery: 5,
+        date: "2026-03-23",
+        notes: "Excellent command on problem sets.",
+      },
+      {
+        id: "66666666-6666-6666-6666-666666666663",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        curriculum: "Environmental Science",
+        chapter: "Climate Systems",
+        mastery: 3,
+        date: "2026-03-21",
+        notes: "Needs stronger real-world examples.",
+      },
+    ],
+    contentItems: [
+      {
+        id: "77777777-7777-7777-7777-777777777771",
+        type: "school",
+        title: "Stanford University",
+        subtitle: "Palo Alto, California",
+        country: "United States",
+        tags: ["Engineering", "Research", "Need-aware"],
+        difficulty: "Reach",
+        status: "published",
+        source: "manual",
+      },
+      {
+        id: "77777777-7777-7777-7777-777777777772",
+        type: "major",
+        title: "Environmental Engineering",
+        subtitle: "Sustainability, systems, impact",
+        tags: ["STEM", "Climate", "Interdisciplinary"],
+        difficulty: "Match",
+        status: "published",
+        source: "manual",
+      },
+      {
+        id: "77777777-7777-7777-7777-777777777773",
+        type: "competition",
+        title: "International Young Eco-Hero Summit",
+        subtitle: "Research & innovation challenge",
+        country: "Global",
+        tags: ["Research", "Sustainability"],
+        difficulty: "Match",
+        status: "published",
+        source: "manual",
+      },
+      {
+        id: "77777777-7777-7777-7777-777777777774",
+        type: "course",
+        title: "AP Physics C",
+        subtitle: "Mechanics and Electricity",
+        tags: ["AP", "STEM"],
+        difficulty: "Reach",
+        status: "draft",
+        source: "manual",
+      },
+    ],
+    advisorNotes: [
+      {
+        id: "88888888-8888-8888-8888-888888888881",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        consultantId: "33333333-3333-3333-3333-333333333333",
+        title: "Profile momentum is strong",
+        summary: "Amara is ahead on language scores; next leverage point is deeper narrative alignment in essays.",
+        createdAt: "2026-03-23T09:00:00.000Z",
+      },
+      {
+        id: "88888888-8888-8888-8888-888888888882",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        consultantId: "33333333-3333-3333-3333-333333333333",
+        title: "Parent sync completed",
+        summary: "Discussed research timeline and competition positioning with Li Wei.",
+        createdAt: "2026-03-22T14:30:00.000Z",
+      },
+    ],
+    analyticsSnapshots: [
+      {
+        id: "analytics_1",
+        date: "2026-03-20",
+        activeStudents: 142,
+        taskCompletionRate: 0.874,
+        milestoneHitRate: 0.92,
+        atRiskCount: 6,
+      },
+      {
+        id: "analytics_2",
+        date: "2026-03-24",
+        activeStudents: 148,
+        taskCompletionRate: 0.889,
+        milestoneHitRate: 0.94,
+        atRiskCount: 5,
+      },
+    ],
+    aiArtifacts: [],
+    auditLogs: [
+      {
+        id: "audit_seed_1",
+        timestamp: "2026-03-24T10:00:00.000Z",
+        traceId: "trace_seed_1",
+        decisionId: "decision_seed_1",
+        actorId: "user_consultant_1",
+        actorRole: "consultant",
+        page: "/consultant/content",
+        action: "bulk_sync_reviewed",
+        targetType: "content_batch",
+        targetId: "seed_batch",
+        status: "success",
+        latencyMs: 114,
+        inputSummary: "Reviewed imported curriculum template",
+        outputSummary: "3 items pending verification",
+      },
+    ],
+  };
+}
+
+export function getStore(): TerraStore {
+  if (!global.__terraStore) {
+    global.__terraStore = seedStore();
+  }
+
+  return global.__terraStore;
+}
