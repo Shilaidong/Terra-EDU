@@ -51,8 +51,8 @@ export default function HomePage() {
 
           <div className="organic-glow">
             <img
-              alt="Students collaborating in a bright campus courtyard"
-              src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80"
+              alt="Terra Edu home page visual"
+              src="/api/assets/home-hero"
               className="aspect-[4/3] w-full rounded-[2rem] object-cover ring-8 ring-surface-container-low shadow-2xl"
             />
           </div>
