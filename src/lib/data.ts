@@ -288,6 +288,35 @@ export async function getAnalyticsData() {
   return data ? mapAnalytics(data) : getAnalyticsFallback();
 }
 
+export async function getConsultantLiveAnalyticsData() {
+  const [students, tasks, milestones] = await Promise.all([
+    getAllStudentsData(),
+    getAllTasksData(),
+    getAllMilestonesData(),
+  ]);
+
+  const studentsWithMetrics = await Promise.all(
+    students.map(async (student) => ({
+      ...student,
+      ...(await getStudentLiveMetricsData(student.id)),
+    }))
+  );
+
+  const atRiskCount = studentsWithMetrics.filter(
+    (student) =>
+      student.completion < 50 || student.checkInStreak < 3 || student.masteryAverage < 3.5
+  ).length;
+
+  return {
+    id: "live-consultant-analytics",
+    date: new Date().toISOString().slice(0, 10),
+    activeStudents: students.length,
+    taskCompletionRate: calculateTaskCompletion(tasks) / 100,
+    milestoneHitRate: calculateMilestoneHitRate(milestones),
+    atRiskCount,
+  } satisfies AnalyticsSnapshot;
+}
+
 export async function getRecentAuditLogsData(limit = 8) {
   const supabase = getSupabaseAdminClient();
 
@@ -553,10 +582,11 @@ export async function getParentOverviewData() {
 }
 
 export async function getConsultantOverviewData() {
-  const [students, content, analytics] = await Promise.all([
+  const [students, content, analytics, milestones] = await Promise.all([
     getAllStudentsData(),
     getContentItemsData(),
-    getAnalyticsData(),
+    getConsultantLiveAnalyticsData(),
+    getAllMilestonesData(),
   ]);
 
   const tasks = await getAllTasksData();
@@ -570,6 +600,7 @@ export async function getConsultantOverviewData() {
   return {
     students: studentsWithMetrics,
     tasks,
+    milestones,
     notes: getStore().advisorNotes,
     analytics,
     content,
@@ -667,6 +698,21 @@ async function getAllTasksData() {
 
   const { data } = await supabase.from("tasks").select("*").order("created_at", { ascending: false });
   return data?.length ? data.map(mapTask) : getStore().tasks;
+}
+
+async function getAllMilestonesData() {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore().milestones;
+  }
+
+  const { data } = await supabase
+    .from("milestones")
+    .select("*")
+    .order("event_date", { ascending: true });
+
+  return data?.length ? data.map(mapMilestone) : getStore().milestones;
 }
 
 async function persistTask(task: Task) {
@@ -1066,6 +1112,15 @@ function calculateMasteryAverage(checkIns: CheckInRecord[]) {
 
   const total = checkIns.reduce((sum, record) => sum + record.mastery, 0);
   return Number((total / checkIns.length).toFixed(1));
+}
+
+function calculateMilestoneHitRate(milestones: Milestone[]) {
+  if (milestones.length === 0) {
+    return 0;
+  }
+
+  const doneCount = milestones.filter((milestone) => milestone.status === "done").length;
+  return Number((doneCount / milestones.length).toFixed(4));
 }
 
 function calculateCheckInStreak(checkIns: CheckInRecord[]) {

@@ -2,12 +2,23 @@ import { ChartSpline } from "lucide-react";
 
 import { AnalyticsExportButton, LogoutButton } from "@/components/client-tools";
 import { AuditFeed, HeroBadge, RoleShell, SectionCard, StatCard, SummaryCard } from "@/components/terra-shell";
-import { getAnalyticsData, getRecentAuditLogsData } from "@/lib/data";
+import { getConsultantOverviewData, getRecentAuditLogsData } from "@/lib/data";
 import { requireSession } from "@/lib/server/guards";
 
 export default async function ConsultantAnalyticsPage() {
   const session = await requireSession("consultant");
-  const [analytics, logs] = await Promise.all([getAnalyticsData(), getRecentAuditLogsData(6)]);
+  const [overview, logs] = await Promise.all([getConsultantOverviewData(), getRecentAuditLogsData(6)]);
+  const analytics = overview.analytics;
+  const averageMastery =
+    overview.students.length > 0
+      ? (overview.students.reduce((sum, student) => sum + student.masteryAverage, 0) / overview.students.length).toFixed(1)
+      : "0.0";
+  const averageStreak =
+    overview.students.length > 0
+      ? Math.round(
+          overview.students.reduce((sum, student) => sum + student.checkInStreak, 0) / overview.students.length
+        )
+      : 0;
 
   return (
     <RoleShell
@@ -33,7 +44,8 @@ export default async function ConsultantAnalyticsPage() {
         <SectionCard title="Reporting Center" eyebrow="Export">
           <SummaryCard
             title="Weekly operating picture"
-            body="Task completion is holding near 89%, milestone accuracy remains above 90%, and the at-risk set has narrowed. The launch export route emits a simple CSV report and logs the export action for auditability."
+            body={`Live cohort completion is ${Math.round(analytics.taskCompletionRate * 100)}%, milestone discipline is ${Math.round(analytics.milestoneHitRate * 100)}%, average mastery is ${averageMastery}/5, and the average check-in streak is ${averageStreak} days.`}
+            footer="These metrics now follow the same live student task, deadline, and check-in data shown across the product."
           />
           <div className="mt-5">
             <AnalyticsExportButton />
