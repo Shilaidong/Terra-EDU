@@ -51,6 +51,11 @@ npm run build
 
 Copy [`.env.example`](/Users/shi/projects/edu-platform/terra-edu/.env.example) to `.env.local`.
 
+- `TERRA_AI_PROVIDER`
+- `TERRA_AI_MODEL`
+- `TERRA_AI_PROMPT_VERSION`
+- `ANTHROPIC_BASE_URL`
+- `ANTHROPIC_API_KEY`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -62,7 +67,19 @@ Copy [`.env.example`](/Users/shi/projects/edu-platform/terra-edu/.env.example) t
 - `SENTRY_PROJECT`
 - `SENTRY_AUTH_TOKEN`
 
-The current implementation runs fully in mock/demo mode if these are not set. Supabase support is scaffolded via [`src/lib/supabase.ts`](/Users/shi/projects/edu-platform/terra-edu/src/lib/supabase.ts).
+AI currently supports a launch-safe provider switch:
+
+- `TERRA_AI_PROVIDER=auto`: use MiniMax over Anthropic-compatible mode when `ANTHROPIC_API_KEY` is set, otherwise fall back to mock AI
+- `TERRA_AI_PROVIDER=mock`: always use the built-in simulated AI responses
+- `TERRA_AI_PROVIDER=minimax_anthropic`: intended production mode; with the current implementation this behaves like `auto` plus MiniMax credentials
+
+MiniMax Anthropic-compatible mode follows the official MiniMax setup:
+
+- `ANTHROPIC_BASE_URL=https://api.minimaxi.com/anthropic`
+- `ANTHROPIC_API_KEY=your MiniMax Token Plan key`
+- `TERRA_AI_MODEL=MiniMax-M2.7`
+
+The current implementation runs fully in mock/demo mode if AI or Supabase credentials are not set. Supabase support is scaffolded via [`src/lib/supabase.ts`](/Users/shi/projects/edu-platform/terra-edu/src/lib/supabase.ts).
 
 ## Logging and future AI bug fixing
 

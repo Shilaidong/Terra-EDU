@@ -14,6 +14,10 @@ export type EnvKey = (typeof requiredKeys)[number];
 export function getEnvSummary() {
   return {
     authMode: process.env.TERRA_AUTH_MODE ?? "auto",
+    aiProvider:
+      process.env.TERRA_AI_PROVIDER ?? (process.env.ANTHROPIC_API_KEY ? "minimax_anthropic" : "mock"),
+    aiReady: Boolean(process.env.ANTHROPIC_API_KEY || process.env.MINIMAX_API_KEY),
+    aiModel: process.env.TERRA_AI_MODEL ?? "MiniMax-M2.7",
     supabaseClientReady: Boolean(
       process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     ),
