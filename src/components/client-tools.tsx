@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 
+import { useText } from "@/components/locale-provider";
 import { avatarPresets } from "@/lib/avatar-presets";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { shouldUseBrowserSupabaseAuth } from "@/lib/supabase/shared";
@@ -21,6 +22,7 @@ async function jsonFetch<T>(input: RequestInfo, init?: RequestInit) {
 }
 
 export function LoginForm() {
+  const t = useText();
   const [role, setRole] = useState<UserRole>("student");
   const [email, setEmail] = useState("student@terra.edu");
   const [password, setPassword] = useState("terra123");
@@ -67,7 +69,7 @@ export function LoginForm() {
           if (shouldUseBrowserSupabaseAuth() && supabase) {
             await supabase.auth.signOut();
           }
-          setError(submissionError instanceof Error ? submissionError.message : "Login failed");
+          setError(submissionError instanceof Error ? submissionError.message : t("Login failed", "登录失败"));
         } finally {
           setPending(false);
         }
@@ -89,7 +91,7 @@ export function LoginForm() {
                 : "rounded-2xl border border-outline-variant bg-white p-3 text-center text-sm font-bold text-secondary"
             }
           >
-            {item}
+            {translateRole(item, t)}
           </button>
         ))}
       </div>
@@ -98,21 +100,21 @@ export function LoginForm() {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         type="email"
-        placeholder="Email address"
+        placeholder={t("Email address", "邮箱地址")}
         className="w-full rounded-2xl border-none bg-surface-container-low px-4 py-3 focus:outline-primary"
       />
       <input
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         type="password"
-        placeholder="Password"
+        placeholder={t("Password", "密码")}
         className="w-full rounded-2xl border-none bg-surface-container-low px-4 py-3 focus:outline-primary"
       />
       <button
         disabled={pending}
-        className="w-full rounded-2xl bg-primary px-5 py-3 text-lg font-bold text-white disabled:opacity-70"
+        className="terra-on-primary w-full rounded-2xl bg-primary px-5 py-3 text-lg font-bold text-white disabled:opacity-70"
       >
-        {pending ? "Signing in..." : "Sign In"}
+        {pending ? t("Signing in...", "登录中...") : t("Sign In", "登录")}
       </button>
       {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
     </form>
@@ -120,6 +122,7 @@ export function LoginForm() {
 }
 
 export function LogoutButton() {
+  const t = useText();
   const router = useRouter();
   const supabase = getBrowserSupabaseClient();
 
@@ -138,7 +141,7 @@ export function LogoutButton() {
       }}
       className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
     >
-      Sign Out
+      {t("Sign Out", "退出登录")}
     </button>
   );
 }
@@ -152,6 +155,7 @@ export function TaskStatusControl({
   status: Task["status"];
   endpointBase?: string;
 }) {
+  const t = useText();
   const [value, setValue] = useState(status);
   const [pending, setPending] = useState(false);
   const router = useRouter();
@@ -178,39 +182,52 @@ export function TaskStatusControl({
       }}
       className="rounded-full border border-outline-variant bg-white px-3 py-2 text-sm font-semibold text-secondary"
     >
-      <option value="pending">pending</option>
-      <option value="in_progress">in progress</option>
-      <option value="done">done</option>
+      <option value="pending">{t("pending", "待开始")}</option>
+      <option value="in_progress">{t("in progress", "进行中")}</option>
+      <option value="done">{t("done", "已完成")}</option>
     </select>
   );
 }
 
 const timelineLaneOptions: {
   value: TimelineLane;
-  label: string;
-  helper: string;
+  label: { en: string; zh: string };
+  helper: { en: string; zh: string };
 }[] = [
   {
     value: "standardized_exams",
-    label: "Standardized Exams",
-    helper: "IELTS, TOEFL, SAT, AP and similar score planning.",
+    label: { en: "Standardized Exams", zh: "标化考试" },
+    helper: { en: "IELTS, TOEFL, SAT, AP and similar score planning.", zh: "用于 IELTS、TOEFL、SAT、AP 等考试规划。" },
   },
   {
     value: "application_progress",
-    label: "Application Progress",
-    helper: "Essays, forms, interviews, and school application steps.",
+    label: { en: "Application Progress", zh: "申请进度" },
+    helper: { en: "Essays, forms, interviews, and school application steps.", zh: "用于文书、表格、面试和学校申请进度。" },
   },
   {
     value: "activities",
-    label: "Activities",
-    helper: "Clubs, volunteering, research, and profile building.",
+    label: { en: "Activities", zh: "活动安排" },
+    helper: { en: "Clubs, volunteering, research, and profile building.", zh: "用于社团、志愿服务、科研和背景提升。" },
   },
   {
     value: "competitions",
-    label: "Competitions",
-    helper: "Olympiads, showcases, hackathons, and contests.",
+    label: { en: "Competitions", zh: "竞赛安排" },
+    helper: { en: "Olympiads, showcases, hackathons, and contests.", zh: "用于奥赛、展示、黑客松和各类比赛。" },
   },
 ];
+
+function translateRole(role: UserRole, t: ReturnType<typeof useText>) {
+  if (role === "parent") return t("parent", "家长");
+  if (role === "consultant") return t("consultant", "顾问");
+  return t("student", "学生");
+}
+
+function translateConsultantTemplate(label: string, t: ReturnType<typeof useText>) {
+  if (label === "Deadline Prep") return t("Deadline Prep", "截止日准备");
+  if (label === "Exam Sprint") return t("Exam Sprint", "考试冲刺");
+  if (label === "Activity Checkpoint") return t("Activity Checkpoint", "活动检查点");
+  return t("Essay Review", "文书审阅");
+}
 
 function getTodayString() {
   return formatDateForInput(new Date());
@@ -228,6 +245,7 @@ function formatDateForInput(date: Date) {
 }
 
 export function StudentTimelineTaskComposer({ studentId }: { studentId: string }) {
+  const t = useText();
   const today = getTodayString();
   const [isMounted, setIsMounted] = useState(false);
   const [title, setTitle] = useState("Book the next IELTS mock exam");
@@ -273,7 +291,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
         event.preventDefault();
 
         if (endDate < startDate) {
-          setMessage("End date needs to be on or after the start date.");
+          setMessage(t("End date needs to be on or after the start date.", "结束日期不能早于开始日期。"));
           return;
         }
 
@@ -294,7 +312,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
               priority,
             }),
           });
-          setMessage("Timeline task added.");
+          setMessage(t("Timeline task added.", "时间线任务已添加。"));
           setTitle("");
           setDescription("");
           setTimelineLane("application_progress");
@@ -303,7 +321,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           setPriority("Medium");
           router.refresh();
         } catch (submissionError) {
-          setMessage(submissionError instanceof Error ? submissionError.message : "Failed to add task.");
+          setMessage(submissionError instanceof Error ? submissionError.message : t("Failed to add task.", "添加任务失败。"));
         } finally {
           setPending(false);
         }
@@ -314,19 +332,19 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-          placeholder="Timeline task title"
+          placeholder={t("Timeline task title", "时间线任务标题")}
         />
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
-          placeholder="Describe the outcome for this task"
+          placeholder={t("Describe the outcome for this task", "描述这个任务的目标与结果")}
         />
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
-          Timeline lane
+          {t("Timeline lane", "时间线分类")}
           <select
             value={timelineLane}
             onChange={(event) => setTimelineLane(event.target.value as TimelineLane)}
@@ -334,28 +352,28 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           >
             {timelineLaneOptions.map((item) => (
               <option key={item.value} value={item.value}>
-                {item.label}
+                {t(item.label.en, item.label.zh)}
               </option>
             ))}
           </select>
         </label>
         <label className="text-sm font-semibold text-secondary">
-          Priority
+          {t("Priority", "优先级")}
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Task["priority"])}
             className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
           >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
+            <option value="Low">{t("Low", "低")}</option>
+            <option value="Medium">{t("Medium", "中")}</option>
+            <option value="High">{t("High", "高")}</option>
           </select>
         </label>
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
-          Start date
+          {t("Start date", "开始日期")}
           <input
             type="date"
             value={startDate}
@@ -364,7 +382,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
-          End date
+          {t("End date", "结束日期")}
           <input
             type="date"
             value={endDate}
@@ -375,7 +393,10 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
       </div>
 
       <p className="mt-3 text-xs text-secondary">
-        {timelineLaneOptions.find((item) => item.value === timelineLane)?.helper}
+        {(() => {
+          const matchedLane = timelineLaneOptions.find((item) => item.value === timelineLane);
+          return matchedLane ? t(matchedLane.helper.en, matchedLane.helper.zh) : null;
+        })()}
       </p>
 
       <div className="mt-4 flex items-center gap-3">
@@ -383,7 +404,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           disabled={pending}
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
         >
-          {pending ? "Adding..." : "Add Timeline Task"}
+          {pending ? t("Adding...", "添加中...") : t("Add Timeline Task", "添加时间线任务")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -400,6 +421,7 @@ export function TaskDeleteButton({
   title: string;
   endpointBase?: string;
 }) {
+  const t = useText();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -410,7 +432,7 @@ export function TaskDeleteButton({
         type="button"
         disabled={pending}
         onClick={async () => {
-          if (!window.confirm(`Delete "${title}" from the timeline?`)) {
+          if (!window.confirm(t(`Delete "${title}" from the timeline?`, `确定从时间线中删除“${title}”吗？`))) {
             return;
           }
 
@@ -423,14 +445,14 @@ export function TaskDeleteButton({
             });
             router.refresh();
           } catch (submissionError) {
-            setMessage(submissionError instanceof Error ? submissionError.message : "Delete failed");
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Delete failed", "删除失败"));
           } finally {
             setPending(false);
           }
         }}
         className="rounded-full border border-error/20 px-3 py-2 text-sm font-semibold text-error disabled:opacity-70"
       >
-        {pending ? "Deleting..." : "Delete"}
+        {pending ? t("Deleting...", "删除中...") : t("Delete", "删除")}
       </button>
       {message ? <span className="text-xs font-semibold text-error">{message}</span> : null}
     </div>
@@ -438,6 +460,7 @@ export function TaskDeleteButton({
 }
 
 export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
+  const t = useText();
   const [title, setTitle] = useState("Application payment deadline");
   const [eventDate, setEventDate] = useState(getTodayString());
   const [status, setStatus] = useState<Milestone["status"]>("upcoming");
@@ -464,13 +487,13 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
               status,
             }),
           });
-          setMessage("Milestone added.");
+          setMessage(t("Milestone added.", "截止日期已添加。"));
           setTitle("");
           setEventDate(getTodayString());
           setStatus("upcoming");
           router.refresh();
         } catch (submissionError) {
-          setMessage(submissionError instanceof Error ? submissionError.message : "Failed to add milestone.");
+          setMessage(submissionError instanceof Error ? submissionError.message : t("Failed to add milestone.", "添加截止日期失败。"));
         } finally {
           setPending(false);
         }
@@ -481,12 +504,12 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-          placeholder="Milestone title"
+          placeholder={t("Milestone title", "截止日期标题")}
         />
       </div>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
-          Date
+          {t("Date", "日期")}
           <input
             type="date"
             value={eventDate}
@@ -495,26 +518,29 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
-          Status
+          {t("Status", "状态")}
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
             className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
           >
-            <option value="upcoming">upcoming</option>
-            <option value="done">done</option>
+            <option value="upcoming">{t("upcoming", "待开始")}</option>
+            <option value="done">{t("done", "已完成")}</option>
           </select>
         </label>
       </div>
       <p className="mt-3 text-xs text-secondary">
-        Milestones are tracked as deadlines only, so this section stays focused and easy to maintain.
+        {t(
+          "Milestones are tracked as deadlines only, so this section stays focused and easy to maintain.",
+          "里程碑这里只记录截止日期，维护会更简单。"
+        )}
       </p>
       <div className="mt-4 flex items-center gap-3">
         <button
           disabled={pending}
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
         >
-          {pending ? "Adding..." : "Add Milestone"}
+          {pending ? t("Adding...", "添加中...") : t("Add Milestone", "添加截止日期")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -529,6 +555,7 @@ export function MilestoneEditorControls({
   milestone: Pick<Milestone, "id" | "title" | "eventDate" | "status">;
   endpointBase?: string;
 }) {
+  const t = useText();
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(milestone.title);
   const [eventDate, setEventDate] = useState(milestone.eventDate);
@@ -555,7 +582,7 @@ export function MilestoneEditorControls({
             setIsEditing(false);
             router.refresh();
           } catch (submissionError) {
-            setMessage(submissionError instanceof Error ? submissionError.message : "Update failed");
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Update failed", "更新失败"));
           } finally {
             setPending(false);
           }
@@ -566,7 +593,7 @@ export function MilestoneEditorControls({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             className="rounded-2xl bg-surface-container-low px-4 py-3"
-            placeholder="Deadline title"
+            placeholder={t("Deadline title", "截止日期标题")}
           />
           <input
             type="date"
@@ -579,8 +606,8 @@ export function MilestoneEditorControls({
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
             className="rounded-2xl bg-surface-container-low px-4 py-3"
           >
-            <option value="upcoming">upcoming</option>
-            <option value="done">done</option>
+            <option value="upcoming">{t("upcoming", "待开始")}</option>
+            <option value="done">{t("done", "已完成")}</option>
           </select>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -588,7 +615,7 @@ export function MilestoneEditorControls({
             disabled={pending}
             className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
           >
-            {pending ? "Saving..." : "Save"}
+            {pending ? t("Saving...", "保存中...") : t("Save", "保存")}
           </button>
           <button
             type="button"
@@ -601,7 +628,7 @@ export function MilestoneEditorControls({
             }}
             className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
           >
-            Cancel
+            {t("Cancel", "取消")}
           </button>
           {message ? <p className="text-sm font-semibold text-error">{message}</p> : null}
         </div>
@@ -616,7 +643,7 @@ export function MilestoneEditorControls({
         onClick={() => setIsEditing(true)}
         className="rounded-full border border-outline-variant px-3 py-2 text-sm font-semibold text-primary"
       >
-        Edit
+        {t("Edit", "编辑")}
       </button>
       <MilestoneDeleteButton milestoneId={milestone.id} title={milestone.title} endpointBase={endpointBase} />
     </div>
@@ -632,6 +659,7 @@ export function MilestoneDeleteButton({
   title: string;
   endpointBase?: string;
 }) {
+  const t = useText();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -642,7 +670,7 @@ export function MilestoneDeleteButton({
         type="button"
         disabled={pending}
         onClick={async () => {
-          if (!window.confirm(`Delete "${title}"?`)) {
+          if (!window.confirm(t(`Delete "${title}"?`, `确定删除“${title}”吗？`))) {
             return;
           }
 
@@ -655,14 +683,14 @@ export function MilestoneDeleteButton({
             });
             router.refresh();
           } catch (submissionError) {
-            setMessage(submissionError instanceof Error ? submissionError.message : "Delete failed");
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Delete failed", "删除失败"));
           } finally {
             setPending(false);
           }
         }}
         className="rounded-full border border-error/20 px-3 py-2 text-sm font-semibold text-error disabled:opacity-70"
       >
-        {pending ? "Deleting..." : "Delete"}
+        {pending ? t("Deleting...", "删除中...") : t("Delete", "删除")}
       </button>
       {message ? <span className="text-xs font-semibold text-error">{message}</span> : null}
     </div>
@@ -670,6 +698,7 @@ export function MilestoneDeleteButton({
 }
 
 export function CheckInComposer({ studentId }: { studentId: string }) {
+  const t = useText();
   const [curriculum, setCurriculum] = useState("AP Biology");
   const [chapter, setChapter] = useState("Ecology");
   const [mastery, setMastery] = useState(4);
@@ -687,7 +716,7 @@ export function CheckInComposer({ studentId }: { studentId: string }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ studentId, curriculum, chapter, mastery, notes }),
         });
-        setMessage("Check-in saved with trace logging.");
+        setMessage(t("Check-in saved with trace logging.", "打卡已保存，并记录日志。"));
         router.refresh();
       }}
     >
@@ -696,17 +725,17 @@ export function CheckInComposer({ studentId }: { studentId: string }) {
           value={curriculum}
           onChange={(event) => setCurriculum(event.target.value)}
           className="rounded-2xl bg-surface-container-low px-4 py-3"
-          placeholder="Curriculum"
+          placeholder={t("Curriculum", "课程")}
         />
         <input
           value={chapter}
           onChange={(event) => setChapter(event.target.value)}
           className="rounded-2xl bg-surface-container-low px-4 py-3"
-          placeholder="Chapter"
+          placeholder={t("Chapter", "章节")}
         />
       </div>
       <label className="text-sm font-semibold text-secondary">
-        Mastery: {mastery}/5
+        {t("Mastery", "掌握度")}: {mastery}/5
         <input
           type="range"
           min={1}
@@ -723,7 +752,7 @@ export function CheckInComposer({ studentId }: { studentId: string }) {
       />
       <div className="flex items-center gap-3">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-          Save Check-in
+          {t("Save Check-in", "保存打卡")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -738,6 +767,7 @@ export function CheckInEditorControls({
   checkIn: Pick<CheckInRecord, "id" | "curriculum" | "chapter" | "mastery" | "date" | "notes">;
   endpointBase?: string;
 }) {
+  const t = useText();
   const [isEditing, setIsEditing] = useState(false);
   const [curriculum, setCurriculum] = useState(checkIn.curriculum);
   const [chapter, setChapter] = useState(checkIn.chapter);
@@ -772,7 +802,7 @@ export function CheckInEditorControls({
             setIsEditing(false);
             router.refresh();
           } catch (submissionError) {
-            setMessage(submissionError instanceof Error ? submissionError.message : "Update failed");
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Update failed", "更新失败"));
           } finally {
             setPending(false);
           }
@@ -783,18 +813,18 @@ export function CheckInEditorControls({
             value={curriculum}
             onChange={(event) => setCurriculum(event.target.value)}
             className="rounded-2xl bg-surface-container-low px-4 py-3"
-            placeholder="Curriculum"
+            placeholder={t("Curriculum", "课程")}
           />
           <input
             value={chapter}
             onChange={(event) => setChapter(event.target.value)}
             className="rounded-2xl bg-surface-container-low px-4 py-3"
-            placeholder="Chapter"
+            placeholder={t("Chapter", "章节")}
           />
         </div>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <label className="text-sm font-semibold text-secondary">
-            Date
+            {t("Date", "日期")}
             <input
               type="date"
               value={date}
@@ -803,7 +833,7 @@ export function CheckInEditorControls({
             />
           </label>
           <label className="text-sm font-semibold text-secondary">
-            Mastery: {mastery}/5
+            {t("Mastery", "掌握度")}: {mastery}/5
             <input
               type="range"
               min={1}
@@ -824,7 +854,7 @@ export function CheckInEditorControls({
             disabled={pending}
             className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
           >
-            {pending ? "Saving..." : "Save"}
+            {pending ? t("Saving...", "保存中...") : t("Save", "保存")}
           </button>
           <button
             type="button"
@@ -839,7 +869,7 @@ export function CheckInEditorControls({
             }}
             className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
           >
-            Cancel
+            {t("Cancel", "取消")}
           </button>
           {message ? <p className="text-sm font-semibold text-error">{message}</p> : null}
         </div>
@@ -854,7 +884,7 @@ export function CheckInEditorControls({
         onClick={() => setIsEditing(true)}
         className="rounded-full border border-outline-variant px-3 py-2 text-sm font-semibold text-primary"
       >
-        Edit
+        {t("Edit", "编辑")}
       </button>
       <CheckInDeleteButton
         checkInId={checkIn.id}
@@ -874,6 +904,7 @@ export function CheckInDeleteButton({
   title: string;
   endpointBase?: string;
 }) {
+  const t = useText();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -884,7 +915,7 @@ export function CheckInDeleteButton({
         type="button"
         disabled={pending}
         onClick={async () => {
-          if (!window.confirm(`Delete "${title}"?`)) {
+          if (!window.confirm(t(`Delete "${title}"?`, `确定删除“${title}”吗？`))) {
             return;
           }
 
@@ -897,14 +928,14 @@ export function CheckInDeleteButton({
             });
             router.refresh();
           } catch (submissionError) {
-            setMessage(submissionError instanceof Error ? submissionError.message : "Delete failed");
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Delete failed", "删除失败"));
           } finally {
             setPending(false);
           }
         }}
         className="rounded-full border border-error/20 px-3 py-2 text-sm font-semibold text-error disabled:opacity-70"
       >
-        {pending ? "Deleting..." : "Delete"}
+        {pending ? t("Deleting...", "删除中...") : t("Delete", "删除")}
       </button>
       {message ? <span className="text-xs font-semibold text-error">{message}</span> : null}
     </div>
@@ -930,6 +961,7 @@ export function StudentProfileEditor({
   defaultMajor: string;
   defaultAvatar: string;
 }) {
+  const t = useText();
   const [name, setName] = useState(defaultName);
   const [grade, setGrade] = useState(defaultGrade);
   const [schoolName, setSchoolName] = useState(defaultSchool);
@@ -959,12 +991,12 @@ export function StudentProfileEditor({
             avatar,
           }),
         });
-        setMessage("Profile basics and goals updated.");
+        setMessage(t("Profile basics and goals updated.", "个人资料和目标已更新。"));
         router.refresh();
       }}
     >
       <div>
-        <p className="text-sm font-semibold text-secondary">Avatar</p>
+        <p className="text-sm font-semibold text-secondary">{t("Avatar", "头像")}</p>
         <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
           {avatarPresets.map((preset) => (
             <button
@@ -989,41 +1021,41 @@ export function StudentProfileEditor({
         value={name}
         onChange={(event) => setName(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Your full name"
+        placeholder={t("Your full name", "你的姓名")}
       />
       <input
         value={grade}
         onChange={(event) => setGrade(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Current grade"
+        placeholder={t("Current grade", "当前年级")}
       />
       <input
         value={schoolName}
         onChange={(event) => setSchoolName(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Current school"
+        placeholder={t("Current school", "当前学校")}
       />
       <input
         value={countries}
         onChange={(event) => setCountries(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Target countries"
+        placeholder={t("Target countries", "目标国家")}
       />
       <input
         value={schools}
         onChange={(event) => setSchools(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Dream schools"
+        placeholder={t("Dream schools", "梦校")}
       />
       <input
         value={major}
         onChange={(event) => setMajor(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Intended major"
+        placeholder={t("Intended major", "意向专业")}
       />
       <div className="flex items-center gap-3">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-          Save Profile
+          {t("Save Profile", "保存资料")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -1040,6 +1072,7 @@ export function ParentProfileEditor({
   defaultName: string;
   defaultAvatar: string;
 }) {
+  const t = useText();
   const [name, setName] = useState(defaultName);
   const [avatar, setAvatar] = useState(defaultAvatar);
   const [message, setMessage] = useState("");
@@ -1059,12 +1092,12 @@ export function ParentProfileEditor({
             avatar,
           }),
         });
-        setMessage("Parent profile updated.");
+        setMessage(t("Parent profile updated.", "家长资料已更新。"));
         router.refresh();
       }}
     >
       <div>
-        <p className="text-sm font-semibold text-secondary">Avatar</p>
+        <p className="text-sm font-semibold text-secondary">{t("Avatar", "头像")}</p>
         <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
           {avatarPresets.map((preset) => (
             <button
@@ -1089,12 +1122,12 @@ export function ParentProfileEditor({
         value={name}
         onChange={(event) => setName(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Your display name"
+        placeholder={t("Your display name", "你的显示名称")}
       />
 
       <div className="flex items-center gap-3">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-          Save Profile
+          {t("Save Profile", "保存资料")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -1113,6 +1146,7 @@ export function AiRecommendationPanel({
   feature: string;
   prompt: string;
 }) {
+  const t = useText();
   const [result, setResult] = useState<null | {
     summary: string;
     recommendations: string[];
@@ -1127,10 +1161,13 @@ export function AiRecommendationPanel({
     <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">AI Recommendation</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">Practical launch AI</h3>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Recommendation", "AI 推荐")}</p>
+          <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Practical launch AI", "可落地的 AI 助手")}</h3>
           <p className="mt-3 text-sm leading-7 text-secondary">
-            Generates recommendation summaries, logs the prompt version, and stores traceable artifacts for later bug fixing.
+            {t(
+              "Generates recommendation summaries, logs the prompt version, and stores traceable artifacts for later bug fixing.",
+              "会生成建议摘要、记录提示词版本，并保存可追踪结果，方便后续排查和修复。"
+            )}
           </p>
         </div>
         <button
@@ -1158,7 +1195,7 @@ export function AiRecommendationPanel({
           }}
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
         >
-          {pending ? "Thinking..." : "Generate"}
+          {pending ? t("Thinking...", "生成中...") : t("Generate", "生成")}
         </button>
       </div>
 
@@ -1182,14 +1219,15 @@ export function AiRecommendationPanel({
 }
 
 export function AiChatWidget({ studentId }: { studentId: string }) {
+  const t = useText();
   const [question, setQuestion] = useState("What should I prioritize this week?");
   const [answer, setAnswer] = useState("");
   const [trace, setTrace] = useState("");
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">AI Assistant</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">Question-driven support</h3>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Assistant", "AI 助手")}</p>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Question-driven support", "问题驱动的支持")}</h3>
       <textarea
         value={question}
         onChange={(event) => setQuestion(event.target.value)}
@@ -1213,7 +1251,7 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
         }}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
-        Ask AI
+        {t("Ask AI", "向 AI 提问")}
       </button>
       {answer ? (
         <div className="mt-5 rounded-2xl bg-primary/5 p-4 text-sm leading-7 text-secondary">
@@ -1226,6 +1264,7 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
 }
 
 export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
+  const t = useText();
   const today = getTodayString();
   const taskTemplates: {
     label: string;
@@ -1284,7 +1323,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
       onSubmit={async (event) => {
         event.preventDefault();
         if (endDate < startDate) {
-          setMessage("End date needs to be on or after the start date.");
+          setMessage(t("End date needs to be on or after the start date.", "结束日期不能早于开始日期。"));
           return;
         }
 
@@ -1305,7 +1344,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
               priority,
             }),
           });
-          setMessage("Task created and audit logged.");
+          setMessage(t("Task created and audit logged.", "任务已创建，并写入审计日志。"));
           setTitle("");
           setDescription("");
           setTimelineLane("application_progress");
@@ -1314,7 +1353,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           setPriority("High");
           router.refresh();
         } catch (submissionError) {
-          setMessage(submissionError instanceof Error ? submissionError.message : "Task creation failed.");
+          setMessage(submissionError instanceof Error ? submissionError.message : t("Task creation failed.", "任务创建失败。"));
         } finally {
           setPending(false);
         }
@@ -1324,7 +1363,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Task title"
+        placeholder={t("Task title", "任务标题")}
       />
       <textarea
         value={description}
@@ -1343,17 +1382,17 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
               setPriority(template.priority);
               setStartDate(today);
               setEndDate(addDays(today, template.durationDays));
-              setMessage(`Loaded ${template.label.toLowerCase()} template.`);
+              setMessage(t(`Loaded ${template.label.toLowerCase()} template.`, `已载入${translateConsultantTemplate(template.label, t)}模板。`));
             }}
             className="rounded-full border border-outline-variant px-3 py-2 text-xs font-bold text-primary"
           >
-            {template.label}
+            {translateConsultantTemplate(template.label, t)}
           </button>
         ))}
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
-          Timeline lane
+          {t("Timeline lane", "时间线分类")}
           <select
             value={timelineLane}
             onChange={(event) => setTimelineLane(event.target.value as TimelineLane)}
@@ -1361,27 +1400,27 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           >
             {timelineLaneOptions.map((item) => (
               <option key={item.value} value={item.value}>
-                {item.label}
+                {t(item.label.en, item.label.zh)}
               </option>
             ))}
           </select>
         </label>
         <label className="text-sm font-semibold text-secondary">
-          Priority
+          {t("Priority", "优先级")}
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Task["priority"])}
             className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
           >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
+            <option value="Low">{t("Low", "低")}</option>
+            <option value="Medium">{t("Medium", "中")}</option>
+            <option value="High">{t("High", "高")}</option>
           </select>
         </label>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
-          Start date
+          {t("Start date", "开始日期")}
           <input
             type="date"
             value={startDate}
@@ -1390,7 +1429,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
-          End date
+          {t("End date", "结束日期")}
           <input
             type="date"
             value={endDate}
@@ -1401,7 +1440,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
       </div>
       <div className="flex items-center gap-3">
         <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
-          {pending ? "Adding..." : "Add Task"}
+          {pending ? t("Adding...", "添加中...") : t("Add Task", "添加任务")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -1410,6 +1449,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
 }
 
 export function ConsultantMilestoneComposer({ studentId }: { studentId: string }) {
+  const t = useText();
   const [title, setTitle] = useState("Application fee deadline");
   const [eventDate, setEventDate] = useState(getTodayString());
   const [status, setStatus] = useState<Milestone["status"]>("upcoming");
@@ -1431,13 +1471,13 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ studentId, title, eventDate, status }),
           });
-          setMessage("Deadline created.");
+          setMessage(t("Deadline created.", "截止日期已创建。"));
           setTitle("");
           setEventDate(getTodayString());
           setStatus("upcoming");
           router.refresh();
         } catch (submissionError) {
-          setMessage(submissionError instanceof Error ? submissionError.message : "Deadline creation failed.");
+          setMessage(submissionError instanceof Error ? submissionError.message : t("Deadline creation failed.", "截止日期创建失败。"));
         } finally {
           setPending(false);
         }
@@ -1447,11 +1487,11 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Deadline title"
+        placeholder={t("Deadline title", "截止日期标题")}
       />
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
-          Date
+          {t("Date", "日期")}
           <input
             type="date"
             value={eventDate}
@@ -1460,20 +1500,20 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
-          Status
+          {t("Status", "状态")}
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
             className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
           >
-            <option value="upcoming">upcoming</option>
-            <option value="done">done</option>
+            <option value="upcoming">{t("upcoming", "待开始")}</option>
+            <option value="done">{t("done", "已完成")}</option>
           </select>
         </label>
       </div>
       <div className="flex items-center gap-3">
         <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
-          {pending ? "Adding..." : "Add Deadline"}
+          {pending ? t("Adding...", "添加中...") : t("Add Deadline", "添加截止日期")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -1496,6 +1536,7 @@ export function ConsultantStudentProfileEditor({
   defaultDreamSchools: string[];
   defaultMajor: string;
 }) {
+  const t = useText();
   const [grade, setGrade] = useState(defaultGrade);
   const [schoolName, setSchoolName] = useState(defaultSchool);
   const [countries, setCountries] = useState(defaultCountries.join(", "));
@@ -1520,19 +1561,19 @@ export function ConsultantStudentProfileEditor({
             intendedMajor: major,
           }),
         });
-        setMessage("Student profile updated.");
+        setMessage(t("Student profile updated.", "学生资料已更新。"));
         router.refresh();
       }}
     >
       <div className="grid gap-3 md:grid-cols-2">
-        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current grade" />
-        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current school" />
+        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current grade", "当前年级")} />
+        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current school", "当前学校")} />
       </div>
-      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Target countries" />
-      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Dream schools" />
-      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Intended major" />
+      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Target countries", "目标国家")} />
+      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Dream schools", "梦校")} />
+      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Intended major", "意向专业")} />
       <div className="flex items-center gap-3">
-        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">Save Student Profile</button>
+        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">{t("Save Student Profile", "保存学生资料")}</button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
@@ -1540,6 +1581,7 @@ export function ConsultantStudentProfileEditor({
 }
 
 export function ConsultantNoteComposer({ studentId }: { studentId: string }) {
+  const t = useText();
   const [title, setTitle] = useState("Advisor follow-up");
   const [summary, setSummary] = useState("Needs a tighter deadline plan for essays and more consistent review rhythm.");
   const [message, setMessage] = useState("");
@@ -1560,12 +1602,12 @@ export function ConsultantNoteComposer({ studentId }: { studentId: string }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ studentId, title, summary }),
           });
-          setMessage("Advisor note saved.");
+          setMessage(t("Advisor note saved.", "顾问备注已保存。"));
           setTitle("");
           setSummary("");
           router.refresh();
         } catch (submissionError) {
-          setMessage(submissionError instanceof Error ? submissionError.message : "Note creation failed.");
+          setMessage(submissionError instanceof Error ? submissionError.message : t("Note creation failed.", "备注创建失败。"));
         } finally {
           setPending(false);
         }
@@ -1575,17 +1617,17 @@ export function ConsultantNoteComposer({ studentId }: { studentId: string }) {
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Note title"
+        placeholder={t("Note title", "备注标题")}
       />
       <textarea
         value={summary}
         onChange={(event) => setSummary(event.target.value)}
         className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Consultant note summary"
+        placeholder={t("Consultant note summary", "顾问备注摘要")}
       />
       <div className="flex items-center gap-3">
         <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
-          {pending ? "Saving..." : "Add Note"}
+          {pending ? t("Saving...", "保存中...") : t("Add Note", "添加备注")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -1612,6 +1654,7 @@ export function ConsultantStudentPicker({
   }[];
   currentStudentId: string;
 }) {
+  const t = useText();
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"risk" | "deadline" | "completion" | "name">("risk");
   const normalizedQuery = useDeferredValue(query).trim().toLowerCase();
@@ -1658,13 +1701,13 @@ export function ConsultantStudentPicker({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Search students"
+        placeholder={t("Search students", "搜索学生")}
       />
       <div className="grid grid-cols-2 gap-2">
         {[
-          { value: "risk", label: "By Risk" },
-          { value: "deadline", label: "By Deadline" },
-          { value: "completion", label: "By Progress" },
+          { value: "risk", label: t("By Risk", "按风险") },
+          { value: "deadline", label: t("By Deadline", "按截止日") },
+          { value: "completion", label: t("By Progress", "按进度") },
           { value: "name", label: "A-Z" },
         ].map((option) => (
           <button
@@ -1716,14 +1759,18 @@ export function ConsultantStudentPicker({
                       : "bg-primary/10 text-primary"
                 )}
               >
-                {student.riskLevel} risk
+                {student.riskLevel === "high"
+                  ? t("high risk", "高风险")
+                  : student.riskLevel === "medium"
+                    ? t("medium risk", "中风险")
+                    : t("low risk", "低风险")}
               </span>
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-outline">
                 {student.phase}
               </span>
             </div>
             <div className="mt-3 rounded-2xl bg-surface-container-low px-3 py-3">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Next deadline</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Next deadline", "下一个截止日期")}</p>
               <p className="mt-1 text-sm font-semibold text-foreground">{student.nextDeadlineTitle}</p>
               <p className="mt-1 text-xs text-secondary">{student.nextDeadlineLabel}</p>
             </div>
@@ -1735,6 +1782,7 @@ export function ConsultantStudentPicker({
 }
 
 export function ContentItemComposer() {
+  const t = useText();
   const [title, setTitle] = useState("Global Sustainability Lab");
   const [subtitle, setSubtitle] = useState("Project-based environmental research");
   const [message, setMessage] = useState("");
@@ -1758,7 +1806,7 @@ export function ContentItemComposer() {
             status: "draft",
           }),
         });
-        setMessage("Manual content item created.");
+        setMessage(t("Manual content item created.", "内容条目已创建。"));
         router.refresh();
       }}
     >
@@ -1766,17 +1814,17 @@ export function ContentItemComposer() {
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         className="rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Title"
+        placeholder={t("Title", "标题")}
       />
       <input
         value={subtitle}
         onChange={(event) => setSubtitle(event.target.value)}
         className="rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Subtitle"
+        placeholder={t("Subtitle", "副标题")}
       />
       <div className="flex items-center gap-3">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-          Create Content
+          {t("Create Content", "创建内容")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
@@ -1785,6 +1833,7 @@ export function ContentItemComposer() {
 }
 
 export function ContentImportPanel() {
+  const t = useText();
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -1808,7 +1857,12 @@ export function ContentImportPanel() {
           setMessage(payload.message);
           return;
         }
-        setMessage(`Imported ${payload.data?.count ?? 0} items with audit logging.`);
+        setMessage(
+          t(
+            `Imported ${payload.data?.count ?? 0} items with audit logging.`,
+            `已导入 ${payload.data?.count ?? 0} 条内容，并写入审计日志。`
+          )
+        );
         router.refresh();
       }}
     >
@@ -1819,7 +1873,7 @@ export function ContentImportPanel() {
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
       />
       <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-        Import Spreadsheet
+        {t("Import Spreadsheet", "导入表格")}
       </button>
       {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
     </form>
@@ -1827,6 +1881,7 @@ export function ContentImportPanel() {
 }
 
 export function AnalyticsExportButton() {
+  const t = useText();
   const [message, setMessage] = useState("");
 
   return (
@@ -1834,9 +1889,9 @@ export function AnalyticsExportButton() {
       <a
         href="/api/analytics/report"
         className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
-        onClick={() => setMessage("Downloading cohort analytics report...")}
+        onClick={() => setMessage(t("Downloading cohort analytics report...", "正在下载顾问分析报表..."))}
       >
-        Export Report
+        {t("Export Report", "导出报表")}
       </a>
       {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
     </div>
@@ -1844,6 +1899,7 @@ export function AnalyticsExportButton() {
 }
 
 export function ContentFilterTable({ items }: { items: ContentItem[] }) {
+  const t = useText();
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
 
@@ -1859,16 +1915,16 @@ export function ContentFilterTable({ items }: { items: ContentItem[] }) {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder="Filter content, majors, or schools..."
+        placeholder={t("Filter content, majors, or schools...", "筛选内容、专业或学校...")}
       />
       <div className="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface-container-low text-secondary">
             <tr>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Difficulty</th>
-              <th className="px-4 py-3">Source</th>
+              <th className="px-4 py-3">{t("Title", "标题")}</th>
+              <th className="px-4 py-3">{t("Type", "类型")}</th>
+              <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
+              <th className="px-4 py-3">{t("Source", "来源")}</th>
             </tr>
           </thead>
           <tbody>

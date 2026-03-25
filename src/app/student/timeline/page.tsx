@@ -4,6 +4,8 @@ import { CalendarRange } from "lucide-react";
 import { LogoutButton, MilestoneEditorControls, StudentMilestoneComposer, StudentTimelineTaskComposer, TaskDeleteButton, TaskStatusControl } from "@/components/client-tools";
 import { AuditFeed, HeroBadge, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import { getCurrentStudentData, getRecentAuditLogsData, getStudentLiveMetricsData, getStudentMilestonesData, getStudentTasksData } from "@/lib/data";
+import { pickText } from "@/lib/locale";
+import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 import type { Milestone, Task, TimelineView } from "@/lib/types";
 
@@ -26,6 +28,7 @@ export default async function StudentTimelinePage({
 }: {
   searchParams?: Promise<{ view?: string }>;
 }) {
+  const locale = await getLocale();
   const session = await requireSession("student");
   const student = await getCurrentStudentData(session);
   const currentView = normalizeView((await searchParams)?.view);
@@ -52,8 +55,8 @@ export default async function StudentTimelinePage({
   return (
     <RoleShell
       session={session}
-      title="Academic Journey"
-      subtitle="A launch-ready timeline view of tasks, milestones, and status changes. First version focuses on reliable updates and logs rather than complex drag scheduling."
+      title={pickText(locale, "Academic Journey", "学业旅程")}
+      subtitle={pickText(locale, "A launch-ready timeline view of tasks, milestones, and status changes. First version focuses on reliable updates and logs rather than complex drag scheduling.", "这是可直接上线的任务时间线视图，展示任务、截止日期和状态变化。当前版本优先保证稳定更新和日志可追踪。")}
       activeHref="/student/timeline"
       hero={
         <div className="flex flex-wrap items-center gap-3">
@@ -68,37 +71,37 @@ export default async function StudentTimelinePage({
                     : "rounded-full px-5 py-2 text-sm font-semibold text-outline transition-colors hover:text-foreground"
                 }
               >
-                {option.label}
+                {pickText(locale, option.label, option.value === "year" ? "年视图" : option.value === "three_years" ? "三年视图" : "月视图")}
               </Link>
             ))}
           </div>
           <HeroBadge
             icon={<CalendarRange className="h-4 w-4" />}
-            title="Default View"
-            value={viewOptions.find((option) => option.value === currentView)?.label ?? "Year"}
+            title={pickText(locale, "Default View", "默认视图")}
+            value={pickText(locale, viewOptions.find((option) => option.value === currentView)?.label ?? "Year", currentView === "year" ? "年视图" : currentView === "three_years" ? "三年视图" : "月视图")}
           />
           <LogoutButton />
         </div>
       }
     >
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Completion" value={`${metrics.completion}%`} hint="Calculated from completed tasks across the plan." />
-        <StatCard label="Active tasks" value={`${visibleTasks.filter((task) => task.status !== "done").length}`} hint="Open items inside the current calendar view." tone="tertiary" />
-        <StatCard label="Upcoming milestones" value={`${upcomingMilestoneCount}`} hint="Future milestones visible in the current calendar view." tone="secondary" />
+        <StatCard label={pickText(locale, "Completion", "完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Calculated from completed tasks across the plan.", "根据当前规划内已完成任务实时计算。")} />
+        <StatCard label={pickText(locale, "Active tasks", "未完成任务")} value={`${visibleTasks.filter((task) => task.status !== "done").length}`} hint={pickText(locale, "Open items inside the current calendar view.", "当前视图内仍未完成的任务数量。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Upcoming milestones", "即将到来的截止日期")} value={`${upcomingMilestoneCount}`} hint={pickText(locale, "Future milestones visible in the current calendar view.", "当前视图中未来将到来的截止日期数量。")} tone="secondary" />
       </div>
 
       <div className="mt-8">
         <SectionCard
-          title="Timeline Gantt"
-          eyebrow="Calendar-aligned roadmap"
-          action={<HeroBadge icon={<CalendarRange className="h-4 w-4" />} title="Active Lanes" value={`${activeLaneCount}/5`} />}
+          title={pickText(locale, "Timeline Gantt", "时间线甘特图")}
+          eyebrow={pickText(locale, "Calendar-aligned roadmap", "按日历排布的路线图")}
+          action={<HeroBadge icon={<CalendarRange className="h-4 w-4" />} title={pickText(locale, "Active Lanes", "活跃分栏")} value={`${activeLaneCount}/5`} />}
         >
           <TaskGanttChart tasks={visibleTasks} milestones={visibleMilestones} view={currentView} rangeStart={visibleRange.start} />
         </SectionCard>
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard title="Task Timeline" eyebrow="Add, update, and remove items against the active calendar view">
+        <SectionCard title={pickText(locale, "Task Timeline", "任务时间线")} eyebrow={pickText(locale, "Add, update, and remove items against the active calendar view", "在当前日历视图下新增、更新和删除内容")}>
           <StudentTimelineTaskComposer studentId={student.id} />
           <div className="mt-6 border-t border-black/5 pt-6">
           <TaskList
@@ -108,7 +111,7 @@ export default async function StudentTimelinePage({
                 <TaskStatusControl taskId={taskId} status={visibleTasks.find((task) => task.id === taskId)?.status ?? "pending"} />
                 <TaskDeleteButton
                   taskId={taskId}
-                  title={visibleTasks.find((task) => task.id === taskId)?.title ?? "this task"}
+                  title={visibleTasks.find((task) => task.id === taskId)?.title ?? pickText(locale, "this task", "这个任务")}
                 />
               </div>
             )}
@@ -116,7 +119,7 @@ export default async function StudentTimelinePage({
           </div>
         </SectionCard>
 
-        <SectionCard title="Milestone Rail" eyebrow={`Long-range plan within ${viewOptions.find((option) => option.value === currentView)?.label ?? "Year"}`}>
+        <SectionCard title={pickText(locale, "Milestone Rail", "截止日期轨道")} eyebrow={pickText(locale, `Long-range plan within ${viewOptions.find((option) => option.value === currentView)?.label ?? "Year"}`, `${currentView === "year" ? "年视图" : currentView === "three_years" ? "三年视图" : "月视图"}中的长期规划`)}>
           <StudentMilestoneComposer studentId={student.id} />
           <div className="mt-6 border-t border-black/5 pt-6">
             <TimelineRail
@@ -145,7 +148,7 @@ export default async function StudentTimelinePage({
       </div>
 
       <div className="mt-8">
-        <SectionCard title="Recent trace log" eyebrow="Observability">
+        <SectionCard title={pickText(locale, "Recent trace log", "最近追踪日志")} eyebrow={pickText(locale, "Observability", "可观测性")}>
           <AuditFeed logs={logs} />
         </SectionCard>
       </div>

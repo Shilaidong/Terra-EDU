@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Literata, Nunito_Sans } from "next/font/google";
 
+import { LocaleProvider } from "@/components/locale-provider";
+import { getLocale } from "@/lib/locale-server";
+
 import "./globals.css";
 
 const literata = Literata({
@@ -18,14 +21,18 @@ export const metadata: Metadata = {
   description: "International education planning platform for students, parents, and consultants.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" className={`${literata.variable} ${nunito.variable} h-full`}>
-      <body className="min-h-full">{children}</body>
+    <html lang={locale} className={`${literata.variable} ${nunito.variable} h-full`}>
+      <body className="min-h-full">
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

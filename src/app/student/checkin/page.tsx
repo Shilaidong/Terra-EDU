@@ -3,9 +3,12 @@ import { Activity } from "lucide-react";
 import { CheckInComposer, CheckInEditorControls, LogoutButton } from "@/components/client-tools";
 import { HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
 import { getCurrentStudentData, getStudentCheckInsData, getStudentLiveMetricsData } from "@/lib/data";
+import { pickText } from "@/lib/locale";
+import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 
 export default async function StudentCheckinPage() {
+  const locale = await getLocale();
   const session = await requireSession("student");
   const student = await getCurrentStudentData(session);
   if (!student) return null;
@@ -18,28 +21,28 @@ export default async function StudentCheckinPage() {
   return (
     <RoleShell
       session={session}
-      title="Daily Task Check-in"
-      subtitle="Capture curriculum mastery, chapter notes, and learning momentum without changing the core visual style."
+      title={pickText(locale, "Daily Task Check-in", "每日学习打卡")}
+      subtitle={pickText(locale, "Capture curriculum mastery, chapter notes, and learning momentum without changing the core visual style.", "记录课程掌握度、章节笔记和学习节奏，同时保持现有视觉风格。")}
       activeHref="/student/checkin"
       hero={
         <div className="flex items-center gap-3">
-          <HeroBadge icon={<Activity className="h-4 w-4" />} title="Streak" value={`${metrics.checkInStreak} days`} />
+          <HeroBadge icon={<Activity className="h-4 w-4" />} title={pickText(locale, "Streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} />
           <LogoutButton />
         </div>
       }
     >
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Average mastery" value={`${metrics.masteryAverage}/5`} hint="Calculated from all saved check-ins." />
-        <StatCard label="Recent entries" value={`${checkIns.length}`} hint="Saved server-side with traceable responses." tone="tertiary" />
-        <StatCard label="Launch focus" value="Reliable logs" hint="Each save emits actor, page, status, and latency." tone="secondary" />
+        <StatCard label={pickText(locale, "Average mastery", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Calculated from all saved check-ins.", "根据全部已保存打卡实时计算。")} />
+        <StatCard label={pickText(locale, "Recent entries", "最近记录")} value={`${checkIns.length}`} hint={pickText(locale, "Saved server-side with traceable responses.", "服务端保存，并带可追踪响应。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Launch focus", "当前重点")} value={pickText(locale, "Reliable logs", "稳定日志")} hint={pickText(locale, "Each save emits actor, page, status, and latency.", "每次保存都会记录操作者、页面、状态和耗时。")} tone="secondary" />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <SectionCard title="Save today's mastery" eyebrow="Writable">
+        <SectionCard title={pickText(locale, "Save today's mastery", "保存今日掌握度")} eyebrow={pickText(locale, "Writable", "可编辑")}>
           <CheckInComposer studentId={student.id} />
         </SectionCard>
 
-        <SectionCard title="Recent study signals" eyebrow="History">
+        <SectionCard title={pickText(locale, "Recent study signals", "近期学习信号")} eyebrow={pickText(locale, "History", "历史记录")}>
           <div className="space-y-4">
             {checkIns.map((record) => (
               <div key={record.id} className="rounded-2xl bg-surface-container-low p-5">
@@ -68,8 +71,8 @@ export default async function StudentCheckinPage() {
             ))}
           </div>
           <div className="mt-5">
-            <Notice title="Why this matters">
-              These notes flow into the AI summary and consultant analytics so the next recommendation is evidence-based, not guessed.
+            <Notice title={pickText(locale, "Why this matters", "为什么这很重要")}>
+              {pickText(locale, "These notes flow into the AI summary and consultant analytics so the next recommendation is evidence-based, not guessed.", "这些笔记会进入 AI 摘要和顾问分析，让后续建议基于真实证据，而不是主观猜测。")}
             </Notice>
           </div>
         </SectionCard>

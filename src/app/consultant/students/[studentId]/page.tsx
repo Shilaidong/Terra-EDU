@@ -23,6 +23,8 @@ import {
   getStudentNotesData,
   getStudentTasksData,
 } from "@/lib/data";
+import { pickText } from "@/lib/locale";
+import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 import type { Milestone, Task } from "@/lib/types";
 
@@ -31,6 +33,7 @@ export default async function ConsultantStudentWorkspacePage({
 }: {
   params: Promise<{ studentId: string }>;
 }) {
+  const locale = await getLocale();
   const session = await requireSession("consultant");
   const { studentId } = await params;
   const [overview, student] = await Promise.all([
@@ -69,7 +72,7 @@ export default async function ConsultantStudentWorkspacePage({
     <RoleShell
       session={session}
       title={student.name}
-      subtitle="Consultant workspace for planning, deadlines, check-ins, and advisor notes."
+      subtitle={pickText(locale, "Consultant workspace for planning, deadlines, check-ins, and advisor notes.", "顾问工作台：集中处理学生规划、截止日期、打卡和顾问备注。")}
       activeHref="/consultant/students"
       hero={
         <div className="flex flex-wrap items-center gap-3">
@@ -78,16 +81,16 @@ export default async function ConsultantStudentWorkspacePage({
             className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-white px-4 py-3 text-sm font-bold text-primary shadow-sm"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Students
+            {pickText(locale, "Back to Students", "返回学生列表")}
           </Link>
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/5 bg-surface-container-low px-4 py-3 shadow-sm">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">Dream School</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{student.dreamSchools[0] ?? "TBD"}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">{pickText(locale, "Dream School", "梦校")}</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{student.dreamSchools[0] ?? pickText(locale, "TBD", "待定")}</p>
             </div>
             <div className="hidden h-10 w-px bg-black/10 md:block" />
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">Risk</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">{pickText(locale, "Risk", "风险")}</p>
               <p
                 className={`mt-1 text-sm font-semibold ${
                   currentStudentSignal.riskLevel === "high"
@@ -97,7 +100,11 @@ export default async function ConsultantStudentWorkspacePage({
                       : "text-primary"
                 }`}
               >
-                {currentStudentSignal.riskLevel}
+                {currentStudentSignal.riskLevel === "high"
+                  ? pickText(locale, "high", "高")
+                  : currentStudentSignal.riskLevel === "medium"
+                    ? pickText(locale, "medium", "中")
+                    : pickText(locale, "low", "低")}
               </p>
             </div>
           </div>
@@ -106,13 +113,13 @@ export default async function ConsultantStudentWorkspacePage({
       }
     >
       <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label="Task completion" value={`${metrics.completion}%`} hint="Live task completion using the same student-side calculation." />
-        <StatCard label="Check-in streak" value={`${metrics.checkInStreak} days`} hint="Current consecutive study rhythm." tone="tertiary" />
-        <StatCard label="Mastery average" value={`${metrics.masteryAverage}/5`} hint="Average mastery across saved check-ins." tone="secondary" />
+        <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Live task completion using the same student-side calculation.", "和学生端使用同一套实时任务完成率计算。")} />
+        <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Current consecutive study rhythm.", "当前连续学习节奏。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Average mastery across saved check-ins.", "根据已保存打卡记录计算平均掌握度。")} tone="secondary" />
       </div>
 
       <div className="mt-8 space-y-8">
-        <SectionCard title="Workspace Navigation" eyebrow="Faster switching">
+        <SectionCard title={pickText(locale, "Workspace Navigation", "工作台导航")} eyebrow={pickText(locale, "Faster switching", "更快切换")}>
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <ConsultantStudentPicker
               currentStudentId={student.id}
@@ -132,10 +139,10 @@ export default async function ConsultantStudentWorkspacePage({
             />
             <div className="space-y-3">
               {[
-                { href: "#profile", label: "Edit student profile" },
-                { href: "#planning", label: "Plan tasks and deadlines" },
-                { href: "#checkins", label: "Review check-ins" },
-                { href: "#notes", label: "Write advisor notes" },
+                { href: "#profile", label: pickText(locale, "Edit student profile", "编辑学生资料") },
+                { href: "#planning", label: pickText(locale, "Plan tasks and deadlines", "安排任务与截止日期") },
+                { href: "#checkins", label: pickText(locale, "Review check-ins", "查看打卡") },
+                { href: "#notes", label: pickText(locale, "Write advisor notes", "记录顾问备注") },
               ].map((item) => (
                 <a
                   key={item.href}
@@ -152,15 +159,15 @@ export default async function ConsultantStudentWorkspacePage({
 
         <div className="space-y-8">
           <SectionCard
-            title="Journey Snapshot"
-            eyebrow="Year view"
-            action={<HeroBadge icon={<CalendarRange className="h-4 w-4" />} title="Active Lanes" value={`${activeLaneCount}/5`} />}
+            title={pickText(locale, "Journey Snapshot", "申请旅程总览")}
+            eyebrow={pickText(locale, "Year view", "年视图")}
+            action={<HeroBadge icon={<CalendarRange className="h-4 w-4" />} title={pickText(locale, "Active Lanes", "活跃分栏")} value={`${activeLaneCount}/5`} />}
           >
             <TaskGanttChart tasks={ganttTasks} milestones={ganttMilestones} view="year" rangeStart={ganttRange.start} />
           </SectionCard>
 
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="profile">
-            <SectionCard title="Student Profile" eyebrow="Consultant editable">
+            <SectionCard title={pickText(locale, "Student Profile", "学生资料")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
               <div className="mb-6 rounded-3xl bg-surface-container-low p-6">
                 <div className="flex items-center gap-4">
                   <img alt={student.name} src={student.avatar} className="h-16 w-16 rounded-full object-cover" />
@@ -182,19 +189,19 @@ export default async function ConsultantStudentWorkspacePage({
               />
             </SectionCard>
 
-            <SectionCard title="Student Summary" eyebrow="Advisor read">
+            <SectionCard title={pickText(locale, "Student Summary", "学生摘要")} eyebrow={pickText(locale, "Advisor read", "顾问速览")}>
               <SummaryCard
-                title={`${student.name} is aiming for ${student.dreamSchools[0] ?? "a target school list"}`}
-                body={`${student.phase} phase, ${student.intendedMajor} track, ${metrics.completion}% completion, ${metrics.checkInStreak} day streak, and ${metrics.masteryAverage}/5 mastery average.`}
-                footer="This card gives the consultant a fast read before making edits."
+                title={pickText(locale, `${student.name} is aiming for ${student.dreamSchools[0] ?? "a target school list"}`, `${student.name} 当前目标是 ${student.dreamSchools[0] ?? "一组目标学校"}`)}
+                body={pickText(locale, `${student.phase} phase, ${student.intendedMajor} track, ${metrics.completion}% completion, ${metrics.checkInStreak} day streak, and ${metrics.masteryAverage}/5 mastery average.`, `当前阶段为 ${student.phase}，目标专业是 ${student.intendedMajor}，完成率 ${metrics.completion}% ，连续打卡 ${metrics.checkInStreak} 天，平均掌握度 ${metrics.masteryAverage}/5。`)}
+                footer={pickText(locale, "This card gives the consultant a fast read before making edits.", "这张卡片用于帮助顾问在修改前快速把握学生现状。")}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl bg-surface-container-low p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Countries</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Countries", "目标国家")}</p>
                   <p className="mt-2 text-sm text-secondary">{student.targetCountries.join(", ")}</p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-low p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Goal Schools</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Goal Schools", "梦校")}</p>
                   <p className="mt-2 text-sm text-secondary">{student.dreamSchools.join(", ")}</p>
                 </div>
               </div>
@@ -202,7 +209,7 @@ export default async function ConsultantStudentWorkspacePage({
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="planning">
-            <SectionCard title="Current Tasks" eyebrow="Consultant editable">
+            <SectionCard title={pickText(locale, "Current Tasks", "当前任务")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
               <TaskList
                 tasks={tasks}
                 action={(taskId) => {
@@ -223,17 +230,17 @@ export default async function ConsultantStudentWorkspacePage({
             </SectionCard>
 
             <div className="space-y-8">
-              <SectionCard title="Add Task" eyebrow="Schedule work">
+              <SectionCard title={pickText(locale, "Add Task", "添加任务")} eyebrow={pickText(locale, "Schedule work", "安排工作")}>
                 <ConsultantTaskComposer studentId={student.id} />
               </SectionCard>
-              <SectionCard title="Add Deadline" eyebrow="Milestone control">
+              <SectionCard title={pickText(locale, "Add Deadline", "添加截止日期")} eyebrow={pickText(locale, "Milestone control", "里程碑管理")}>
                 <ConsultantMilestoneComposer studentId={student.id} />
               </SectionCard>
             </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-            <SectionCard title="Deadline Rail" eyebrow="Consultant editable">
+            <SectionCard title={pickText(locale, "Deadline Rail", "截止日期轨道")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
               <TimelineRail
                 milestones={milestones}
                 action={(milestoneId) => {
@@ -254,11 +261,11 @@ export default async function ConsultantStudentWorkspacePage({
             </SectionCard>
 
             <div id="checkins">
-              <SectionCard title="Recent Check-ins" eyebrow="Directly editable">
+              <SectionCard title={pickText(locale, "Recent Check-ins", "近期打卡")} eyebrow={pickText(locale, "Directly editable", "可直接编辑")}>
                 <div className="space-y-4">
                   {checkIns.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
-                      No check-ins recorded for this student yet.
+                      {pickText(locale, "No check-ins recorded for this student yet.", "这个学生还没有打卡记录。")}
                     </div>
                   ) : (
                     checkIns.map((record) => (
@@ -295,11 +302,11 @@ export default async function ConsultantStudentWorkspacePage({
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]" id="notes">
-            <SectionCard title="Advisor Notes" eyebrow="Internal tracking">
+            <SectionCard title={pickText(locale, "Advisor Notes", "顾问备注")} eyebrow={pickText(locale, "Internal tracking", "内部记录")}>
               <div className="space-y-4">
                 {notes.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
-                    No advisor notes yet. Add one from the quick action panel.
+                    {pickText(locale, "No advisor notes yet. Add one from the quick action panel.", "还没有顾问备注，可以从右侧操作区新增。")}
                   </div>
                 ) : (
                   notes.map((note) => (
@@ -314,52 +321,56 @@ export default async function ConsultantStudentWorkspacePage({
             </SectionCard>
 
             <div className="space-y-8">
-              <SectionCard title="Add Advisor Note" eyebrow="Consultant log">
+              <SectionCard title={pickText(locale, "Add Advisor Note", "添加顾问备注")} eyebrow={pickText(locale, "Consultant log", "顾问日志")}>
                 <ConsultantNoteComposer studentId={student.id} />
               </SectionCard>
-              <SectionCard title="Why this workspace matters" eyebrow="Future-ready structure">
+              <SectionCard title={pickText(locale, "Why this workspace matters", "为什么这个工作台重要")} eyebrow={pickText(locale, "Future-ready structure", "可持续扩展结构")}>
                 <SummaryCard
-                  title="One student, one operating surface"
-                  body="As the consultant portfolio grows, the key is reducing context switching. This workspace keeps selection, reading, and editing around the same student in one place."
-                  footer="The next upgrade can add bulk actions and a stronger risk queue without changing this route."
+                  title={pickText(locale, "One student, one operating surface", "一个学生，一个完整操作面板")}
+                  body={pickText(locale, "As the consultant portfolio grows, the key is reducing context switching. This workspace keeps selection, reading, and editing around the same student in one place.", "随着顾问管理的学生越来越多，关键是减少来回切换上下文。这个工作台把查看、阅读和编辑都围绕同一个学生集中起来。")}
+                  footer={pickText(locale, "The next upgrade can add bulk actions and a stronger risk queue without changing this route.", "下一步可以继续加批量操作和风险队列，而不需要推翻这个路由。")}
                 />
               </SectionCard>
             </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
-            <SectionCard title="Parent View Preview" eyebrow="Family-facing readout">
+            <SectionCard title={pickText(locale, "Parent View Preview", "家长视角预览")} eyebrow={pickText(locale, "Family-facing readout", "家长可见内容")}>
               <SummaryCard
-                title={`${student.name} is currently in ${student.phase}`}
-                body={`A parent opening the family dashboard should mainly see three things: ${metrics.completion}% progress, ${metrics.checkInStreak} day check-in rhythm, and the next deadline "${currentStudentSignal.nextDeadlineTitle}" on ${currentStudentSignal.nextDeadlineLabel}.`}
-                footer="Use this preview to sanity-check whether consultant edits are clear enough for family visibility."
+                title={pickText(locale, `${student.name} is currently in ${student.phase}`, `${student.name} 当前处于 ${student.phase}`)}
+                body={pickText(locale, `A parent opening the family dashboard should mainly see three things: ${metrics.completion}% progress, ${metrics.checkInStreak} day check-in rhythm, and the next deadline "${currentStudentSignal.nextDeadlineTitle}" on ${currentStudentSignal.nextDeadlineLabel}.`, `家长打开仪表盘时，最重要的是看到这三件事：当前进度 ${metrics.completion}% 、连续打卡 ${metrics.checkInStreak} 天，以及下一个截止日期“${currentStudentSignal.nextDeadlineTitle}”（${currentStudentSignal.nextDeadlineLabel}）。`)}
+                footer={pickText(locale, "Use this preview to sanity-check whether consultant edits are clear enough for family visibility.", "你可以用这个预览检查顾问修改后的内容是否足够清晰，方便家长理解。")}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl bg-surface-container-low p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Latest note preview</p>
-                  <p className="mt-2 text-sm text-secondary">{notes[0]?.summary ?? "No advisor note written yet."}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Latest note preview", "最新备注预览")}</p>
+                  <p className="mt-2 text-sm text-secondary">{notes[0]?.summary ?? pickText(locale, "No advisor note written yet.", "还没有顾问备注。")}</p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-low p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Current risk</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Current risk", "当前风险")}</p>
                   <p className="mt-2 text-sm text-secondary">
-                    {currentStudentSignal.riskLevel} risk with score {currentStudentSignal.riskScore}
+                    {pickText(
+                      locale,
+                      `${currentStudentSignal.riskLevel} risk with score ${currentStudentSignal.riskScore}`,
+                      `${currentStudentSignal.riskLevel === "high" ? "高" : currentStudentSignal.riskLevel === "medium" ? "中" : "低"}风险，评分 ${currentStudentSignal.riskScore}`
+                    )}
                   </p>
                 </div>
               </div>
             </SectionCard>
 
-            <SectionCard title="Consultant Focus Queue" eyebrow="Second-version workflow">
+            <SectionCard title={pickText(locale, "Consultant Focus Queue", "顾问关注队列")} eyebrow={pickText(locale, "Second-version workflow", "第二版工作流")}>
               <div className="space-y-4">
                 <div className="rounded-2xl bg-surface-container-low p-5">
-                  <p className="font-bold text-foreground">Why this student is ordered here</p>
+                  <p className="font-bold text-foreground">{pickText(locale, "Why this student is ordered here", "这个学生为什么排在这里")}</p>
                   <p className="mt-2 text-sm leading-7 text-secondary">
-                    Risk sorting now considers completion, streak, mastery, open work, and deadline pressure together instead of only looking at one number.
+                    {pickText(locale, "Risk sorting now considers completion, streak, mastery, open work, and deadline pressure together instead of only looking at one number.", "风险排序现在会综合考虑完成率、连续打卡、掌握度、未完成任务和截止日期压力，而不是只看单一指标。")}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-low p-5">
-                  <p className="font-bold text-foreground">Next best consultant move</p>
+                  <p className="font-bold text-foreground">{pickText(locale, "Next best consultant move", "下一步最适合的顾问动作")}</p>
                   <p className="mt-2 text-sm leading-7 text-secondary">
-                    If the next deadline is close, use a template to create structured work immediately. If study rhythm is weak, review check-ins and leave an advisor note before changing the plan.
+                    {pickText(locale, "If the next deadline is close, use a template to create structured work immediately. If study rhythm is weak, review check-ins and leave an advisor note before changing the plan.", "如果下一个截止日期很近，就优先用模板快速创建结构化任务；如果学习节奏偏弱，就先查看打卡并写顾问备注，再决定是否调整计划。")}
                   </p>
                 </div>
               </div>
@@ -372,7 +383,7 @@ export default async function ConsultantStudentWorkspacePage({
               <NotebookPen className="h-5 w-5" />
               <Link href="/consultant/students" className="inline-flex items-center gap-2 text-sm font-bold">
                 <ArrowLeft className="h-4 w-4" />
-                Back to cohort table
+                {pickText(locale, "Back to cohort table", "返回学生总表")}
               </Link>
             </div>
           </div>

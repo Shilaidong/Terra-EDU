@@ -2,28 +2,32 @@
 import Link from "next/link";
 import { Bell, Bot, BookOpenText, Compass, FileText, FolderOpen, HelpCircle, LayoutDashboard, LifeBuoy, LineChart, MessageCircle, NotebookPen, PiggyBank, Settings, Shield, Sparkles, Users } from "lucide-react";
 
-import { roleNav } from "@/lib/navigation";
+import { LocaleSwitcher } from "@/components/locale-provider";
+import { pickText } from "@/lib/locale";
+import { getLocale } from "@/lib/locale-server";
+import { getRoleNav } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import type { AuditLog, Milestone, SessionPayload, Task, TimelineLane, TimelineView, UserRole } from "@/lib/types";
 
 const iconMap = {
-  Dashboard: LayoutDashboard,
-  Timeline: NotebookPen,
-  "Check-ins": BookOpenText,
-  Explore: Compass,
-  Settings,
-  Applications: FileText,
-  Documents: FolderOpen,
-  Messages: MessageCircle,
-  Finances: PiggyBank,
-  Support: LifeBuoy,
-  Students: Users,
-  Content: BookOpenText,
-  Analytics: LineChart,
+  dashboard: LayoutDashboard,
+  timeline: NotebookPen,
+  checkin: BookOpenText,
+  explore: Compass,
+  settings: Settings,
+  applications: FileText,
+  documents: FolderOpen,
+  messages: MessageCircle,
+  finances: PiggyBank,
+  support: LifeBuoy,
+  students: Users,
+  content: BookOpenText,
+  analytics: LineChart,
 };
 
-function NavIcon({ label }: { label: string }) {
-  const Icon = iconMap[label as keyof typeof iconMap] ?? Sparkles;
+function NavIcon({ href }: { href: string }) {
+  const key = href.split("/").filter(Boolean).at(-1) ?? "dashboard";
+  const Icon = iconMap[key as keyof typeof iconMap] ?? Sparkles;
   return <Icon className="h-4 w-4" />;
 }
 
@@ -31,7 +35,7 @@ export function PageContainer({ children }: { children: React.ReactNode }) {
   return <div className="mx-auto max-w-7xl px-6 pb-14 pt-24">{children}</div>;
 }
 
-export function RoleShell({
+export async function RoleShell({
   session,
   title,
   subtitle,
@@ -46,7 +50,8 @@ export function RoleShell({
   hero?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const navItems = roleNav[session.role];
+  const locale = await getLocale();
+  const navItems = getRoleNav(locale)[session.role];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -75,8 +80,9 @@ export function RoleShell({
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2 rounded-full bg-surface-container-low px-4 py-2 text-sm text-secondary md:flex">
             <Bell className="h-4 w-4 text-primary" />
-            Full trace logging enabled
+            {pickText(locale, "Full trace logging enabled", "全链路日志已开启")}
           </div>
+          <LocaleSwitcher className="hidden md:inline-flex" />
           <img
             alt={session.name}
             src={session.avatar ?? getAvatarForRole(session.role)}
@@ -97,7 +103,15 @@ export function RoleShell({
               <div>
                 <p className="font-semibold text-foreground">{session.name}</p>
                 <p className="text-xs uppercase tracking-[0.2em] text-secondary">
-                  {session.role} portal
+                  {pickText(
+                    locale,
+                    `${session.role} portal`,
+                    session.role === "student"
+                      ? "学生端"
+                      : session.role === "parent"
+                        ? "家长端"
+                        : "顾问端"
+                  )}
                 </p>
               </div>
             </div>
@@ -116,7 +130,7 @@ export function RoleShell({
                   : "text-secondary hover:bg-black/5 hover:text-primary"
               )}
             >
-              <NavIcon label={item.label} />
+              <NavIcon href={item.href} />
               {item.label}
             </Link>
           ))}
@@ -126,10 +140,14 @@ export function RoleShell({
           <div className="rounded-2xl bg-primary p-4 text-white shadow-terra">
             <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-white/80">
               <Shield className="h-4 w-4" />
-              Observability
+              {pickText(locale, "Observability", "可观测性")}
             </div>
             <p className="mt-2 text-sm text-white/85">
-              Every write action stores `trace_id`, `decision_id`, actor, latency, and result.
+              {pickText(
+                locale,
+                "Every write action stores `trace_id`, `decision_id`, actor, latency, and result.",
+                "每一次写入操作都会记录 `trace_id`、`decision_id`、操作者、耗时和结果。"
+              )}
             </p>
           </div>
         </div>
@@ -229,7 +247,7 @@ export function StatCard({
   );
 }
 
-export function TaskList({
+export async function TaskList({
   tasks,
   action,
 }: {
@@ -247,10 +265,11 @@ export function TaskList({
   }[];
   action?: (taskId: string) => React.ReactNode;
 }) {
+  const locale = await getLocale();
   if (tasks.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
-        No timeline tasks yet. Add your first item above and it will appear here immediately.
+        {pickText(locale, "No timeline tasks yet. Add your first item above and it will appear here immediately.", "还没有时间线任务。你在上方新增后，这里会立即显示。")}
       </div>
     );
   }
@@ -267,7 +286,7 @@ export function TaskList({
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">{task.title}</h3>
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-                  {task.timelineLane ? getLaneLabel(task.timelineLane) : task.category}
+                  {task.timelineLane ? getLaneLabel(task.timelineLane, locale) : task.category}
                 </span>
                 <span className="rounded-full bg-tertiary/10 px-3 py-1 text-xs font-bold text-tertiary">
                   {task.priority}
@@ -283,7 +302,7 @@ export function TaskList({
             </div>
             <div className="flex items-center gap-3">
               <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-secondary shadow-sm">
-                {task.status}
+                {translateTaskStatus(task.status, locale)}
               </span>
               {action?.(task.id)}
             </div>
@@ -296,42 +315,42 @@ export function TaskList({
 
 const ganttLaneMeta: {
   lane: TimelineLane;
-  label: string;
-  subtitle: string;
+  label: { en: string; zh: string };
+  subtitle: { en: string; zh: string };
   barClassName: string;
   markerClassName: string;
 }[] = [
   {
     lane: "standardized_exams",
-    label: "Standardized Exams",
-    subtitle: "Scores and test readiness",
+    label: { en: "Standardized Exams", zh: "标化考试" },
+    subtitle: { en: "Scores and test readiness", zh: "分数与考试准备" },
     barClassName: "bg-primary-container/45 border border-primary/20 text-[#2a6038]",
     markerClassName: "bg-primary",
   },
   {
     lane: "application_progress",
-    label: "Applications",
-    subtitle: "Essays, forms, and interviews",
+    label: { en: "Applications", zh: "申请进度" },
+    subtitle: { en: "Essays, forms, and interviews", zh: "文书、表格与面试" },
     barClassName: "bg-secondary-container border border-secondary/20 text-[#4a4538]",
     markerClassName: "bg-tertiary",
   },
   {
     lane: "activities",
-    label: "Extracurriculars",
-    subtitle: "Leadership, research, and service",
+    label: { en: "Extracurriculars", zh: "活动安排" },
+    subtitle: { en: "Leadership, research, and service", zh: "领导力、科研与服务" },
     barClassName: "bg-tertiary-fixed-dim/20 border border-tertiary/10 text-[#554020]",
     markerClassName: "bg-tertiary-container",
   },
   {
     lane: "competitions",
-    label: "Competitions",
-    subtitle: "Challenges and showcases",
+    label: { en: "Competitions", zh: "竞赛安排" },
+    subtitle: { en: "Challenges and showcases", zh: "竞赛与展示" },
     barClassName: "bg-primary/10 border border-primary/15 text-primary",
     markerClassName: "bg-primary-fixed-dim",
   },
 ];
 
-export function TaskGanttChart({
+export async function TaskGanttChart({
   tasks,
   milestones,
   view,
@@ -342,10 +361,11 @@ export function TaskGanttChart({
   view: TimelineView;
   rangeStart: Date;
 }) {
+  const locale = await getLocale();
   if (tasks.length === 0 && milestones.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
-        Add a timeline task or deadline to generate the gantt view.
+        {pickText(locale, "Add a timeline task or deadline to generate the gantt view.", "新增时间线任务或截止日期后，这里会生成甘特图。")}
       </div>
     );
   }
@@ -359,7 +379,7 @@ export function TaskGanttChart({
         <div className="grid grid-cols-[240px_minmax(0,1fr)] border-b border-outline-variant/30">
           <div className="flex items-center gap-2 bg-surface-container-low px-6 py-5 text-sm font-bold text-primary">
             <CalendarBadge />
-            {timeline.label}
+            {pickText(locale, timeline.label, translateTimelineLabel(timeline.label))}
           </div>
           <div
             className="grid bg-surface-container-low"
@@ -388,8 +408,8 @@ export function TaskGanttChart({
             return (
               <div key={lane.lane} className="grid grid-cols-[240px_minmax(0,1fr)]">
                 <div className="flex flex-col justify-center bg-white px-6 py-6">
-                  <p className="font-bold text-primary">{lane.label}</p>
-                  <p className="mt-1 text-xs text-secondary">{lane.subtitle}</p>
+                  <p className="font-bold text-primary">{pickText(locale, lane.label.en, lane.label.zh)}</p>
+                  <p className="mt-1 text-xs text-secondary">{pickText(locale, lane.subtitle.en, lane.subtitle.zh)}</p>
                 </div>
 
                 <div className="relative overflow-hidden bg-white px-0 py-3">
@@ -461,7 +481,7 @@ export function TaskGanttChart({
                         <div key={column.key} className="h-10" />
                       ))}
                       <p className="col-span-full px-2 text-sm text-secondary">
-                        No items scheduled in this lane yet.
+                        {pickText(locale, "No items scheduled in this lane yet.", "这一栏目前还没有安排内容。")}
                       </p>
                     </div>
                   )}
@@ -472,8 +492,8 @@ export function TaskGanttChart({
 
           <div className="grid grid-cols-[240px_minmax(0,1fr)]">
             <div className="flex flex-col justify-center bg-white px-6 py-6">
-              <p className="font-bold text-primary">Deadline</p>
-              <p className="mt-1 text-xs text-secondary">Milestones and hard submission dates</p>
+              <p className="font-bold text-primary">{pickText(locale, "Deadline", "截止日期")}</p>
+              <p className="mt-1 text-xs text-secondary">{pickText(locale, "Milestones and hard submission dates", "里程碑与硬性截止时间")}</p>
             </div>
 
             <div className="relative overflow-hidden bg-white px-0 py-3">
@@ -538,7 +558,7 @@ export function TaskGanttChart({
                     <div key={column.key} className="h-10" />
                   ))}
                   <p className="col-span-full px-2 text-sm text-secondary">
-                    No deadlines scheduled in this calendar window yet.
+                    {pickText(locale, "No deadlines scheduled in this calendar window yet.", "当前时间窗口内还没有截止日期。")}
                   </p>
                 </div>
               )}
@@ -550,17 +570,18 @@ export function TaskGanttChart({
   );
 }
 
-export function TimelineRail({
+export async function TimelineRail({
   milestones,
   action,
 }: {
   milestones: { id: string; title: string; dateLabel: string; eventDate?: string; status: string; type: string }[];
   action?: (milestoneId: string) => React.ReactNode;
 }) {
+  const locale = await getLocale();
   if (milestones.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
-        No milestones are scheduled inside this calendar window yet.
+        {pickText(locale, "No milestones are scheduled inside this calendar window yet.", "当前时间窗口内还没有里程碑。")}
       </div>
     );
   }
@@ -576,7 +597,7 @@ export function TimelineRail({
           <div className="ml-2 flex items-start justify-between gap-4">
             <div>
               <h3 className="font-bold text-foreground">{milestone.title}</h3>
-              <p className="mt-1 text-sm text-secondary">deadline</p>
+              <p className="mt-1 text-sm text-secondary">{pickText(locale, "deadline", "截止日期")}</p>
               {action ? action(milestone.id) : null}
             </div>
             <div className="text-right">
@@ -592,7 +613,8 @@ export function TimelineRail({
   );
 }
 
-export function AuditFeed({ logs }: { logs: AuditLog[] }) {
+export async function AuditFeed({ logs }: { logs: AuditLog[] }) {
+  const locale = await getLocale();
   return (
     <div className="space-y-4">
       {logs.map((log) => (
@@ -605,7 +627,7 @@ export function AuditFeed({ logs }: { logs: AuditLog[] }) {
               </p>
             </div>
             <div className="text-right text-xs uppercase tracking-[0.2em] text-outline">
-              <p>{log.actorRole}</p>
+              <p>{translateActorRole(log.actorRole, locale)}</p>
               <p>{log.latencyMs}ms</p>
             </div>
           </div>
@@ -620,7 +642,7 @@ export function AuditFeed({ logs }: { logs: AuditLog[] }) {
   );
 }
 
-export function PlaceholderCard({
+export async function PlaceholderCard({
   role,
   title,
   description,
@@ -629,13 +651,14 @@ export function PlaceholderCard({
   title: string;
   description: string;
 }) {
+  const locale = await getLocale();
   return (
     <div className="grid gap-8 lg:grid-cols-[1.4fr_0.9fr]">
-      <SectionCard title={title} eyebrow="Launch-safe placeholder">
+      <SectionCard title={title} eyebrow={pickText(locale, "Launch-safe placeholder", "上线安全占位页")}>
         <div className="rounded-3xl border border-dashed border-primary/30 bg-primary/5 p-8">
           <div className="flex items-center gap-3 text-primary">
             <Sparkles className="h-5 w-5" />
-            <p className="text-xs font-bold uppercase tracking-[0.2em]">No dead links, clear next step</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em]">{pickText(locale, "No dead links, clear next step", "无死链，下一步清晰")}</p>
           </div>
           <p className="mt-4 max-w-2xl text-secondary">{description}</p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -643,27 +666,39 @@ export function PlaceholderCard({
               href={role === "consultant" ? "/consultant/content" : `/${role}/dashboard`}
               className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
             >
-              Return to active workflow
+              {pickText(locale, "Return to active workflow", "返回当前可用流程")}
             </Link>
             <Link
               href={role === "consultant" ? "/consultant/analytics" : `/${role}/settings`}
               className="rounded-full border border-outline-variant px-5 py-3 text-sm font-bold text-primary"
             >
-              Review current setup
+              {pickText(locale, "Review current setup", "查看当前配置")}
             </Link>
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="What is already live" eyebrow="Today">
+      <SectionCard title={pickText(locale, "What is already live", "当前已上线")} eyebrow={pickText(locale, "Today", "今天")}>
         <ul className="space-y-3 text-sm text-secondary">
-          <li className="rounded-2xl bg-surface-container-low p-4">Role-based routing and protected sessions</li>
-          <li className="rounded-2xl bg-surface-container-low p-4">Structured logs with `trace_id` and `decision_id`</li>
-          <li className="rounded-2xl bg-surface-container-low p-4">Shared Terra design system for later AI bug fixing</li>
+          <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "Role-based routing and protected sessions", "基于角色的路由与受保护会话")}</li>
+          <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "Structured logs with `trace_id` and `decision_id`", "带有 `trace_id` 和 `decision_id` 的结构化日志")}</li>
+          <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "Shared Terra design system for later AI bug fixing", "统一的 Terra 设计系统，方便后续 AI 修复问题")}</li>
         </ul>
       </SectionCard>
     </div>
   );
+}
+
+function translateTimelineLabel(label: string) {
+  if (label.includes("3-Year")) {
+    return "三年视图";
+  }
+
+  if (label.includes("Month")) {
+    return "月视图";
+  }
+
+  return "年视图";
 }
 
 function getAvatarForRole(role: UserRole) {
@@ -724,8 +759,12 @@ function formatTaskRange(startDate: string, endDate: string) {
   })}`;
 }
 
-function getLaneLabel(lane: TimelineLane) {
-  return ganttLaneMeta.find((item) => item.lane === lane)?.label ?? "Timeline";
+function getLaneLabel(lane: TimelineLane, locale: Awaited<ReturnType<typeof getLocale>>) {
+  const matchedLane = ganttLaneMeta.find((item) => item.lane === lane);
+  if (!matchedLane) {
+    return pickText(locale, "Timeline", "时间线");
+  }
+  return pickText(locale, matchedLane.label.en, matchedLane.label.zh);
 }
 
 type TimelineColumn = {
@@ -847,7 +886,7 @@ function CalendarBadge() {
   );
 }
 
-export function SummaryCard({
+export async function SummaryCard({
   title,
   body,
   footer,
@@ -856,11 +895,12 @@ export function SummaryCard({
   body: string;
   footer?: string;
 }) {
+  const locale = await getLocale();
   return (
     <div className="rounded-3xl border border-black/5 bg-surface-container-low p-6">
       <div className="mb-3 flex items-center gap-2 text-primary">
         <Bot className="h-5 w-5" />
-        <p className="text-xs font-bold uppercase tracking-[0.2em]">AI Summary</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">{pickText(locale, "AI Summary", "AI 摘要")}</p>
       </div>
       <h3 className="font-serif text-2xl font-bold text-foreground">{title}</h3>
       <p className="mt-3 text-sm leading-7 text-secondary">{body}</p>
@@ -869,20 +909,45 @@ export function SummaryCard({
   );
 }
 
-export function Notice({
+export async function Notice({
   title,
   children,
 }: {
   title: string;
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
   return (
     <div className="rounded-2xl border border-tertiary/20 bg-tertiary/5 p-4">
       <div className="flex items-center gap-2 text-tertiary">
         <HelpCircle className="h-4 w-4" />
         <p className="text-xs font-bold uppercase tracking-[0.2em]">{title}</p>
       </div>
-      <div className="mt-2 text-sm text-secondary">{children}</div>
+      <div className="mt-2 text-sm text-secondary">{children ?? pickText(locale, "No detail yet.", "暂时还没有更多内容。")}</div>
     </div>
   );
+}
+
+function translateTaskStatus(status: string, locale: Awaited<ReturnType<typeof getLocale>>) {
+  if (status === "in_progress") {
+    return pickText(locale, "in progress", "进行中");
+  }
+
+  if (status === "done") {
+    return pickText(locale, "done", "已完成");
+  }
+
+  return pickText(locale, "pending", "待开始");
+}
+
+function translateActorRole(role: string, locale: Awaited<ReturnType<typeof getLocale>>) {
+  if (role === "consultant") {
+    return pickText(locale, "consultant", "顾问");
+  }
+
+  if (role === "parent") {
+    return pickText(locale, "parent", "家长");
+  }
+
+  return pickText(locale, "student", "学生");
 }

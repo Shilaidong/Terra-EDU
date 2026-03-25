@@ -101,3 +101,13 @@ textarea {
   filter: blur(40px);
   z-index: -1;
 }
+
+.terra-on-primary {
+  color: #ffffff !important;
+}
+
+.terra-on-primary:hover,
+.terra-on-primary:visited,
+.terra-on-primary:active {
+  color: #ffffff !important;
+}

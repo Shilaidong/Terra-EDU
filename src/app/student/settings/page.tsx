@@ -4,9 +4,12 @@ import { Settings2 } from "lucide-react";
 import { AiRecommendationPanel, LogoutButton, StudentProfileEditor } from "@/components/client-tools";
 import { AuditFeed, HeroBadge, InfoPill, RoleShell, SectionCard } from "@/components/terra-shell";
 import { getCurrentStudentData, getRecentAuditLogsData } from "@/lib/data";
+import { pickText } from "@/lib/locale";
+import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 
 export default async function StudentSettingsPage() {
+  const locale = await getLocale();
   const session = await requireSession("student");
   const student = await getCurrentStudentData(session);
   if (!student) return null;
@@ -15,12 +18,12 @@ export default async function StudentSettingsPage() {
   return (
     <RoleShell
       session={session}
-      title="Student Profile & AI Twin"
-      subtitle="Manage academic identity, goals, and the light AI twin summary while preserving the original Terra visual direction."
+      title={pickText(locale, "Student Profile & AI Twin", "学生资料与 AI 档案")}
+      subtitle={pickText(locale, "Manage academic identity, goals, and the light AI twin summary while preserving the original Terra visual direction.", "管理个人学术资料、目标和轻量 AI 档案摘要，同时保留 Terra 的原始设计风格。")}
       activeHref="/student/settings"
       hero={
         <div className="flex items-center gap-3">
-          <HeroBadge icon={<Settings2 className="h-4 w-4" />} title="Profile strength" value="84%" />
+          <HeroBadge icon={<Settings2 className="h-4 w-4" />} title={pickText(locale, "Profile strength", "资料完整度")} value="84%" />
           <LogoutButton />
         </div>
       }
@@ -36,7 +39,7 @@ export default async function StudentSettingsPage() {
               ))}
             </div>
             <div className="mt-6 w-full rounded-3xl bg-surface-container-low p-5 text-left">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">Dream schools</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Dream schools", "梦校")}</p>
               <ul className="mt-3 space-y-2 text-sm text-secondary">
                 {student.dreamSchools.map((school) => (
                   <li key={school}>{school}</li>
@@ -47,7 +50,7 @@ export default async function StudentSettingsPage() {
         </SectionCard>
 
         <div className="space-y-8">
-          <SectionCard title="Editable goals" eyebrow="Profile preferences">
+          <SectionCard title={pickText(locale, "Editable goals", "可编辑目标")} eyebrow={pickText(locale, "Profile preferences", "资料设置")}>
             <StudentProfileEditor
               studentId={student.id}
               defaultName={student.name}
@@ -70,7 +73,7 @@ export default async function StudentSettingsPage() {
       </div>
 
       <div className="mt-8">
-        <SectionCard title="Recent profile activity" eyebrow="Audit trail">
+        <SectionCard title={pickText(locale, "Recent profile activity", "最近资料更新")} eyebrow={pickText(locale, "Audit trail", "审计记录")}>
           <AuditFeed logs={logs} />
         </SectionCard>
       </div>

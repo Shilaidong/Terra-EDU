@@ -1,3 +1,4 @@
+import { pickText, type Locale } from "@/lib/locale";
 import type { UserRole } from "@/lib/types";
 
 export interface NavItem {
@@ -5,35 +6,37 @@ export interface NavItem {
   href: string;
 }
 
-export const roleNav: Record<UserRole, NavItem[]> = {
-  student: [
-    { label: "Dashboard", href: "/student/dashboard" },
-    { label: "Timeline", href: "/student/timeline" },
-    { label: "Check-ins", href: "/student/checkin" },
-    { label: "Explore", href: "/student/explore" },
-    { label: "Settings", href: "/student/settings" },
-    { label: "Applications", href: "/student/applications" },
-    { label: "Documents", href: "/student/documents" },
-    { label: "Messages", href: "/student/messages" },
-    { label: "Finances", href: "/student/finances" },
-    { label: "Support", href: "/student/support" },
-  ],
-  parent: [
-    { label: "Dashboard", href: "/parent/dashboard" },
-    { label: "Applications", href: "/parent/applications" },
-    { label: "Documents", href: "/parent/documents" },
-    { label: "Finances", href: "/parent/finances" },
-    { label: "Messages", href: "/parent/messages" },
-    { label: "Settings", href: "/parent/settings" },
-    { label: "Support", href: "/parent/support" },
-  ],
-  consultant: [
-    { label: "Students", href: "/consultant/students" },
-    { label: "Content", href: "/consultant/content" },
-    { label: "Analytics", href: "/consultant/analytics" },
-    { label: "Applications", href: "/consultant/applications" },
-    { label: "Documents", href: "/consultant/documents" },
-    { label: "Messages", href: "/consultant/messages" },
-    { label: "Finances", href: "/consultant/finances" },
-  ],
-};
+export function getRoleNav(locale: Locale): Record<UserRole, NavItem[]> {
+  return {
+    student: [
+      { label: pickText(locale, "Dashboard", "仪表盘"), href: "/student/dashboard" },
+      { label: pickText(locale, "Timeline", "时间线"), href: "/student/timeline" },
+      { label: pickText(locale, "Check-ins", "打卡"), href: "/student/checkin" },
+      { label: pickText(locale, "Explore", "探索"), href: "/student/explore" },
+      { label: pickText(locale, "Settings", "设置"), href: "/student/settings" },
+      { label: pickText(locale, "Applications", "申请"), href: "/student/applications" },
+      { label: pickText(locale, "Documents", "材料"), href: "/student/documents" },
+      { label: pickText(locale, "Messages", "消息"), href: "/student/messages" },
+      { label: pickText(locale, "Finances", "财务"), href: "/student/finances" },
+      { label: pickText(locale, "Support", "支持"), href: "/student/support" },
+    ],
+    parent: [
+      { label: pickText(locale, "Dashboard", "仪表盘"), href: "/parent/dashboard" },
+      { label: pickText(locale, "Applications", "申请"), href: "/parent/applications" },
+      { label: pickText(locale, "Documents", "材料"), href: "/parent/documents" },
+      { label: pickText(locale, "Finances", "财务"), href: "/parent/finances" },
+      { label: pickText(locale, "Messages", "消息"), href: "/parent/messages" },
+      { label: pickText(locale, "Settings", "设置"), href: "/parent/settings" },
+      { label: pickText(locale, "Support", "支持"), href: "/parent/support" },
+    ],
+    consultant: [
+      { label: pickText(locale, "Students", "学生"), href: "/consultant/students" },
+      { label: pickText(locale, "Content", "内容"), href: "/consultant/content" },
+      { label: pickText(locale, "Analytics", "分析"), href: "/consultant/analytics" },
+      { label: pickText(locale, "Applications", "申请"), href: "/consultant/applications" },
+      { label: pickText(locale, "Documents", "材料"), href: "/consultant/documents" },
+      { label: pickText(locale, "Messages", "消息"), href: "/consultant/messages" },
+      { label: pickText(locale, "Finances", "财务"), href: "/consultant/finances" },
+    ],
+  };
+}
