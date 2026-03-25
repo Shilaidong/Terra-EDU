@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarRange, GraduationCap, NotebookPen, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarRange, GraduationCap, NotebookPen } from "lucide-react";
 
 import {
   CheckInEditorControls,
@@ -68,8 +68,8 @@ export default async function ConsultantStudentWorkspacePage({
   return (
     <RoleShell
       session={session}
-      title={`${student.name} Workspace`}
-      subtitle="Review the full student picture, edit profile basics, schedule timeline tasks, manage deadlines, and keep advisor notes in one place."
+      title={student.name}
+      subtitle="Consultant workspace for planning, deadlines, check-ins, and advisor notes."
       activeHref="/consultant/students"
       hero={
         <div className="flex flex-wrap items-center gap-3">
@@ -80,9 +80,27 @@ export default async function ConsultantStudentWorkspacePage({
             <ArrowLeft className="h-4 w-4" />
             Back to Students
           </Link>
-          <HeroBadge icon={<BriefcaseBusiness className="h-4 w-4" />} title="Phase" value={student.phase} />
-          <HeroBadge icon={<Target className="h-4 w-4" />} title="Goal school" value={student.dreamSchools[0] ?? "TBD"} />
-          <HeroBadge icon={<CalendarRange className="h-4 w-4" />} title="Risk" value={currentStudentSignal.riskLevel} />
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/5 bg-surface-container-low px-4 py-3 shadow-sm">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">Dream School</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{student.dreamSchools[0] ?? "TBD"}</p>
+            </div>
+            <div className="hidden h-10 w-px bg-black/10 md:block" />
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">Risk</p>
+              <p
+                className={`mt-1 text-sm font-semibold ${
+                  currentStudentSignal.riskLevel === "high"
+                    ? "text-error"
+                    : currentStudentSignal.riskLevel === "medium"
+                      ? "text-tertiary"
+                      : "text-primary"
+                }`}
+              >
+                {currentStudentSignal.riskLevel}
+              </p>
+            </div>
+          </div>
           <LogoutButton />
         </div>
       }
@@ -156,13 +174,11 @@ export default async function ConsultantStudentWorkspacePage({
               </div>
               <ConsultantStudentProfileEditor
                 studentId={student.id}
-                defaultName={student.name}
                 defaultGrade={student.grade}
                 defaultSchool={student.school}
                 defaultCountries={student.targetCountries}
                 defaultDreamSchools={student.dreamSchools}
                 defaultMajor={student.intendedMajor}
-                defaultAvatar={student.avatar}
               />
             </SectionCard>
 

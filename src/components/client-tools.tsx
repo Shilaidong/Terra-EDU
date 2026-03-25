@@ -1483,30 +1483,24 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
 
 export function ConsultantStudentProfileEditor({
   studentId,
-  defaultName,
   defaultGrade,
   defaultSchool,
   defaultCountries,
   defaultDreamSchools,
   defaultMajor,
-  defaultAvatar,
 }: {
   studentId: string;
-  defaultName: string;
   defaultGrade: string;
   defaultSchool: string;
   defaultCountries: string[];
   defaultDreamSchools: string[];
   defaultMajor: string;
-  defaultAvatar: string;
 }) {
-  const [name, setName] = useState(defaultName);
   const [grade, setGrade] = useState(defaultGrade);
   const [schoolName, setSchoolName] = useState(defaultSchool);
   const [countries, setCountries] = useState(defaultCountries.join(", "));
   const [schools, setSchools] = useState(defaultDreamSchools.join(", "));
   const [major, setMajor] = useState(defaultMajor);
-  const [avatar, setAvatar] = useState(defaultAvatar);
   const [message, setMessage] = useState("");
   const router = useRouter();
 
@@ -1519,45 +1513,21 @@ export function ConsultantStudentProfileEditor({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name,
             grade,
             school: schoolName,
             targetCountries: countries.split(",").map((value) => value.trim()).filter(Boolean),
             dreamSchools: schools.split(",").map((value) => value.trim()).filter(Boolean),
             intendedMajor: major,
-            avatar,
           }),
         });
         setMessage("Student profile updated.");
         router.refresh();
       }}
     >
-      <div>
-        <p className="text-sm font-semibold text-secondary">Avatar</p>
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
-          {avatarPresets.map((preset) => (
-            <button
-              key={preset.value}
-              type="button"
-              onClick={() => setAvatar(preset.value)}
-              className={cn(
-                "flex items-center justify-center rounded-3xl border bg-white p-4 transition-all",
-                avatar === preset.value
-                  ? "border-primary shadow-terra ring-2 ring-primary/20"
-                  : "border-black/5 hover:border-primary/30"
-              )}
-              aria-label={preset.label}
-            >
-              <img alt={preset.label} src={preset.value} className="h-20 w-20 rounded-full object-cover" />
-            </button>
-          ))}
-        </div>
-      </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <input value={name} onChange={(event) => setName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Student name" />
         <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current grade" />
+        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current school" />
       </div>
-      <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Current school" />
       <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Target countries" />
       <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Dream schools" />
       <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder="Intended major" />
