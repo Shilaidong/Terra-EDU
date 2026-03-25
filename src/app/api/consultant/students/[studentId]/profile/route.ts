@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { avatarPresetValues } from "@/lib/avatar-presets";
 import { updateStudentProfile } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
+const studentPhaseValues = ["Planning", "Application", "Submission", "Decision", "Visa"] as const;
+
 const schema = z.object({
-  name: z.string().min(1),
   grade: z.string().min(1),
   school: z.string().min(1),
+  phase: z.enum(studentPhaseValues),
   targetCountries: z.array(z.string()).min(1),
   dreamSchools: z.array(z.string()).min(1),
   intendedMajor: z.string().min(1),
-  avatar: z.enum(avatarPresetValues),
 });
 
 export async function PATCH(
@@ -72,8 +72,8 @@ export async function PATCH(
     targetType: "student",
     targetId: student.id,
     status: "success",
-    inputSummary: "Consultant updated student profile basics and goals",
-    outputSummary: `${student.name}, ${student.grade}, ${student.school}, major ${student.intendedMajor}`,
+    inputSummary: "Consultant updated student grade, school, phase, and goals",
+    outputSummary: `${student.name}, ${student.grade}, ${student.school}, phase ${student.phase}, major ${student.intendedMajor}`,
   });
 
   return NextResponse.json({

@@ -6,11 +6,14 @@ import { updateStudentProfile } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession, setSession } from "@/lib/session";
 
+const studentPhaseValues = ["Planning", "Application", "Submission", "Decision", "Visa"] as const;
+
 const schema = z.object({
   studentId: z.string(),
   name: z.string().min(1),
   grade: z.string().min(1),
   school: z.string().min(1),
+  phase: z.enum(studentPhaseValues),
   targetCountries: z.array(z.string()).min(1),
   dreamSchools: z.array(z.string()).min(1),
   intendedMajor: z.string().min(1),
@@ -80,8 +83,8 @@ export async function PATCH(request: Request) {
     targetType: "student",
     targetId: student.id,
     status: "success",
-    inputSummary: "Updated name, school, avatar, target countries, dream schools, and major",
-    outputSummary: `${student.name}, ${student.grade}, ${student.school}, major ${student.intendedMajor}`,
+    inputSummary: "Updated name, grade, school, phase, avatar, target countries, dream schools, and major",
+    outputSummary: `${student.name}, ${student.grade}, ${student.school}, phase ${student.phase}, major ${student.intendedMajor}`,
   });
 
   return NextResponse.json({

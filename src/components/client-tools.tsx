@@ -14,6 +14,16 @@ import { shouldUseBrowserSupabaseAuth } from "@/lib/supabase/shared";
 import { cn } from "@/lib/utils";
 import type { ApiResponse, CheckInRecord, ContentItem, Milestone, Task, TimelineLane, UserRole } from "@/lib/types";
 
+type StudentPhaseValue = "Planning" | "Application" | "Submission" | "Decision" | "Visa";
+
+const studentPhaseOptions: { value: StudentPhaseValue; label: string }[] = [
+  { value: "Planning", label: "Planning" },
+  { value: "Application", label: "Application" },
+  { value: "Submission", label: "Submission" },
+  { value: "Decision", label: "Decision" },
+  { value: "Visa", label: "Visa" },
+];
+
 async function jsonFetch<T>(input: RequestInfo, init?: RequestInit) {
   const response = await fetch(input, init);
   const payload = (await response.json()) as ApiResponse<T>;
@@ -951,6 +961,7 @@ export function StudentProfileEditor({
   defaultName,
   defaultGrade,
   defaultSchool,
+  defaultPhase,
   defaultCountries,
   defaultDreamSchools,
   defaultMajor,
@@ -960,6 +971,7 @@ export function StudentProfileEditor({
   defaultName: string;
   defaultGrade: string;
   defaultSchool: string;
+  defaultPhase: string;
   defaultCountries: string[];
   defaultDreamSchools: string[];
   defaultMajor: string;
@@ -969,6 +981,7 @@ export function StudentProfileEditor({
   const [name, setName] = useState(defaultName);
   const [grade, setGrade] = useState(defaultGrade);
   const [schoolName, setSchoolName] = useState(defaultSchool);
+  const [phase, setPhase] = useState<StudentPhaseValue>(normalizeStudentPhase(defaultPhase));
   const [countries, setCountries] = useState(defaultCountries.join(", "));
   const [schools, setSchools] = useState(defaultDreamSchools.join(", "));
   const [major, setMajor] = useState(defaultMajor);
@@ -989,6 +1002,7 @@ export function StudentProfileEditor({
             name,
             grade,
             school: schoolName,
+            phase,
             targetCountries: countries.split(",").map((value) => value.trim()).filter(Boolean),
             dreamSchools: schools.split(",").map((value) => value.trim()).filter(Boolean),
             intendedMajor: major,
@@ -1039,6 +1053,18 @@ export function StudentProfileEditor({
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
         placeholder={t("Current school", "当前学校")}
       />
+      <select
+        aria-label="Current phase"
+        value={phase}
+        onChange={(event) => setPhase(event.target.value as StudentPhaseValue)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3 text-base font-medium text-foreground"
+      >
+        {studentPhaseOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       <input
         value={countries}
         onChange={(event) => setCountries(event.target.value)}
@@ -2006,6 +2032,18 @@ async function copyToClipboard(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
+function normalizeStudentPhase(value: string): StudentPhaseValue {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "application") return "Application";
+  if (normalized === "submission") return "Submission";
+  if (normalized === "decision") return "Decision";
+  if (normalized === "visa") return "Visa";
+  if (normalized === "planning" || normalized === "research") return "Planning";
+
+  return "Planning";
+}
+
 function stripLeadingListMarker(value: string) {
   return value.replace(/^\s*\d+\.\s+/, "").trim();
 }
@@ -2272,6 +2310,7 @@ export function ConsultantStudentProfileEditor({
   studentId,
   defaultGrade,
   defaultSchool,
+  defaultPhase,
   defaultCountries,
   defaultDreamSchools,
   defaultMajor,
@@ -2279,6 +2318,7 @@ export function ConsultantStudentProfileEditor({
   studentId: string;
   defaultGrade: string;
   defaultSchool: string;
+  defaultPhase: string;
   defaultCountries: string[];
   defaultDreamSchools: string[];
   defaultMajor: string;
@@ -2286,6 +2326,7 @@ export function ConsultantStudentProfileEditor({
   const t = useText();
   const [grade, setGrade] = useState(defaultGrade);
   const [schoolName, setSchoolName] = useState(defaultSchool);
+  const [phase, setPhase] = useState<StudentPhaseValue>(normalizeStudentPhase(defaultPhase));
   const [countries, setCountries] = useState(defaultCountries.join(", "));
   const [schools, setSchools] = useState(defaultDreamSchools.join(", "));
   const [major, setMajor] = useState(defaultMajor);
@@ -2303,6 +2344,7 @@ export function ConsultantStudentProfileEditor({
           body: JSON.stringify({
             grade,
             school: schoolName,
+            phase,
             targetCountries: countries.split(",").map((value) => value.trim()).filter(Boolean),
             dreamSchools: schools.split(",").map((value) => value.trim()).filter(Boolean),
             intendedMajor: major,
@@ -2316,6 +2358,18 @@ export function ConsultantStudentProfileEditor({
         <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current grade", "当前年级")} />
         <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current school", "当前学校")} />
       </div>
+      <select
+        aria-label="Current phase"
+        value={phase}
+        onChange={(event) => setPhase(event.target.value as StudentPhaseValue)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3 text-base font-medium text-foreground"
+      >
+        {studentPhaseOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Target countries", "目标国家")} />
       <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Dream schools", "梦校")} />
       <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Intended major", "意向专业")} />

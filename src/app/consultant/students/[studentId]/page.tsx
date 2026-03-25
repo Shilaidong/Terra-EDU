@@ -185,6 +185,7 @@ export default async function ConsultantStudentWorkspacePage({
                 studentId={student.id}
                 defaultGrade={student.grade}
                 defaultSchool={student.school}
+                defaultPhase={student.phase}
                 defaultCountries={student.targetCountries}
                 defaultDreamSchools={student.dreamSchools}
                 defaultMajor={student.intendedMajor}

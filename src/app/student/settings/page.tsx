@@ -56,6 +56,7 @@ export default async function StudentSettingsPage() {
               defaultName={student.name}
               defaultGrade={student.grade}
               defaultSchool={student.school}
+              defaultPhase={student.phase}
               defaultCountries={student.targetCountries}
               defaultDreamSchools={student.dreamSchools}
               defaultMajor={student.intendedMajor}
