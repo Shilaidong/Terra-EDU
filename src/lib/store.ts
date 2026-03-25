@@ -291,6 +291,12 @@ function seedStore(): TerraStore {
         difficulty: "Reach",
         status: "published",
         source: "manual",
+        schoolDetails: {
+          ranking: "6",
+          city: "Palo Alto",
+          tuitionUsd: 65127,
+          acceptanceRate: "3.9%",
+        },
       },
       {
         id: "77777777-7777-7777-7777-777777777772",
@@ -301,6 +307,12 @@ function seedStore(): TerraStore {
         difficulty: "Match",
         status: "published",
         source: "manual",
+        majorDetails: {
+          degree: "BS",
+          stemEligible: true,
+          recommendedBackground: "Physics, calculus, environmental systems",
+          careerPaths: ["Sustainability Consultant", "Water Systems Engineer"],
+        },
       },
       {
         id: "77777777-7777-7777-7777-777777777773",
@@ -312,6 +324,12 @@ function seedStore(): TerraStore {
         difficulty: "Match",
         status: "published",
         source: "manual",
+        competitionDetails: {
+          organizer: "Eco Future Alliance",
+          eligibility: "Grade 9-12 teams",
+          award: "Global finalist recognition",
+          season: "Spring",
+        },
       },
       {
         id: "77777777-7777-7777-7777-777777777774",
@@ -320,8 +338,14 @@ function seedStore(): TerraStore {
         subtitle: "Mechanics and Electricity",
         tags: ["AP", "STEM"],
         difficulty: "Reach",
-        status: "draft",
+        status: "published",
         source: "manual",
+        courseDetails: {
+          provider: "Westside Academy",
+          format: "Offline",
+          durationWeeks: 24,
+          workload: "5 hours/week",
+        },
       },
     ],
     advisorNotes: [

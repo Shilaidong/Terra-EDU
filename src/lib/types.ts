@@ -85,6 +85,36 @@ export interface ContentItem {
   difficulty: "Safety" | "Match" | "Reach";
   status: "published" | "draft";
   source: "manual" | "import";
+  schoolDetails?: {
+    ranking?: string;
+    city?: string;
+    tuitionUsd?: number;
+    acceptanceRate?: string;
+  };
+  majorDetails?: {
+    degree?: string;
+    stemEligible?: boolean;
+    recommendedBackground?: string;
+    careerPaths: string[];
+  };
+  competitionDetails?: {
+    organizer?: string;
+    eligibility?: string;
+    award?: string;
+    season?: string;
+  };
+  courseDetails?: {
+    provider?: string;
+    format?: "Online" | "Offline" | "Hybrid";
+    durationWeeks?: number;
+    workload?: string;
+  };
+  chapterDetails?: {
+    curriculum?: string;
+    sequence?: string;
+    estimatedHours?: number;
+    keySkill?: string;
+  };
 }
 
 export interface AdvisorNote {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createContentItem, deleteContentItems } from "@/lib/data";
+import { updateContentItem } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
@@ -55,11 +55,10 @@ const schema = z.object({
     .optional(),
 });
 
-const deleteSchema = z.object({
-  ids: z.array(z.string()).min(1),
-});
-
-export async function POST(request: Request) {
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ itemId: string }> }
+) {
   const trace = createTraceContext();
   const session = await getSession();
 
@@ -75,6 +74,7 @@ export async function POST(request: Request) {
     );
   }
 
+  const { itemId } = await context.params;
   const body = await request.json();
   const parsed = schema.safeParse(body);
 
@@ -90,21 +90,30 @@ export async function POST(request: Request) {
     );
   }
 
-  const item = createContentItem({
-    ...parsed.data,
-    source: "manual",
-  });
+  const item = await updateContentItem(itemId, parsed.data);
+
+  if (!item) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Content item not found.",
+      },
+      { status: 404 }
+    );
+  }
 
   finishTrace(trace, {
     actorId: session.userId,
     actorRole: session.role,
     page: "/consultant/content",
-    action: "content_item_created",
+    action: "content_item_updated",
     targetType: "content_item",
     targetId: item.id,
     status: "success",
     inputSummary: item.title,
-    outputSummary: `${item.type} created as ${item.status}`,
+    outputSummary: `${item.type} updated`,
   });
 
   return NextResponse.json({
@@ -112,77 +121,7 @@ export async function POST(request: Request) {
     entity_id: item.id,
     trace_id: trace.traceId,
     decision_id: trace.decisionId,
-    message: "Content item created.",
+    message: "Content item updated.",
     data: item,
   });
-}
-
-export async function DELETE(request: Request) {
-  const trace = createTraceContext();
-  try {
-    const session = await getSession();
-
-    if (!session || session.role !== "consultant") {
-      return NextResponse.json(
-        {
-          success: false,
-          trace_id: trace.traceId,
-          decision_id: trace.decisionId,
-          message: "Unauthorized.",
-        },
-        { status: 401 }
-      );
-    }
-
-    const rawBody = await request.text();
-    const parsed = deleteSchema.safeParse(rawBody ? JSON.parse(rawBody) : {});
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          trace_id: trace.traceId,
-          decision_id: trace.decisionId,
-          message: "Invalid content delete payload.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const deletedItems = await deleteContentItems(parsed.data.ids);
-
-    finishTrace(trace, {
-      actorId: session.userId,
-      actorRole: session.role,
-      page: "/consultant/content",
-      action: "content_items_deleted",
-      targetType: "content_item",
-      targetId: parsed.data.ids.join(","),
-      status: "success",
-      inputSummary: `Delete ${parsed.data.ids.length} content items`,
-      outputSummary: `${deletedItems.length} content items deleted`,
-    });
-
-    return NextResponse.json({
-      success: true,
-      entity_id: parsed.data.ids[0],
-      trace_id: trace.traceId,
-      decision_id: trace.decisionId,
-      message: "Content items deleted.",
-      data: {
-        count: deletedItems.length,
-        ids: deletedItems.map((item) => item.id),
-      },
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        trace_id: trace.traceId,
-        decision_id: trace.decisionId,
-        message: error instanceof Error ? error.message : "Failed to delete content items.",
-      },
-      { status: 500 }
-    );
-  }
 }

@@ -1,6 +1,6 @@
 import { Database } from "lucide-react";
 
-import { ContentFilterTable, ContentImportPanel, ContentItemComposer, LogoutButton } from "@/components/client-tools";
+import { ContentCategoryTables, ContentImportPanel, ContentItemComposer, LogoutButton } from "@/components/client-tools";
 import { AuditFeed, HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
 import { getContentItemsData, getRecentAuditLogsData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -27,28 +27,27 @@ export default async function ConsultantContentPage() {
     >
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label={pickText(locale, "Published", "已发布")} value={`${items.filter((item) => item.status === "published").length}`} hint={pickText(locale, "Visible in student exploration.", "学生探索页可见。")} />
-        <StatCard label={pickText(locale, "Draft", "草稿")} value={`${items.filter((item) => item.status === "draft").length}`} hint={pickText(locale, "Needs consultant review.", "需要顾问审核。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Manual", "手动录入")} value={`${items.filter((item) => item.source === "manual").length}`} hint={pickText(locale, "Created and published right away.", "创建后立即发布。")} tone="tertiary" />
         <StatCard label={pickText(locale, "Imported", "已导入")} value={`${items.filter((item) => item.source === "import").length}`} hint={pickText(locale, "Spreadsheet-synced records.", "通过表格同步导入的记录。")} tone="secondary" />
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard title={pickText(locale, "Content table", "内容列表")} eyebrow={pickText(locale, "Filterable", "可筛选")}>
-          <ContentFilterTable items={items} />
+      <div className="mt-8 space-y-8">
+        <SectionCard title={pickText(locale, "Content library", "内容列表")} eyebrow={pickText(locale, "By category", "按类型分表")}>
+          <ContentCategoryTables items={items} />
         </SectionCard>
 
-        <div className="space-y-8">
-          <SectionCard title={pickText(locale, "Create item", "创建内容")} eyebrow={pickText(locale, "Manual entry", "手动录入")}>
-            <ContentItemComposer />
-          </SectionCard>
-          <SectionCard title={pickText(locale, "Bulk import", "批量导入")} eyebrow={pickText(locale, "Excel & CSV", "Excel 与 CSV")}>
-            <ContentImportPanel />
-            <div className="mt-4">
-              <Notice title={pickText(locale, "Import behavior", "导入规则")}>
-                {pickText(locale, "Accepted columns: `type`, `title`, `subtitle`, `country`, `tags`, `difficulty`, `status`. Imported writes are audit logged automatically.", "支持的列包括：`type`、`title`、`subtitle`、`country`、`tags`、`difficulty`、`status`。导入写入会自动记录审计日志。")}
-              </Notice>
-            </div>
-          </SectionCard>
-        </div>
+        <SectionCard title={pickText(locale, "Create item", "创建内容")} eyebrow={pickText(locale, "Manual entry", "手动录入")}>
+          <ContentItemComposer />
+        </SectionCard>
+
+        <SectionCard title={pickText(locale, "Bulk import", "批量导入")} eyebrow={pickText(locale, "Excel & CSV", "Excel 与 CSV")}>
+          <ContentImportPanel />
+          <div className="mt-4">
+            <Notice title={pickText(locale, "Import behavior", "导入规则")}>
+              {pickText(locale, "Accepted common columns: `type`, `title`, `subtitle`, `country`, `tags`, `difficulty`. Manual entries and imports publish immediately. Type-specific columns are also supported, including school ranking and city, major degree and career paths, competition organizer and award, course provider and format, plus chapter sequence and key skill. For school imports, prefer the dedicated school template and write rankings like `1 UsNews` or `2 QS`.", "公共列支持：`type`、`title`、`subtitle`、`country`、`tags`、`difficulty`。手动创建和导入都会直接发布。同时支持类型专属列，例如学校的排名和城市、专业的学位和就业方向、竞赛的主办方和奖项、课程的提供方和形式，以及章节的顺序和核心能力。学校导入建议优先使用学校专用模板，排名推荐写成 `1 UsNews` 或 `2 QS` 这样的格式。")}
+            </Notice>
+          </div>
+        </SectionCard>
       </div>
 
       <div className="mt-8">

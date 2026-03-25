@@ -1,0 +1,6 @@
+type,title,subtitle,country,tags,difficulty,ranking,city,tuition_usd,acceptance_rate,degree,stem_eligible,recommended_background,career_paths,organizer,eligibility,award,season,provider,format,duration_weeks,workload,curriculum,sequence,estimated_hours,key_skill
+school,Stanford University,Palo Alto California,United States,"Engineering,Research,Need-aware",Reach,6,Palo Alto,65127,3.9%,,,,,,,,,,,,,,
+major,Environmental Engineering,Sustainability systems and impact,,"STEM,Climate,Interdisciplinary",Match,,,,BS,true,"Physics,calculus,environmental systems","Sustainability Consultant,Water Systems Engineer",,,,,,,,,,
+competition,International Young Eco-Hero Summit,Research and innovation challenge,Global,"Research,Sustainability",Match,,,,,,,Eco Future Alliance,"Grade 9-12 teams",Global finalist recognition,Spring,,,,,,,,
+course,AP Physics C,Mechanics and Electricity,,"AP,STEM",Reach,,,,,,,,,,,,Westside Academy,Offline,24,5 hours/week,,,,
+chapter,Series and Convergence,Advanced AP Calculus review,,"Math,AP",Match,,,,,,,,,,,,,,,AP Calculus,Unit 7,12,Problem solving

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -26,10 +26,23 @@ const studentPhaseOptions: { value: StudentPhaseValue; label: string }[] = [
 
 async function jsonFetch<T>(input: RequestInfo, init?: RequestInit) {
   const response = await fetch(input, init);
-  const payload = (await response.json()) as ApiResponse<T>;
+  const rawText = await response.text();
+  let payload: ApiResponse<T> | null = null;
+
+  if (rawText) {
+    try {
+      payload = JSON.parse(rawText) as ApiResponse<T>;
+    } catch {
+      throw new Error(`Request failed (${response.status})`);
+    }
+  }
+
+  if (!payload) {
+    throw new Error(`Request failed (${response.status})`);
+  }
 
   if (!response.ok || !payload.success) {
-    throw new Error(payload.message || "Request failed");
+    throw new Error(payload.message || `Request failed (${response.status})`);
   }
 
   return payload;
@@ -2582,54 +2595,510 @@ export function ConsultantStudentPicker({
   );
 }
 
+type ContentDraft = {
+  type: ContentItem["type"];
+  title: string;
+  subtitle: string;
+  country: string;
+  tags: string;
+  difficulty: ContentItem["difficulty"];
+  schoolRanking: string;
+  schoolCity: string;
+  schoolTuition: string;
+  schoolAcceptanceRate: string;
+  majorDegree: string;
+  majorStemEligible: boolean;
+  majorBackground: string;
+  majorCareerPaths: string;
+  competitionOrganizer: string;
+  competitionEligibility: string;
+  competitionAward: string;
+  competitionSeason: string;
+  courseProvider: string;
+  courseFormat: NonNullable<ContentItem["courseDetails"]>["format"];
+  courseDurationWeeks: string;
+  courseWorkload: string;
+  chapterCurriculum: string;
+  chapterSequence: string;
+  chapterEstimatedHours: string;
+  chapterKeySkill: string;
+};
+
+function createDefaultContentDraft(): ContentDraft {
+  return {
+    type: "competition",
+    title: "Global Sustainability Lab",
+    subtitle: "Project-based environmental research",
+    country: "Global",
+    tags: "Research, Sustainability",
+    difficulty: "Match",
+    schoolRanking: "",
+    schoolCity: "",
+    schoolTuition: "",
+    schoolAcceptanceRate: "",
+    majorDegree: "BS",
+    majorStemEligible: true,
+    majorBackground: "",
+    majorCareerPaths: "",
+    competitionOrganizer: "",
+    competitionEligibility: "",
+    competitionAward: "",
+    competitionSeason: "",
+    courseProvider: "",
+    courseFormat: "Online",
+    courseDurationWeeks: "",
+    courseWorkload: "",
+    chapterCurriculum: "",
+    chapterSequence: "",
+    chapterEstimatedHours: "",
+    chapterKeySkill: "",
+  };
+}
+
+function createContentDraftFromItem(item: ContentItem): ContentDraft {
+  return {
+    type: item.type,
+    title: item.title,
+    subtitle: item.subtitle,
+    country: item.country ?? "",
+    tags: item.tags.join(", "),
+    difficulty: item.difficulty,
+    schoolRanking:
+      item.schoolDetails?.ranking != null ? String(item.schoolDetails.ranking) : "",
+    schoolCity: item.schoolDetails?.city ?? "",
+    schoolTuition:
+      item.schoolDetails?.tuitionUsd != null ? String(item.schoolDetails.tuitionUsd) : "",
+    schoolAcceptanceRate: item.schoolDetails?.acceptanceRate ?? "",
+    majorDegree: item.majorDetails?.degree ?? "BS",
+    majorStemEligible: item.majorDetails?.stemEligible ?? true,
+    majorBackground: item.majorDetails?.recommendedBackground ?? "",
+    majorCareerPaths: item.majorDetails?.careerPaths?.join(", ") ?? "",
+    competitionOrganizer: item.competitionDetails?.organizer ?? "",
+    competitionEligibility: item.competitionDetails?.eligibility ?? "",
+    competitionAward: item.competitionDetails?.award ?? "",
+    competitionSeason: item.competitionDetails?.season ?? "",
+    courseProvider: item.courseDetails?.provider ?? "",
+    courseFormat: item.courseDetails?.format ?? "Online",
+    courseDurationWeeks:
+      item.courseDetails?.durationWeeks != null ? String(item.courseDetails.durationWeeks) : "",
+    courseWorkload: item.courseDetails?.workload ?? "",
+    chapterCurriculum: item.chapterDetails?.curriculum ?? "",
+    chapterSequence: item.chapterDetails?.sequence ?? "",
+    chapterEstimatedHours:
+      item.chapterDetails?.estimatedHours != null
+        ? String(item.chapterDetails.estimatedHours)
+        : "",
+    chapterKeySkill: item.chapterDetails?.keySkill ?? "",
+  };
+}
+
+function buildContentPayload(draft: ContentDraft) {
+  return {
+    type: draft.type,
+    title: draft.title,
+    subtitle: draft.subtitle,
+    country: draft.country || undefined,
+    tags: splitCommaValue(draft.tags),
+    difficulty: draft.difficulty,
+    status: "published" as const,
+    schoolDetails:
+      draft.type === "school"
+        ? {
+            ranking: draft.schoolRanking.trim() || undefined,
+            city: draft.schoolCity || undefined,
+            tuitionUsd: parseOptionalNumber(draft.schoolTuition),
+            acceptanceRate: draft.schoolAcceptanceRate || undefined,
+          }
+        : undefined,
+    majorDetails:
+      draft.type === "major"
+        ? {
+            degree: draft.majorDegree || undefined,
+            stemEligible: draft.majorStemEligible,
+            recommendedBackground: draft.majorBackground || undefined,
+            careerPaths: splitCommaValue(draft.majorCareerPaths),
+          }
+        : undefined,
+    competitionDetails:
+      draft.type === "competition"
+        ? {
+            organizer: draft.competitionOrganizer || undefined,
+            eligibility: draft.competitionEligibility || undefined,
+            award: draft.competitionAward || undefined,
+            season: draft.competitionSeason || undefined,
+          }
+        : undefined,
+    courseDetails:
+      draft.type === "course"
+        ? {
+            provider: draft.courseProvider || undefined,
+            format: draft.courseFormat || undefined,
+            durationWeeks: parseOptionalNumber(draft.courseDurationWeeks),
+            workload: draft.courseWorkload || undefined,
+          }
+        : undefined,
+    chapterDetails:
+      draft.type === "chapter"
+        ? {
+            curriculum: draft.chapterCurriculum || undefined,
+            sequence: draft.chapterSequence || undefined,
+            estimatedHours: parseOptionalNumber(draft.chapterEstimatedHours),
+            keySkill: draft.chapterKeySkill || undefined,
+          }
+        : undefined,
+  };
+}
+
+function ContentItemFields({
+  draft,
+  setDraft,
+}: {
+  draft: ContentDraft;
+  setDraft: Dispatch<SetStateAction<ContentDraft>>;
+}) {
+  const t = useText();
+
+  const setField = <K extends keyof ContentDraft>(field: K, value: ContentDraft[K]) => {
+    setDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      <input
+        value={draft.title}
+        onChange={(event) => setField("title", event.target.value)}
+        className="rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Title", "标题")}
+        required
+      />
+      <input
+        value={draft.subtitle}
+        onChange={(event) => setField("subtitle", event.target.value)}
+        className="rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Subtitle", "副标题")}
+        required
+      />
+      <select
+        value={draft.type}
+        onChange={(event) => setField("type", event.target.value as ContentItem["type"])}
+        className="rounded-2xl bg-surface-container-low px-4 py-3"
+      >
+        <option value="course">{t("Course", "课程")}</option>
+        <option value="chapter">{t("Chapter", "章节")}</option>
+        <option value="competition">{t("Competition", "竞赛")}</option>
+        <option value="school">{t("School", "学校")}</option>
+        <option value="major">{t("Major", "专业")}</option>
+      </select>
+      <input
+        value={draft.country}
+        onChange={(event) => setField("country", event.target.value)}
+        className="rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Country", "国家")}
+      />
+      <input
+        value={draft.tags}
+        onChange={(event) => setField("tags", event.target.value)}
+        className="rounded-2xl bg-surface-container-low px-4 py-3 md:col-span-2"
+        placeholder={t("Tags, separated by commas", "标签，用逗号分隔")}
+      />
+      <select
+        value={draft.difficulty}
+        onChange={(event) => setField("difficulty", event.target.value as ContentItem["difficulty"])}
+        className="rounded-2xl bg-surface-container-low px-4 py-3"
+      >
+        <option value="Safety">{t("Safety", "保底")}</option>
+        <option value="Match">{t("Match", "匹配")}</option>
+        <option value="Reach">{t("Reach", "冲刺")}</option>
+      </select>
+      {draft.type === "school" ? (
+        <>
+          <input
+            value={draft.schoolRanking}
+            onChange={(event) => setField("schoolRanking", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Ranking", "排名")}
+          />
+          <input
+            value={draft.schoolCity}
+            onChange={(event) => setField("schoolCity", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("City", "城市")}
+          />
+          <input
+            value={draft.schoolTuition}
+            onChange={(event) => setField("schoolTuition", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Tuition (USD)", "学费（美元）")}
+          />
+          <input
+            value={draft.schoolAcceptanceRate}
+            onChange={(event) => setField("schoolAcceptanceRate", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Acceptance rate", "录取率")}
+          />
+        </>
+      ) : null}
+      {draft.type === "major" ? (
+        <>
+          <input
+            value={draft.majorDegree}
+            onChange={(event) => setField("majorDegree", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Degree", "学位")}
+          />
+          <label className="flex items-center gap-3 rounded-2xl bg-surface-container-low px-4 py-3 text-sm font-semibold text-secondary">
+            <input
+              type="checkbox"
+              checked={draft.majorStemEligible}
+              onChange={(event) => setField("majorStemEligible", event.target.checked)}
+            />
+            {t("STEM eligible", "STEM 专业")}
+          </label>
+          <input
+            value={draft.majorBackground}
+            onChange={(event) => setField("majorBackground", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3 md:col-span-2"
+            placeholder={t("Recommended background", "推荐学科背景")}
+          />
+          <input
+            value={draft.majorCareerPaths}
+            onChange={(event) => setField("majorCareerPaths", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3 md:col-span-2"
+            placeholder={t("Career paths, separated by commas", "就业方向，用逗号分隔")}
+          />
+        </>
+      ) : null}
+      {draft.type === "competition" ? (
+        <>
+          <input
+            value={draft.competitionOrganizer}
+            onChange={(event) => setField("competitionOrganizer", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Organizer", "主办方")}
+          />
+          <input
+            value={draft.competitionEligibility}
+            onChange={(event) => setField("competitionEligibility", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Eligibility", "参赛要求")}
+          />
+          <input
+            value={draft.competitionAward}
+            onChange={(event) => setField("competitionAward", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Award / outcome", "奖项说明")}
+          />
+          <input
+            value={draft.competitionSeason}
+            onChange={(event) => setField("competitionSeason", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Season", "赛季")}
+          />
+        </>
+      ) : null}
+      {draft.type === "course" ? (
+        <>
+          <input
+            value={draft.courseProvider}
+            onChange={(event) => setField("courseProvider", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Provider", "提供方")}
+          />
+          <select
+            value={draft.courseFormat}
+            onChange={(event) =>
+              setField(
+                "courseFormat",
+                event.target.value as NonNullable<ContentItem["courseDetails"]>["format"]
+              )
+            }
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+          >
+            <option value="Online">{t("Online", "线上")}</option>
+            <option value="Offline">{t("Offline", "线下")}</option>
+            <option value="Hybrid">{t("Hybrid", "混合")}</option>
+          </select>
+          <input
+            value={draft.courseDurationWeeks}
+            onChange={(event) => setField("courseDurationWeeks", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Duration (weeks)", "周期（周）")}
+          />
+          <input
+            value={draft.courseWorkload}
+            onChange={(event) => setField("courseWorkload", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Workload", "学习强度")}
+          />
+        </>
+      ) : null}
+      {draft.type === "chapter" ? (
+        <>
+          <input
+            value={draft.chapterCurriculum}
+            onChange={(event) => setField("chapterCurriculum", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Curriculum", "所属课程")}
+          />
+          <input
+            value={draft.chapterSequence}
+            onChange={(event) => setField("chapterSequence", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Sequence", "章节顺序")}
+          />
+          <input
+            value={draft.chapterEstimatedHours}
+            onChange={(event) => setField("chapterEstimatedHours", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Estimated hours", "预计时长（小时）")}
+          />
+          <input
+            value={draft.chapterKeySkill}
+            onChange={(event) => setField("chapterKeySkill", event.target.value)}
+            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Key skill", "核心能力")}
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 export function ContentItemComposer() {
   const t = useText();
-  const [title, setTitle] = useState("Global Sustainability Lab");
-  const [subtitle, setSubtitle] = useState("Project-based environmental research");
-  const [message, setMessage] = useState("");
   const router = useRouter();
+  const [draft, setDraft] = useState<ContentDraft>(() => createDefaultContentDraft());
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
 
   return (
     <form
       className="grid gap-3"
       onSubmit={async (event) => {
         event.preventDefault();
-        await jsonFetch("/api/content/items", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "competition",
-            title,
-            subtitle,
-            country: "Global",
-            tags: ["Research", "Sustainability"],
-            difficulty: "Match",
-            status: "draft",
-          }),
-        });
-        setMessage(t("Manual content item created.", "内容条目已创建。"));
-        router.refresh();
+        setPending(true);
+        setMessage("");
+        try {
+          await jsonFetch("/api/content/items", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(buildContentPayload(draft)),
+          });
+          setMessage(t("Manual content item created.", "内容条目已创建。"));
+          setDraft(createDefaultContentDraft());
+          router.refresh();
+        } catch (error) {
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : t("Failed to create content item.", "创建内容失败。")
+          );
+        } finally {
+          setPending(false);
+        }
       }}
     >
-      <input
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-        className="rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder={t("Title", "标题")}
-      />
-      <input
-        value={subtitle}
-        onChange={(event) => setSubtitle(event.target.value)}
-        className="rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder={t("Subtitle", "副标题")}
-      />
+      <ContentItemFields draft={draft} setDraft={setDraft} />
       <div className="flex items-center gap-3">
-        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
-          {t("Create Content", "创建内容")}
+        <button
+          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+          disabled={pending}
+        >
+          {pending ? t("Creating...", "创建中...") : t("Create Content", "创建内容")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
+  );
+}
+
+function ContentItemEditor({
+  item,
+  onSaved,
+  onCancel,
+}: {
+  item: ContentItem;
+  onSaved: () => void;
+  onCancel: () => void;
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [draft, setDraft] = useState<ContentDraft>(() => createContentDraftFromItem(item));
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    setDraft(createContentDraftFromItem(item));
+    setMessage("");
+  }, [item]);
+
+  return (
+    <div className="rounded-3xl border border-black/5 bg-surface-container-low p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 className="text-base font-semibold text-foreground">
+            {t("Edit content item", "编辑内容")}
+          </h4>
+          <p className="text-sm text-secondary">
+            {t(`Now editing ${item.title}`, `正在编辑：${item.title}`)}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="rounded-full border border-outline-variant px-4 py-2 text-sm font-semibold text-secondary"
+          onClick={onCancel}
+        >
+          {t("Close", "关闭")}
+        </button>
+      </div>
+      <form
+        className="grid gap-3"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setPending(true);
+          setMessage("");
+          try {
+            await jsonFetch(`/api/content/items/${item.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(buildContentPayload(draft)),
+            });
+            setMessage(t("Content item updated.", "内容已更新。"));
+            router.refresh();
+            onSaved();
+          } catch (error) {
+            setMessage(
+              error instanceof Error
+                ? error.message
+                : t("Failed to update content item.", "更新内容失败。")
+            );
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        <ContentItemFields draft={draft} setDraft={setDraft} />
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+            disabled={pending}
+          >
+            {pending ? t("Saving...", "保存中...") : t("Save Changes", "保存修改")}
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-outline-variant px-5 py-3 text-sm font-semibold text-secondary"
+            onClick={onCancel}
+          >
+            {t("Cancel", "取消")}
+          </button>
+          {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+        </div>
+      </form>
+    </div>
   );
 }
 
@@ -2681,6 +3150,211 @@ export function ContentImportPanel() {
   );
 }
 
+export function ContentCategoryTables({ items }: { items: ContentItem[] }) {
+  const t = useText();
+  const [query, setQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("smart");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(false);
+  const deferredQuery = useDeferredValue(query);
+  const router = useRouter();
+
+  const availableTags = Array.from(new Set(items.flatMap((item) => item.tags))).sort((left, right) =>
+    left.localeCompare(right)
+  );
+
+  const filteredItems = items
+    .filter((item) => {
+      const matchesQuery = `${item.title} ${item.subtitle} ${item.tags.join(" ")} ${item.country ?? ""}`
+        .toLowerCase()
+        .includes(deferredQuery.toLowerCase());
+      const matchesSource = sourceFilter === "all" || item.source === sourceFilter;
+      const matchesTag = tagFilter === "all" || item.tags.includes(tagFilter);
+      return matchesQuery && matchesSource && matchesTag;
+    })
+    .slice()
+    .sort((left, right) => sortManagedContentItems(left, right, sortBy));
+
+  const visibleIds = filteredItems.map((item) => item.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((itemId) => selectedIds.includes(itemId));
+  const editingItem = items.find((item) => item.id === editingItemId) ?? null;
+
+  useEffect(() => {
+    if (editingItemId && !items.some((item) => item.id === editingItemId)) {
+      setEditingItemId(null);
+    }
+  }, [editingItemId, items]);
+
+  const deleteItems = async (ids: string[]) => {
+    setPendingDelete(true);
+    setMessage("");
+    try {
+      const countToDelete = ids.length;
+      await jsonFetch<{ count: number; ids: string[] }>("/api/content/items", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      setSelectedIds((current) => current.filter((itemId) => !ids.includes(itemId)));
+      setMessage(
+        t(
+          `Deleted ${countToDelete} content items.`,
+          `已删除 ${countToDelete} 条内容。`
+        )
+      );
+      router.refresh();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : t("Delete failed.", "删除失败。")
+      );
+    } finally {
+      setPendingDelete(false);
+    }
+  };
+
+  const sections = contentTypeOrder
+    .map((type) => ({
+      type,
+      items: filteredItems.filter((item) => item.type === type),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          placeholder={t("Search content titles, subtitles, and tags...", "搜索内容标题、副标题和标签...")}
+        />
+        <select
+          value={sourceFilter}
+          onChange={(event) => setSourceFilter(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="all">{t("All sources", "全部来源")}</option>
+          <option value="manual">{t("Manual", "手动录入")}</option>
+          <option value="import">{t("Import", "导入")}</option>
+        </select>
+        <select
+          value={tagFilter}
+          onChange={(event) => setTagFilter(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="all">{t("All tags", "全部标签")}</option>
+          {availableTags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="smart">{t("Sort: smart", "排序：智能")}</option>
+          <option value="title">{t("Sort: title", "排序：标题")}</option>
+          <option value="difficulty">{t("Sort: difficulty", "排序：难度")}</option>
+          <option value="source">{t("Sort: source", "排序：来源")}</option>
+        </select>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className="rounded-full border border-outline-variant px-4 py-2 text-sm font-semibold text-secondary"
+          onClick={() =>
+            setSelectedIds((current) =>
+              allVisibleSelected
+                ? current.filter((itemId) => !visibleIds.includes(itemId))
+                : Array.from(new Set([...current, ...visibleIds]))
+            )
+          }
+        >
+          {allVisibleSelected
+            ? t("Clear visible selection", "取消当前筛选结果选择")
+            : t("Select visible rows", "选中当前筛选结果")}
+        </button>
+        <button
+          type="button"
+          disabled={selectedIds.length === 0 || pendingDelete}
+          className="rounded-full bg-error px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+          onClick={() => void deleteItems(selectedIds)}
+        >
+          {pendingDelete
+            ? t("Deleting...", "删除中...")
+            : t("Delete selected", "删除选中项")}
+        </button>
+        <p className="text-sm font-semibold text-secondary">
+          {t(
+            `${filteredItems.length} items shown · ${selectedIds.length} selected`,
+            `当前显示 ${filteredItems.length} 条 · 已选中 ${selectedIds.length} 条`
+          )}
+        </p>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+
+      {sections.map((section) => (
+        <div
+          key={section.type}
+          className="space-y-3 rounded-3xl border border-black/5 bg-white p-5 shadow-sm"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">
+                {contentTypeLabel(section.type, t)}
+              </h3>
+              <p className="text-sm text-secondary">
+                {t(
+                  `${section.items.length} items in this category`,
+                  `该分类下共有 ${section.items.length} 条内容`
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            {renderManagedContentTable({
+              type: section.type,
+              items: section.items,
+              selectedIds,
+              setSelectedIds,
+              editingItemId,
+              setEditingItemId,
+              t,
+            })}
+          </div>
+          {editingItem?.type === section.type ? (
+            <ContentItemEditor
+              key={editingItem.id}
+              item={editingItem}
+              onCancel={() => setEditingItemId(null)}
+              onSaved={() => {
+                setEditingItemId(null);
+                setMessage(t("Content item updated.", "内容已更新。"));
+              }}
+            />
+          ) : null}
+        </div>
+      ))}
+
+      {sections.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-outline-variant px-6 py-10 text-center text-sm font-medium text-secondary">
+          {t("No content matches the current filters.", "当前筛选条件下没有内容。")}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function AnalyticsExportButton() {
   const t = useText();
   const [message, setMessage] = useState("");
@@ -2699,31 +3373,594 @@ export function AnalyticsExportButton() {
   );
 }
 
-export function ContentFilterTable({ items }: { items: ContentItem[] }) {
+const contentTypeOrder = ["school", "major", "competition", "course", "chapter"] as const;
+
+function contentTypeLabel(type: ContentItem["type"], t: ReturnType<typeof useText>) {
+  switch (type) {
+    case "school":
+      return t("Schools", "学校");
+    case "major":
+      return t("Majors", "专业");
+    case "competition":
+      return t("Competitions", "竞赛");
+    case "course":
+      return t("Courses", "课程");
+    case "chapter":
+      return t("Chapters", "章节");
+    default:
+      return type;
+  }
+}
+
+function sortManagedContentItems(left: ContentItem, right: ContentItem, sortBy: string) {
+  if (sortBy === "title") {
+    return left.title.localeCompare(right.title);
+  }
+
+  if (sortBy === "difficulty") {
+    return compareDifficulty(left.difficulty, right.difficulty) || left.title.localeCompare(right.title);
+  }
+
+  if (sortBy === "source") {
+    return left.source.localeCompare(right.source) || left.title.localeCompare(right.title);
+  }
+
+  if (left.type === "school" && right.type === "school") {
+    return compareRanking(left, right) || left.title.localeCompare(right.title);
+  }
+
+  return left.type.localeCompare(right.type) || left.title.localeCompare(right.title);
+}
+
+function renderManagedContentTable({
+  type,
+  items,
+  selectedIds,
+  setSelectedIds,
+  editingItemId,
+  setEditingItemId,
+  t,
+}: {
+  type: ContentItem["type"];
+  items: ContentItem[];
+  selectedIds: string[];
+  setSelectedIds: Dispatch<SetStateAction<string[]>>;
+  editingItemId: string | null;
+  setEditingItemId: Dispatch<SetStateAction<string | null>>;
+  t: ReturnType<typeof useText>;
+}) {
+  if (type === "school") {
+    return (
+      <table className="min-w-[1100px] w-full text-left text-sm">
+        <thead className="bg-surface-container-low text-secondary">
+          <tr>
+            <th className="px-4 py-3" />
+            <th className="px-4 py-3">{t("School", "学校")}</th>
+            <th className="px-4 py-3">{t("Country", "国家")}</th>
+            <th className="px-4 py-3">{t("Ranking", "排名")}</th>
+            <th className="px-4 py-3">{t("City", "城市")}</th>
+            <th className="px-4 py-3">{t("Tuition", "学费")}</th>
+            <th className="px-4 py-3">{t("Acceptance Rate", "录取率")}</th>
+            <th className="px-4 py-3">{t("Tags", "标签")}</th>
+            <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
+            <th className="px-4 py-3">{t("Source", "来源")}</th>
+            <th className="px-4 py-3">{t("Edit", "编辑")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t border-black/5">
+              <td className="px-4 py-3 align-top">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={(event) =>
+                    setSelectedIds((current) =>
+                      event.target.checked
+                        ? [...current, item.id]
+                        : current.filter((itemId) => itemId !== item.id)
+                    )
+                  }
+                />
+              </td>
+              <td className="px-4 py-3">
+                <p className="font-semibold text-foreground">{item.title}</p>
+                <p className="text-xs text-secondary">{item.subtitle}</p>
+              </td>
+              <td className="px-4 py-3 text-secondary">{item.country ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">
+                {renderSchoolRanking(item.schoolDetails?.ranking, t)}
+              </td>
+              <td className="px-4 py-3 text-secondary">
+                {renderSchoolInfoChip(item.schoolDetails?.city, "neutral")}
+              </td>
+              <td className="px-4 py-3 text-secondary">
+                {renderSchoolInfoChip(formatSchoolTuition(item.schoolDetails?.tuitionUsd), "primary")}
+              </td>
+              <td className="px-4 py-3 text-secondary">
+                {renderSchoolInfoChip(formatAcceptanceRate(item.schoolDetails?.acceptanceRate), "success")}
+              </td>
+              <td className="px-4 py-3">{renderTagChips(item.tags)}</td>
+              <td className="px-4 py-3">{item.difficulty}</td>
+              <td className="px-4 py-3 capitalize text-secondary">{item.source}</td>
+              <td className="px-4 py-3">
+                <button
+                  type="button"
+                  className="rounded-full border border-outline-variant px-3 py-1.5 text-xs font-semibold text-secondary"
+                  onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}
+                >
+                  {editingItemId === item.id ? t("Editing", "编辑中") : t("Edit", "编辑")}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  if (type === "major") {
+    return (
+      <table className="min-w-[1080px] w-full text-left text-sm">
+        <thead className="bg-surface-container-low text-secondary">
+          <tr>
+            <th className="px-4 py-3" />
+            <th className="px-4 py-3">{t("Major", "专业")}</th>
+            <th className="px-4 py-3">{t("Degree", "学位")}</th>
+            <th className="px-4 py-3">{t("STEM", "STEM")}</th>
+            <th className="px-4 py-3">{t("Recommended Background", "推荐背景")}</th>
+            <th className="px-4 py-3">{t("Career Paths", "就业方向")}</th>
+            <th className="px-4 py-3">{t("Tags", "标签")}</th>
+            <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
+            <th className="px-4 py-3">{t("Source", "来源")}</th>
+            <th className="px-4 py-3">{t("Edit", "编辑")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t border-black/5">
+              <td className="px-4 py-3 align-top">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={(event) =>
+                    setSelectedIds((current) =>
+                      event.target.checked
+                        ? [...current, item.id]
+                        : current.filter((itemId) => itemId !== item.id)
+                    )
+                  }
+                />
+              </td>
+              <td className="px-4 py-3">
+                <p className="font-semibold text-foreground">{item.title}</p>
+                <p className="text-xs text-secondary">{item.subtitle}</p>
+              </td>
+              <td className="px-4 py-3 text-secondary">{item.majorDetails?.degree ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.majorDetails?.stemEligible ? "Yes" : "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.majorDetails?.recommendedBackground ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">
+                {item.majorDetails?.careerPaths?.length ? item.majorDetails.careerPaths.join(", ") : "—"}
+              </td>
+              <td className="px-4 py-3">{renderTagChips(item.tags)}</td>
+              <td className="px-4 py-3">{item.difficulty}</td>
+              <td className="px-4 py-3 capitalize text-secondary">{item.source}</td>
+              <td className="px-4 py-3">
+                <button
+                  type="button"
+                  className="rounded-full border border-outline-variant px-3 py-1.5 text-xs font-semibold text-secondary"
+                  onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}
+                >
+                  {editingItemId === item.id ? t("Editing", "编辑中") : t("Edit", "编辑")}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  if (type === "competition") {
+    return (
+      <table className="min-w-[1080px] w-full text-left text-sm">
+        <thead className="bg-surface-container-low text-secondary">
+          <tr>
+            <th className="px-4 py-3" />
+            <th className="px-4 py-3">{t("Competition", "竞赛")}</th>
+            <th className="px-4 py-3">{t("Organizer", "主办方")}</th>
+            <th className="px-4 py-3">{t("Eligibility", "参赛要求")}</th>
+            <th className="px-4 py-3">{t("Award", "奖项")}</th>
+            <th className="px-4 py-3">{t("Season", "赛季")}</th>
+            <th className="px-4 py-3">{t("Country", "国家")}</th>
+            <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
+            <th className="px-4 py-3">{t("Source", "来源")}</th>
+            <th className="px-4 py-3">{t("Edit", "编辑")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t border-black/5">
+              <td className="px-4 py-3 align-top">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={(event) =>
+                    setSelectedIds((current) =>
+                      event.target.checked
+                        ? [...current, item.id]
+                        : current.filter((itemId) => itemId !== item.id)
+                    )
+                  }
+                />
+              </td>
+              <td className="px-4 py-3">
+                <p className="font-semibold text-foreground">{item.title}</p>
+                <p className="text-xs text-secondary">{item.subtitle}</p>
+              </td>
+              <td className="px-4 py-3 text-secondary">{item.competitionDetails?.organizer ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.competitionDetails?.eligibility ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.competitionDetails?.award ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.competitionDetails?.season ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.country ?? "—"}</td>
+              <td className="px-4 py-3">{item.difficulty}</td>
+              <td className="px-4 py-3 capitalize text-secondary">{item.source}</td>
+              <td className="px-4 py-3">
+                <button
+                  type="button"
+                  className="rounded-full border border-outline-variant px-3 py-1.5 text-xs font-semibold text-secondary"
+                  onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}
+                >
+                  {editingItemId === item.id ? t("Editing", "编辑中") : t("Edit", "编辑")}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  if (type === "course") {
+    return (
+      <table className="min-w-[980px] w-full text-left text-sm">
+        <thead className="bg-surface-container-low text-secondary">
+          <tr>
+            <th className="px-4 py-3" />
+            <th className="px-4 py-3">{t("Course", "课程")}</th>
+            <th className="px-4 py-3">{t("Provider", "提供方")}</th>
+            <th className="px-4 py-3">{t("Format", "形式")}</th>
+            <th className="px-4 py-3">{t("Duration", "周期")}</th>
+            <th className="px-4 py-3">{t("Workload", "学习强度")}</th>
+            <th className="px-4 py-3">{t("Tags", "标签")}</th>
+            <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
+            <th className="px-4 py-3">{t("Source", "来源")}</th>
+            <th className="px-4 py-3">{t("Edit", "编辑")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t border-black/5">
+              <td className="px-4 py-3 align-top">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={(event) =>
+                    setSelectedIds((current) =>
+                      event.target.checked
+                        ? [...current, item.id]
+                        : current.filter((itemId) => itemId !== item.id)
+                    )
+                  }
+                />
+              </td>
+              <td className="px-4 py-3">
+                <p className="font-semibold text-foreground">{item.title}</p>
+                <p className="text-xs text-secondary">{item.subtitle}</p>
+              </td>
+              <td className="px-4 py-3 text-secondary">{item.courseDetails?.provider ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">{item.courseDetails?.format ?? "—"}</td>
+              <td className="px-4 py-3 text-secondary">
+                {item.courseDetails?.durationWeeks != null ? `${item.courseDetails.durationWeeks}w` : "—"}
+              </td>
+              <td className="px-4 py-3 text-secondary">{item.courseDetails?.workload ?? "—"}</td>
+              <td className="px-4 py-3">{renderTagChips(item.tags)}</td>
+              <td className="px-4 py-3">{item.difficulty}</td>
+              <td className="px-4 py-3 capitalize text-secondary">{item.source}</td>
+              <td className="px-4 py-3">
+                <button
+                  type="button"
+                  className="rounded-full border border-outline-variant px-3 py-1.5 text-xs font-semibold text-secondary"
+                  onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}
+                >
+                  {editingItemId === item.id ? t("Editing", "编辑中") : t("Edit", "编辑")}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  return (
+    <table className="min-w-[980px] w-full text-left text-sm">
+      <thead className="bg-surface-container-low text-secondary">
+        <tr>
+          <th className="px-4 py-3" />
+          <th className="px-4 py-3">{t("Chapter", "章节")}</th>
+          <th className="px-4 py-3">{t("Curriculum", "所属课程")}</th>
+          <th className="px-4 py-3">{t("Sequence", "顺序")}</th>
+          <th className="px-4 py-3">{t("Estimated Hours", "预计时长")}</th>
+          <th className="px-4 py-3">{t("Key Skill", "核心能力")}</th>
+          <th className="px-4 py-3">{t("Tags", "标签")}</th>
+          <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
+          <th className="px-4 py-3">{t("Source", "来源")}</th>
+          <th className="px-4 py-3">{t("Edit", "编辑")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item) => (
+          <tr key={item.id} className="border-t border-black/5">
+            <td className="px-4 py-3 align-top">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(item.id)}
+                onChange={(event) =>
+                  setSelectedIds((current) =>
+                    event.target.checked
+                      ? [...current, item.id]
+                      : current.filter((itemId) => itemId !== item.id)
+                  )
+                }
+              />
+            </td>
+            <td className="px-4 py-3">
+              <p className="font-semibold text-foreground">{item.title}</p>
+              <p className="text-xs text-secondary">{item.subtitle}</p>
+            </td>
+            <td className="px-4 py-3 text-secondary">{item.chapterDetails?.curriculum ?? "—"}</td>
+            <td className="px-4 py-3 text-secondary">{item.chapterDetails?.sequence ?? "—"}</td>
+            <td className="px-4 py-3 text-secondary">
+              {item.chapterDetails?.estimatedHours != null ? `${item.chapterDetails.estimatedHours}h` : "—"}
+            </td>
+            <td className="px-4 py-3 text-secondary">{item.chapterDetails?.keySkill ?? "—"}</td>
+            <td className="px-4 py-3">{renderTagChips(item.tags)}</td>
+            <td className="px-4 py-3">{item.difficulty}</td>
+            <td className="px-4 py-3 capitalize text-secondary">{item.source}</td>
+            <td className="px-4 py-3">
+              <button
+                type="button"
+                className="rounded-full border border-outline-variant px-3 py-1.5 text-xs font-semibold text-secondary"
+                onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}
+              >
+                {editingItemId === item.id ? t("Editing", "编辑中") : t("Edit", "编辑")}
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function renderTagChips(tags: string[]) {
+  if (tags.length === 0) {
+    return <span className="text-secondary">—</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold text-secondary"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function ContentFilterTable({
+  items,
+  canManage = false,
+}: {
+  items: ContentItem[];
+  canManage?: boolean;
+}) {
   const t = useText();
   const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("title");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(false);
   const deferredQuery = useDeferredValue(query);
+  const router = useRouter();
 
-  const filteredItems = items.filter((item) =>
-    `${item.title} ${item.subtitle} ${item.tags.join(" ")}`
-      .toLowerCase()
-      .includes(deferredQuery.toLowerCase())
+  const availableTags = Array.from(new Set(items.flatMap((item) => item.tags))).sort((left, right) =>
+    left.localeCompare(right)
   );
+
+  const filteredItems = items
+    .filter((item) => {
+      const matchesQuery = `${item.title} ${item.subtitle} ${item.tags.join(" ")} ${item.country ?? ""}`
+        .toLowerCase()
+        .includes(deferredQuery.toLowerCase());
+      const matchesType = typeFilter === "all" || item.type === typeFilter;
+      const matchesSource = sourceFilter === "all" || item.source === sourceFilter;
+      const matchesTag = tagFilter === "all" || item.tags.includes(tagFilter);
+      return matchesQuery && matchesType && matchesSource && matchesTag;
+    })
+    .slice()
+    .sort((left, right) => {
+      if (sortBy === "title") {
+        return left.title.localeCompare(right.title);
+      }
+
+      if (sortBy === "type") {
+        return left.type.localeCompare(right.type) || left.title.localeCompare(right.title);
+      }
+
+      if (sortBy === "difficulty") {
+        return compareDifficulty(left.difficulty, right.difficulty) || left.title.localeCompare(right.title);
+      }
+
+      return compareRanking(left, right) || left.title.localeCompare(right.title);
+    });
+
+  const visibleIds = filteredItems.map((item) => item.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((itemId) => selectedIds.includes(itemId));
+  const deleteItems = async (ids: string[]) => {
+    setPendingDelete(true);
+    setMessage("");
+    try {
+      const countToDelete = ids.length;
+      await jsonFetch<{ count: number; ids: string[] }>("/api/content/items", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      setSelectedIds((current) => current.filter((itemId) => !ids.includes(itemId)));
+      setMessage(
+        t(
+          `Deleted ${countToDelete} content items.`,
+          `已删除 ${countToDelete} 条内容。`
+        )
+      );
+      router.refresh();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : t("Delete failed.", "删除失败。")
+      );
+    } finally {
+      setPendingDelete(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <input
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
-        placeholder={t("Filter content, majors, or schools...", "筛选内容、专业或学校...")}
-      />
-      <div className="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          placeholder={t("Filter content, majors, or schools...", "筛选内容、专业或学校...")}
+        />
+        <select
+          value={typeFilter}
+          onChange={(event) => setTypeFilter(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="all">{t("All types", "全部类型")}</option>
+          <option value="course">{t("Course", "课程")}</option>
+          <option value="chapter">{t("Chapter", "章节")}</option>
+          <option value="competition">{t("Competition", "竞赛")}</option>
+          <option value="school">{t("School", "学校")}</option>
+          <option value="major">{t("Major", "专业")}</option>
+        </select>
+        <select
+          value={sourceFilter}
+          onChange={(event) => setSourceFilter(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="all">{t("All sources", "全部来源")}</option>
+          <option value="manual">{t("Manual", "手动录入")}</option>
+          <option value="import">{t("Import", "导入")}</option>
+        </select>
+        <select
+          value={tagFilter}
+          onChange={(event) => setTagFilter(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="all">{t("All tags", "全部标签")}</option>
+          {availableTags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+          className="rounded-2xl bg-surface-container-low px-4 py-3"
+        >
+          <option value="title">{t("Sort: title", "排序：标题")}</option>
+          <option value="type">{t("Sort: type", "排序：类型")}</option>
+          <option value="difficulty">{t("Sort: difficulty", "排序：难度")}</option>
+          <option value="ranking">{t("Sort: ranking", "排序：学校排名")}</option>
+        </select>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        {canManage ? (
+          <>
+            <button
+              type="button"
+              className="rounded-full border border-outline-variant px-4 py-2 text-sm font-semibold text-secondary"
+              onClick={() =>
+                setSelectedIds((current) =>
+                  allVisibleSelected
+                    ? current.filter((itemId) => !visibleIds.includes(itemId))
+                    : Array.from(new Set([...current, ...visibleIds]))
+                )
+              }
+            >
+              {allVisibleSelected
+                ? t("Clear visible selection", "取消当前筛选结果选择")
+                : t("Select visible rows", "选中当前筛选结果")}
+            </button>
+            <button
+              type="button"
+              disabled={selectedIds.length === 0 || pendingDelete}
+              className="rounded-full bg-error px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+              onClick={() => void deleteItems(selectedIds)}
+            >
+              {pendingDelete
+                ? t("Deleting...", "删除中...")
+                : t("Delete selected", "删除选中项")}
+            </button>
+          </>
+        ) : null}
+        <p className="text-sm font-semibold text-secondary">
+          {canManage
+            ? t(
+                `${filteredItems.length} items shown · ${selectedIds.length} selected`,
+                `当前显示 ${filteredItems.length} 条 · 已选中 ${selectedIds.length} 条`
+              )
+            : t(`${filteredItems.length} items shown`, `当前显示 ${filteredItems.length} 条`)}
+        </p>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+      <div className="overflow-x-auto rounded-3xl border border-black/5 bg-white shadow-sm">
+        <table className="min-w-[980px] w-full text-left text-sm">
           <thead className="bg-surface-container-low text-secondary">
             <tr>
+              {canManage ? (
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={() =>
+                      setSelectedIds((current) =>
+                        allVisibleSelected
+                          ? current.filter((itemId) => !visibleIds.includes(itemId))
+                          : Array.from(new Set([...current, ...visibleIds]))
+                      )
+                    }
+                    aria-label={t("Select visible rows", "选中当前筛选结果")}
+                  />
+                </th>
+              ) : null}
               <th className="px-4 py-3">{t("Title", "标题")}</th>
               <th className="px-4 py-3">{t("Type", "类型")}</th>
+              <th className="px-4 py-3">{t("Details", "详情字段")}</th>
               <th className="px-4 py-3">{t("Difficulty", "难度")}</th>
               <th className="px-4 py-3">{t("Source", "来源")}</th>
             </tr>
@@ -2731,18 +3968,252 @@ export function ContentFilterTable({ items }: { items: ContentItem[] }) {
           <tbody>
             {filteredItems.map((item) => (
               <tr key={item.id} className="border-t border-black/5">
+                {canManage ? (
+                  <td className="px-4 py-3 align-top">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(item.id)}
+                      onChange={(event) =>
+                        setSelectedIds((current) =>
+                          event.target.checked
+                            ? [...current, item.id]
+                            : current.filter((itemId) => itemId !== item.id)
+                        )
+                      }
+                      aria-label={t("Select row", "选中行")}
+                    />
+                  </td>
+                ) : null}
                 <td className="px-4 py-3">
                   <p className="font-semibold text-foreground">{item.title}</p>
                   <p className="text-xs text-secondary">{item.subtitle}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {item.tags.map((tag) => (
+                      <span
+                        key={`${item.id}-${tag}`}
+                        className="rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold text-secondary"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </td>
                 <td className="px-4 py-3 capitalize text-secondary">{item.type}</td>
+                <td className="px-4 py-3 text-secondary">{renderContentDetailsSummary(item, t)}</td>
                 <td className="px-4 py-3">{item.difficulty}</td>
                 <td className="px-4 py-3 capitalize text-secondary">{item.source}</td>
               </tr>
             ))}
+            {filteredItems.length === 0 ? (
+              <tr className="border-t border-black/5">
+                <td colSpan={canManage ? 6 : 5} className="px-4 py-6 text-center text-sm font-medium text-secondary">
+                  {t("No content matches the current filters.", "当前筛选条件下没有内容。")}
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
     </div>
   );
+}
+
+function splitCommaValue(value: string) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseOptionalNumber(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function compareDifficulty(left: ContentItem["difficulty"], right: ContentItem["difficulty"]) {
+  const order = { Safety: 0, Match: 1, Reach: 2 };
+  return order[left] - order[right];
+}
+
+function compareRanking(left: ContentItem, right: ContentItem) {
+  const leftValue = extractRankingNumber(left.schoolDetails?.ranking);
+  const rightValue = extractRankingNumber(right.schoolDetails?.ranking);
+  return leftValue - rightValue;
+}
+
+function extractRankingNumber(value?: string) {
+  if (!value) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const match = value.match(/\d+(\.\d+)?/);
+  if (!match) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+}
+
+function splitRankingDisplay(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+
+  if (!match) {
+    return {
+      number: null,
+      source: trimmed,
+      raw: trimmed,
+    };
+  }
+
+  return {
+    number: match[1],
+    source: match[2]?.trim() || null,
+    raw: trimmed,
+  };
+}
+
+function renderSchoolRanking(value: string | undefined, t: ReturnType<typeof useText>) {
+  const ranking = splitRankingDisplay(value);
+
+  if (!ranking) {
+    return "—";
+  }
+
+  if (!ranking.number) {
+    return (
+      <span className="inline-flex rounded-full bg-surface-container-low px-2.5 py-1 text-xs font-semibold text-secondary">
+        {ranking.raw}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="inline-flex min-w-12 items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+        {t(`#${ranking.number}`, `#${ranking.number}`)}
+      </span>
+      {ranking.source ? (
+        <span className="inline-flex rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold text-secondary">
+          {ranking.source}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function renderSchoolInfoChip(
+  value: string | null | undefined,
+  tone: "neutral" | "primary" | "success"
+) {
+  if (!value) {
+    return "—";
+  }
+
+  const toneClass =
+    tone === "primary"
+      ? "bg-primary/10 text-primary"
+      : tone === "success"
+        ? "bg-emerald-100 text-emerald-700"
+        : "bg-surface-container-low text-secondary";
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${toneClass}`}
+    >
+      {value}
+    </span>
+  );
+}
+
+function formatSchoolTuition(value?: number) {
+  if (value == null || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return `$${value.toLocaleString()}/yr`;
+}
+
+function formatAcceptanceRate(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.endsWith("%")) {
+    return trimmed;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) {
+    return trimmed;
+  }
+
+  if (parsed <= 1) {
+    return `${(parsed * 100).toFixed(1).replace(/\.0$/, "")}%`;
+  }
+
+  return `${parsed.toFixed(1).replace(/\.0$/, "")}%`;
+}
+
+function renderContentDetailsSummary(item: ContentItem, t: ReturnType<typeof useText>) {
+  const chips: string[] = [];
+
+  if (item.type === "school") {
+    if (item.schoolDetails?.ranking) {
+      const ranking = splitRankingDisplay(item.schoolDetails.ranking);
+      if (ranking?.number && ranking.source) {
+        chips.push(
+          t(`Rank #${ranking.number} · ${ranking.source}`, `排名 #${ranking.number} · ${ranking.source}`)
+        );
+      } else if (ranking?.number) {
+        chips.push(t(`Rank #${ranking.number}`, `排名 #${ranking.number}`));
+      } else if (ranking?.raw) {
+        chips.push(t(`Rank ${ranking.raw}`, `排名 ${ranking.raw}`));
+      }
+    }
+    if (item.schoolDetails?.city) chips.push(item.schoolDetails.city);
+    if (item.schoolDetails?.tuitionUsd != null) chips.push(`$${item.schoolDetails.tuitionUsd.toLocaleString()}/yr`);
+    if (item.schoolDetails?.acceptanceRate) {
+      const formattedRate = formatAcceptanceRate(item.schoolDetails.acceptanceRate);
+      if (formattedRate) chips.push(formattedRate);
+    }
+  }
+
+  if (item.type === "major") {
+    if (item.majorDetails?.degree) chips.push(item.majorDetails.degree);
+    if (item.majorDetails?.stemEligible) chips.push("STEM");
+    if (item.majorDetails?.careerPaths?.length) chips.push(item.majorDetails.careerPaths[0] as string);
+    if (item.majorDetails?.recommendedBackground) chips.push(item.majorDetails.recommendedBackground);
+  }
+
+  if (item.type === "competition") {
+    if (item.competitionDetails?.organizer) chips.push(item.competitionDetails.organizer);
+    if (item.competitionDetails?.eligibility) chips.push(item.competitionDetails.eligibility);
+    if (item.competitionDetails?.award) chips.push(item.competitionDetails.award);
+    if (item.competitionDetails?.season) chips.push(item.competitionDetails.season);
+  }
+
+  if (item.type === "course") {
+    if (item.courseDetails?.provider) chips.push(item.courseDetails.provider);
+    if (item.courseDetails?.format) chips.push(item.courseDetails.format);
+    if (item.courseDetails?.durationWeeks != null) chips.push(t(`${item.courseDetails.durationWeeks} weeks`, `${item.courseDetails.durationWeeks} 周`));
+    if (item.courseDetails?.workload) chips.push(item.courseDetails.workload);
+  }
+
+  if (item.type === "chapter") {
+    if (item.chapterDetails?.curriculum) chips.push(item.chapterDetails.curriculum);
+    if (item.chapterDetails?.sequence) chips.push(item.chapterDetails.sequence);
+    if (item.chapterDetails?.estimatedHours != null) chips.push(t(`${item.chapterDetails.estimatedHours} hours`, `${item.chapterDetails.estimatedHours} 小时`));
+    if (item.chapterDetails?.keySkill) chips.push(item.chapterDetails.keySkill);
+  }
+
+  return chips.length ? chips.join(" · ") : "—";
 }

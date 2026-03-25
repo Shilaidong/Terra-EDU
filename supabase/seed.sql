@@ -182,6 +182,39 @@ values
   )
 on conflict (id) do nothing;
 
+insert into school_content_details (content_item_id, ranking, city, tuition_usd, acceptance_rate)
+values
+  (
+    '77777777-7777-7777-7777-777777777771',
+    '6',
+    'Palo Alto',
+    65127,
+    '3.9%'
+  )
+on conflict (content_item_id) do nothing;
+
+insert into major_content_details (content_item_id, degree, stem_eligible, recommended_background, career_paths)
+values
+  (
+    '77777777-7777-7777-7777-777777777772',
+    'BS',
+    true,
+    'Physics, calculus, environmental systems',
+    array['Sustainability Consultant', 'Water Systems Engineer']
+  )
+on conflict (content_item_id) do nothing;
+
+insert into competition_content_details (content_item_id, organizer, eligibility, award, season)
+values
+  (
+    '77777777-7777-7777-7777-777777777773',
+    'Eco Future Alliance',
+    'Grade 9-12 teams',
+    'Global finalist recognition',
+    'Spring'
+  )
+on conflict (content_item_id) do nothing;
+
 insert into advisor_notes (id, student_id, consultant_id, title, summary, created_at)
 values
   (

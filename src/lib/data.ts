@@ -18,6 +18,18 @@ import type {
 
 type DbRow = Record<string, unknown>;
 type StudentLiveMetrics = Pick<StudentRecord, "completion" | "checkInStreak" | "masteryAverage">;
+type SchoolContentDetails = NonNullable<ContentItem["schoolDetails"]>;
+type MajorContentDetails = NonNullable<ContentItem["majorDetails"]>;
+type CompetitionContentDetails = NonNullable<ContentItem["competitionDetails"]>;
+type CourseContentDetails = NonNullable<ContentItem["courseDetails"]>;
+type ChapterContentDetails = NonNullable<ContentItem["chapterDetails"]>;
+type ContentDetailMaps = {
+  school: Map<string, SchoolContentDetails>;
+  major: Map<string, MajorContentDetails>;
+  competition: Map<string, CompetitionContentDetails>;
+  course: Map<string, CourseContentDetails>;
+  chapter: Map<string, ChapterContentDetails>;
+};
 
 export function getUserByCredentials(email: string, password: string, role: UserRole) {
   const store = getStore();
@@ -268,7 +280,12 @@ export async function getContentItemsData() {
   }
 
   const { data } = await supabase.from("content_items").select("*").order("created_at", { ascending: false });
-  return data?.length ? data.map(mapContentItem) : getContentItemsFallback();
+  if (!data?.length) {
+    return getContentItemsFallback();
+  }
+
+  const detailMaps = await loadContentDetailMaps();
+  return data.map((row) => mapContentItem(row, detailMaps));
 }
 
 export async function getAnalyticsData() {
@@ -532,6 +549,59 @@ export function createImportedContentItems(items: Omit<ContentItem, "id" | "sour
       source: "import",
     })
   );
+}
+
+export async function updateContentItem(
+  itemId: string,
+  input: Omit<ContentItem, "id" | "source"> & Partial<Pick<ContentItem, "source" | "status">>
+) {
+  const store = getStore();
+  const localItem = store.contentItems.find((item) => item.id === itemId);
+
+  if (localItem) {
+    const updatedItem = normalizeContentItemDetails({
+      ...localItem,
+      ...input,
+      id: itemId,
+      source: input.source ?? localItem.source,
+      status: input.status ?? localItem.status,
+    });
+
+    Object.assign(localItem, updatedItem);
+    await persistContentItem(localItem);
+    return localItem;
+  }
+
+  const persistedItem = await getPersistedContentItemById(itemId);
+
+  if (!persistedItem) {
+    return null;
+  }
+
+  const updatedItem = normalizeContentItemDetails({
+    ...persistedItem,
+    ...input,
+    id: itemId,
+    source: input.source ?? persistedItem.source,
+    status: input.status ?? persistedItem.status,
+  });
+
+  store.contentItems.unshift(updatedItem);
+  await persistContentItem(updatedItem);
+  return updatedItem;
+}
+
+export async function deleteContentItems(itemIds: string[]) {
+  const uniqueIds = Array.from(new Set(itemIds));
+  const store = getStore();
+  const deletedItems = store.contentItems.filter((item) => uniqueIds.includes(item.id));
+
+  if (deletedItems.length > 0) {
+    store.contentItems = store.contentItems.filter((item) => !uniqueIds.includes(item.id));
+  }
+
+  await removeContentItems(uniqueIds);
+  return deletedItems;
 }
 
 export function createAdvisorNote(input: Omit<AdvisorNote, "id">) {
@@ -906,7 +976,7 @@ async function persistContentItem(item: ContentItem) {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
 
-  await supabase.from("content_items").upsert({
+  const payload = {
     id: item.id,
     type: item.type,
     title: item.title,
@@ -916,7 +986,199 @@ async function persistContentItem(item: ContentItem) {
     difficulty: item.difficulty,
     status: item.status,
     source: item.source,
-  });
+  };
+
+  const { error } = await supabase.from("content_items").upsert(payload);
+
+  if (!error) {
+    await persistContentDetail(item);
+    return;
+  }
+}
+
+async function removeContentItems(itemIds: string[]) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase || itemIds.length === 0) return;
+
+  await supabase.from("content_items").delete().in("id", itemIds);
+}
+
+async function getPersistedContentItemById(itemId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data } = await supabase.from("content_items").select("*").eq("id", itemId).maybeSingle();
+
+  if (!data) {
+    return null;
+  }
+
+  const detailMaps = await loadContentDetailMaps();
+  return mapContentItem(data, detailMaps);
+}
+
+async function persistContentDetail(item: ContentItem) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await Promise.allSettled([
+    supabase.from("school_content_details").delete().eq("content_item_id", item.id),
+    supabase.from("major_content_details").delete().eq("content_item_id", item.id),
+    supabase.from("competition_content_details").delete().eq("content_item_id", item.id),
+    supabase.from("course_content_details").delete().eq("content_item_id", item.id),
+    supabase.from("chapter_content_details").delete().eq("content_item_id", item.id),
+  ]);
+
+  if (item.type === "school" && item.schoolDetails) {
+    await Promise.allSettled([
+      supabase.from("school_content_details").upsert({
+        content_item_id: item.id,
+        ranking: item.schoolDetails.ranking ?? null,
+        city: item.schoolDetails.city ?? null,
+        tuition_usd: item.schoolDetails.tuitionUsd ?? null,
+        acceptance_rate: item.schoolDetails.acceptanceRate ?? null,
+      }),
+    ]);
+  }
+
+  if (item.type === "major" && item.majorDetails) {
+    await Promise.allSettled([
+      supabase.from("major_content_details").upsert({
+        content_item_id: item.id,
+        degree: item.majorDetails.degree ?? null,
+        stem_eligible: item.majorDetails.stemEligible ?? null,
+        recommended_background: item.majorDetails.recommendedBackground ?? null,
+        career_paths: item.majorDetails.careerPaths ?? [],
+      }),
+    ]);
+  }
+
+  if (item.type === "competition" && item.competitionDetails) {
+    await Promise.allSettled([
+      supabase.from("competition_content_details").upsert({
+        content_item_id: item.id,
+        organizer: item.competitionDetails.organizer ?? null,
+        eligibility: item.competitionDetails.eligibility ?? null,
+        award: item.competitionDetails.award ?? null,
+        season: item.competitionDetails.season ?? null,
+      }),
+    ]);
+  }
+
+  if (item.type === "course" && item.courseDetails) {
+    await Promise.allSettled([
+      supabase.from("course_content_details").upsert({
+        content_item_id: item.id,
+        provider: item.courseDetails.provider ?? null,
+        format: item.courseDetails.format ?? null,
+        duration_weeks: item.courseDetails.durationWeeks ?? null,
+        workload: item.courseDetails.workload ?? null,
+      }),
+    ]);
+  }
+
+  if (item.type === "chapter" && item.chapterDetails) {
+    await Promise.allSettled([
+      supabase.from("chapter_content_details").upsert({
+        content_item_id: item.id,
+        curriculum: item.chapterDetails.curriculum ?? null,
+        sequence: item.chapterDetails.sequence ?? null,
+        estimated_hours: item.chapterDetails.estimatedHours ?? null,
+        key_skill: item.chapterDetails.keySkill ?? null,
+      }),
+    ]);
+  }
+}
+
+async function loadContentDetailMaps(): Promise<ContentDetailMaps> {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return {
+      school: new Map(),
+      major: new Map(),
+      competition: new Map(),
+      course: new Map(),
+      chapter: new Map(),
+    };
+  }
+
+  const [
+    schoolResponse,
+    majorResponse,
+    competitionResponse,
+    courseResponse,
+    chapterResponse,
+  ] = await Promise.all([
+    supabase.from("school_content_details").select("*"),
+    supabase.from("major_content_details").select("*"),
+    supabase.from("competition_content_details").select("*"),
+    supabase.from("course_content_details").select("*"),
+    supabase.from("chapter_content_details").select("*"),
+  ]);
+
+  return {
+    school: new Map(
+      ((schoolResponse.data as DbRow[] | null) ?? []).map((row) => [
+        String(row.content_item_id),
+        {
+          ranking: row.ranking == null ? undefined : String(row.ranking),
+          city: row.city ? String(row.city) : undefined,
+          tuitionUsd: row.tuition_usd == null ? undefined : Number(row.tuition_usd),
+          acceptanceRate: row.acceptance_rate ? String(row.acceptance_rate) : undefined,
+        } satisfies SchoolContentDetails,
+      ])
+    ),
+    major: new Map(
+      ((majorResponse.data as DbRow[] | null) ?? []).map((row) => [
+        String(row.content_item_id),
+        {
+          degree: row.degree ? String(row.degree) : undefined,
+          stemEligible: row.stem_eligible == null ? undefined : Boolean(row.stem_eligible),
+          recommendedBackground: row.recommended_background
+            ? String(row.recommended_background)
+            : undefined,
+          careerPaths: ((row.career_paths as string[] | null) ?? []).map(String),
+        } satisfies MajorContentDetails,
+      ])
+    ),
+    competition: new Map(
+      ((competitionResponse.data as DbRow[] | null) ?? []).map((row) => [
+        String(row.content_item_id),
+        {
+          organizer: row.organizer ? String(row.organizer) : undefined,
+          eligibility: row.eligibility ? String(row.eligibility) : undefined,
+          award: row.award ? String(row.award) : undefined,
+          season: row.season ? String(row.season) : undefined,
+        } satisfies CompetitionContentDetails,
+      ])
+    ),
+    course: new Map(
+      ((courseResponse.data as DbRow[] | null) ?? []).map((row) => [
+        String(row.content_item_id),
+        {
+          provider: row.provider ? String(row.provider) : undefined,
+          format: row.format ? (String(row.format) as CourseContentDetails["format"]) : undefined,
+          durationWeeks: row.duration_weeks == null ? undefined : Number(row.duration_weeks),
+          workload: row.workload ? String(row.workload) : undefined,
+        } satisfies CourseContentDetails,
+      ])
+    ),
+    chapter: new Map(
+      ((chapterResponse.data as DbRow[] | null) ?? []).map((row) => [
+        String(row.content_item_id),
+        {
+          curriculum: row.curriculum ? String(row.curriculum) : undefined,
+          sequence: row.sequence ? String(row.sequence) : undefined,
+          estimatedHours: row.estimated_hours == null ? undefined : Number(row.estimated_hours),
+          keySkill: row.key_skill ? String(row.key_skill) : undefined,
+        } satisfies ChapterContentDetails,
+      ])
+    ),
+  };
 }
 
 async function persistAdvisorNote(note: AdvisorNote) {
@@ -1005,8 +1267,8 @@ function mapAdvisorNote(row: DbRow): AdvisorNote {
   };
 }
 
-function mapContentItem(row: DbRow): ContentItem {
-  return {
+function mapContentItem(row: DbRow, detailMaps?: ContentDetailMaps): ContentItem {
+  const item: ContentItem = {
     id: String(row.id),
     type: row.type as ContentItem["type"],
     title: String(row.title),
@@ -1014,8 +1276,31 @@ function mapContentItem(row: DbRow): ContentItem {
     country: row.country ? String(row.country) : undefined,
     tags: ((row.tags as string[] | null) ?? []).map(String),
     difficulty: row.difficulty as ContentItem["difficulty"],
-    status: row.status as ContentItem["status"],
+    status: row.status === "draft" ? "published" : (row.status as ContentItem["status"]),
     source: row.source as ContentItem["source"],
+  };
+
+  if (!detailMaps) {
+    return item;
+  }
+
+  item.schoolDetails = detailMaps.school.get(item.id);
+  item.majorDetails = detailMaps.major.get(item.id);
+  item.competitionDetails = detailMaps.competition.get(item.id);
+  item.courseDetails = detailMaps.course.get(item.id);
+  item.chapterDetails = detailMaps.chapter.get(item.id);
+
+  return normalizeContentItemDetails(item);
+}
+
+function normalizeContentItemDetails(item: ContentItem): ContentItem {
+  return {
+    ...item,
+    schoolDetails: item.type === "school" ? item.schoolDetails : undefined,
+    majorDetails: item.type === "major" ? item.majorDetails : undefined,
+    competitionDetails: item.type === "competition" ? item.competitionDetails : undefined,
+    courseDetails: item.type === "course" ? item.courseDetails : undefined,
+    chapterDetails: item.type === "chapter" ? item.chapterDetails : undefined,
   };
 }
 
