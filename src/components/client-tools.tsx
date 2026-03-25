@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -1165,7 +1166,33 @@ export function AiRecommendationPanel({
   }>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
   const router = useRouter();
+
+  const runGeneration = async () => {
+    setPending(true);
+    setError("");
+    setCopied("");
+    try {
+      const payload = await jsonFetch<{
+        summary: string;
+        recommendations: string[];
+        sources: string[];
+        trace_id: string;
+        decision_id: string;
+      }>("/api/ai/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, page, feature, prompt }),
+      });
+      setResult(payload.data ?? null);
+      router.refresh();
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
@@ -1186,29 +1213,7 @@ export function AiRecommendationPanel({
         <button
           type="button"
           disabled={pending}
-          onClick={async () => {
-            setPending(true);
-            setError("");
-            try {
-              const payload = await jsonFetch<{
-                summary: string;
-                recommendations: string[];
-                sources: string[];
-                trace_id: string;
-                decision_id: string;
-              }>("/api/ai/recommendations", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentId, page, feature, prompt }),
-              });
-              setResult(payload.data ?? null);
-              router.refresh();
-            } catch (submissionError) {
-              setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
-            } finally {
-              setPending(false);
-            }
-          }}
+          onClick={runGeneration}
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
         >
           {pending ? t("Thinking...", "生成中...") : buttonLabel ?? t("Generate", "生成")}
@@ -1228,6 +1233,23 @@ export function AiRecommendationPanel({
               </li>
             ))}
           </ul>
+          <AiActionRow
+            copiedMessage={copied}
+            onCopy={async () => {
+              await copyToClipboard(
+                [
+                  result.summary,
+                  "",
+                  ...result.recommendations.map((item, index) => `${index + 1}. ${item}`),
+                ].join("\n")
+              );
+              setCopied(t("Copied", "已复制"));
+            }}
+            onRegenerate={runGeneration}
+            regenerateLabel={t("Regenerate", "重新生成")}
+            copyLabel={t("Copy", "复制内容")}
+          />
+          <AiStudentFeedback />
           <div className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
             trace_id: {result.trace_id} · decision_id: {result.decision_id}
           </div>
@@ -1244,6 +1266,32 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
   const [trace, setTrace] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
+
+  const runChat = async () => {
+    setPending(true);
+    setError("");
+    setCopied("");
+
+    try {
+      const payload = await jsonFetch<{
+        summary: string;
+        trace_id: string;
+        decision_id: string;
+      }>("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, question }),
+      });
+
+      setAnswer(payload.data?.summary ?? "");
+      setTrace(`${payload.trace_id} · ${payload.data?.decision_id ?? ""}`);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
@@ -1263,29 +1311,7 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
       <button
         type="button"
         disabled={pending}
-        onClick={async () => {
-          setPending(true);
-          setError("");
-
-          try {
-            const payload = await jsonFetch<{
-              summary: string;
-              trace_id: string;
-              decision_id: string;
-            }>("/api/ai/chat", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ studentId, question }),
-            });
-
-            setAnswer(payload.data?.summary ?? "");
-            setTrace(`${payload.trace_id} · ${payload.data?.decision_id ?? ""}`);
-          } catch (submissionError) {
-            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
-          } finally {
-            setPending(false);
-          }
-        }}
+        onClick={runChat}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
         {pending ? t("Thinking...", "生成中...") : t("Ask AI", "向 AI 提问")}
@@ -1295,6 +1321,17 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
         <div className="mt-5 rounded-2xl bg-primary/5 p-4 text-sm leading-7 text-secondary">
           <AiDisclaimerBanner />
           <MarkdownText>{answer}</MarkdownText>
+          <AiActionRow
+            copiedMessage={copied}
+            onCopy={async () => {
+              await copyToClipboard(answer);
+              setCopied(t("Copied", "已复制"));
+            }}
+            onRegenerate={runChat}
+            regenerateLabel={t("Regenerate", "重新生成")}
+            copyLabel={t("Copy", "复制内容")}
+          />
+          <AiStudentFeedback />
           <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">{trace}</p>
         </div>
       ) : null}
@@ -1307,6 +1344,7 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
   const [goal, setGoal] = useState("比如：帮我拆解“准备暑校申请”这个任务");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
   const [result, setResult] = useState<null | {
     title: string;
     summary: string;
@@ -1314,6 +1352,37 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
     trace_id: string;
     decision_id: string;
   }>(null);
+
+  const runBreakdown = async () => {
+    setPending(true);
+    setError("");
+    setCopied("");
+
+    try {
+      const payload = await jsonFetch<{
+        title: string;
+        summary: string;
+        steps: string[];
+        trace_id: string;
+        decision_id: string;
+      }>("/api/ai/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "student_task_breakdown",
+          studentId,
+          page: "/student/timeline",
+          text: goal,
+        }),
+      });
+
+      setResult(payload.data ?? null);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
@@ -1333,35 +1402,7 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
       <button
         type="button"
         disabled={pending}
-        onClick={async () => {
-          setPending(true);
-          setError("");
-
-          try {
-            const payload = await jsonFetch<{
-              title: string;
-              summary: string;
-              steps: string[];
-              trace_id: string;
-              decision_id: string;
-            }>("/api/ai/workflows", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                kind: "student_task_breakdown",
-                studentId,
-                page: "/student/timeline",
-                text: goal,
-              }),
-            });
-
-            setResult(payload.data ?? null);
-          } catch (submissionError) {
-            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
-          } finally {
-            setPending(false);
-          }
-        }}
+        onClick={runBreakdown}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
         {pending ? t("Thinking...", "生成中...") : t("Break Down", "拆解任务")}
@@ -1372,13 +1413,31 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
           <AiDisclaimerBanner />
           <p className="font-bold text-foreground">{result.title}</p>
           <MarkdownText className="mt-3 text-sm text-secondary">{result.summary}</MarkdownText>
-          <ol className="mt-4 space-y-2">
+          <div className="mt-4 space-y-3">
             {result.steps.map((step, index) => (
-              <li key={`${index}-${step}`} className="rounded-2xl bg-white px-4 py-3">
-                <MarkdownText className="text-sm text-secondary">{`${index + 1}. ${step}`}</MarkdownText>
-              </li>
+              <div key={`${index}-${step}`} className="flex gap-3 rounded-2xl bg-white px-4 py-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                  {index + 1}
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <MarkdownText className="text-sm text-secondary">{stripLeadingListMarker(step)}</MarkdownText>
+                </div>
+              </div>
             ))}
-          </ol>
+          </div>
+          <AiActionRow
+            copiedMessage={copied}
+            onCopy={async () => {
+              await copyToClipboard(
+                [result.title, result.summary, "", ...result.steps.map((step, index) => `${index + 1}. ${stripLeadingListMarker(step)}`)].join("\n")
+              );
+              setCopied(t("Copied", "已复制"));
+            }}
+            onRegenerate={runBreakdown}
+            regenerateLabel={t("Regenerate", "重新生成")}
+            copyLabel={t("Copy", "复制内容")}
+          />
+          <AiStudentFeedback />
           <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">
             {result.trace_id} · {result.decision_id}
           </p>
@@ -1390,12 +1449,18 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
 
 export function ConsultantWeeklyReportPanel({
   studentId,
+  studentName,
 }: {
   studentId: string;
+  studentName: string;
 }) {
   const t = useText();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const router = useRouter();
   const [result, setResult] = useState<null | {
     summary: string;
     progress: string[];
@@ -1404,6 +1469,38 @@ export function ConsultantWeeklyReportPanel({
     trace_id: string;
     decision_id: string;
   }>(null);
+
+  const runReport = async () => {
+    setPending(true);
+    setError("");
+    setCopied("");
+    setMessage("");
+
+    try {
+      const payload = await jsonFetch<{
+        summary: string;
+        progress: string[];
+        risks: string[];
+        nextActions: string[];
+        trace_id: string;
+        decision_id: string;
+      }>("/api/ai/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "consultant_weekly_report",
+          studentId,
+          page: "/consultant/students/[studentId]",
+        }),
+      });
+
+      setResult(payload.data ?? null);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
@@ -1418,40 +1515,13 @@ export function ConsultantWeeklyReportPanel({
       <button
         type="button"
         disabled={pending}
-        onClick={async () => {
-          setPending(true);
-          setError("");
-
-          try {
-            const payload = await jsonFetch<{
-              summary: string;
-              progress: string[];
-              risks: string[];
-              nextActions: string[];
-              trace_id: string;
-              decision_id: string;
-            }>("/api/ai/workflows", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                kind: "consultant_weekly_report",
-                studentId,
-                page: "/consultant/students/[studentId]",
-              }),
-            });
-
-            setResult(payload.data ?? null);
-          } catch (submissionError) {
-            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
-          } finally {
-            setPending(false);
-          }
-        }}
+        onClick={runReport}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
         {pending ? t("Thinking...", "生成中...") : t("Generate Weekly Report", "生成周报")}
       </button>
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+      {message ? <p className="mt-4 text-sm font-semibold text-primary">{message}</p> : null}
       {result ? (
         <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
           <AiDisclaimerBanner />
@@ -1459,6 +1529,48 @@ export function ConsultantWeeklyReportPanel({
           <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
           <AiBulletSection title={t("Risks", "当前风险")} items={result.risks} />
           <AiBulletSection title={t("Next actions", "下周建议动作")} items={result.nextActions} />
+          <AiActionRow
+            copiedMessage={copied}
+            onCopy={async () => {
+              await copyToClipboard(buildWeeklyReportText(result));
+              setCopied(t("Copied", "已复制"));
+            }}
+            onRegenerate={runReport}
+            regenerateLabel={t("Regenerate", "重新生成")}
+            copyLabel={t("Copy", "复制内容")}
+            extraAction={
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => {
+                  setSaving(true);
+                  setError("");
+                  setMessage("");
+
+                  try {
+                    await jsonFetch("/api/consultant/notes", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        studentId,
+                        title: `AI周报｜${studentName}｜${new Date().toISOString().slice(0, 10)}`,
+                        summary: buildWeeklyReportText(result),
+                      }),
+                    });
+                    setMessage(t("Saved to advisor notes.", "已保存到顾问备注。"));
+                    router.refresh();
+                  } catch (submissionError) {
+                    setError(submissionError instanceof Error ? submissionError.message : t("Saving failed.", "保存失败。"));
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                className="rounded-full border border-outline-variant px-4 py-2 text-xs font-bold text-primary disabled:opacity-60"
+              >
+                {saving ? t("Saving...", "保存中...") : t("Save to Notes", "保存到备注")}
+              </button>
+            }
+          />
           <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
             {result.trace_id} · {result.decision_id}
           </p>
@@ -1482,6 +1594,7 @@ export function ConsultantMeetingSummaryPanel({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [copied, setCopied] = useState("");
   const [result, setResult] = useState<null | {
     summary: string;
     studentFeedback: string[];
@@ -1492,6 +1605,41 @@ export function ConsultantMeetingSummaryPanel({
     trace_id: string;
     decision_id: string;
   }>(null);
+
+  const runMeetingSummary = async () => {
+    setPending(true);
+    setError("");
+    setMessage("");
+    setCopied("");
+
+    try {
+      const payload = await jsonFetch<{
+        summary: string;
+        studentFeedback: string[];
+        parentFeedback: string[];
+        consultantAdvice: string[];
+        followUps: string[];
+        risks: string[];
+        trace_id: string;
+        decision_id: string;
+      }>("/api/ai/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "consultant_meeting_summary",
+          studentId,
+          page: "/consultant/students/[studentId]",
+          text: transcript,
+        }),
+      });
+
+      setResult(payload.data ?? null);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
@@ -1513,39 +1661,7 @@ export function ConsultantMeetingSummaryPanel({
         <button
           type="button"
           disabled={pending}
-          onClick={async () => {
-            setPending(true);
-            setError("");
-            setMessage("");
-
-            try {
-              const payload = await jsonFetch<{
-                summary: string;
-                studentFeedback: string[];
-                parentFeedback: string[];
-                consultantAdvice: string[];
-                followUps: string[];
-                risks: string[];
-                trace_id: string;
-                decision_id: string;
-              }>("/api/ai/workflows", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  kind: "consultant_meeting_summary",
-                  studentId,
-                  page: "/consultant/students/[studentId]",
-                  text: transcript,
-                }),
-              });
-
-              setResult(payload.data ?? null);
-            } catch (submissionError) {
-              setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
-            } finally {
-              setPending(false);
-            }
-          }}
+          onClick={runMeetingSummary}
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
         >
           {pending ? t("Thinking...", "生成中...") : t("Generate Meeting Summary", "生成会议摘要")}
@@ -1593,6 +1709,16 @@ export function ConsultantMeetingSummaryPanel({
           <AiBulletSection title={t("Consultant advice", "顾问建议")} items={result.consultantAdvice} />
           <AiBulletSection title={t("Follow-ups", "后续待办")} items={result.followUps} />
           <AiBulletSection title={t("Risks", "风险提醒")} items={result.risks} />
+          <AiActionRow
+            copiedMessage={copied}
+            onCopy={async () => {
+              await copyToClipboard(buildMeetingNoteSummary(result));
+              setCopied(t("Copied", "已复制"));
+            }}
+            onRegenerate={runMeetingSummary}
+            regenerateLabel={t("Regenerate", "重新生成")}
+            copyLabel={t("Copy", "复制内容")}
+          />
           <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
             {result.trace_id} · {result.decision_id}
           </p>
@@ -1606,6 +1732,7 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
   const t = useText();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
   const [result, setResult] = useState<null | {
     summary: string;
     progress: string[];
@@ -1614,6 +1741,37 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
     trace_id: string;
     decision_id: string;
   }>(null);
+
+  const runParentSummary = async () => {
+    setPending(true);
+    setError("");
+    setCopied("");
+
+    try {
+      const payload = await jsonFetch<{
+        summary: string;
+        progress: string[];
+        nextFocus: string[];
+        parentSupport: string[];
+        trace_id: string;
+        decision_id: string;
+      }>("/api/ai/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "parent_weekly_summary",
+          studentId,
+          page: "/parent/dashboard",
+        }),
+      });
+
+      setResult(payload.data ?? null);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
@@ -1628,35 +1786,7 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
       <button
         type="button"
         disabled={pending}
-        onClick={async () => {
-          setPending(true);
-          setError("");
-
-          try {
-            const payload = await jsonFetch<{
-              summary: string;
-              progress: string[];
-              nextFocus: string[];
-              parentSupport: string[];
-              trace_id: string;
-              decision_id: string;
-            }>("/api/ai/workflows", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                kind: "parent_weekly_summary",
-                studentId,
-                page: "/parent/dashboard",
-              }),
-            });
-
-            setResult(payload.data ?? null);
-          } catch (submissionError) {
-            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
-          } finally {
-            setPending(false);
-          }
-        }}
+        onClick={runParentSummary}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
         {pending ? t("Thinking...", "生成中...") : t("Generate Summary", "生成总结")}
@@ -1669,6 +1799,16 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
           <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
           <AiBulletSection title={t("Next focus", "下周重点")} items={result.nextFocus} />
           <AiBulletSection title={t("How family can help", "家长可以怎么支持")} items={result.parentSupport} />
+          <AiActionRow
+            copiedMessage={copied}
+            onCopy={async () => {
+              await copyToClipboard(buildParentSummaryText(result));
+              setCopied(t("Copied", "已复制"));
+            }}
+            onRegenerate={runParentSummary}
+            regenerateLabel={t("Regenerate", "重新生成")}
+            copyLabel={t("Copy", "复制内容")}
+          />
           <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
             {result.trace_id} · {result.decision_id}
           </p>
@@ -1682,6 +1822,76 @@ function AiDisclaimerBanner() {
   return (
     <div className="mb-4 rounded-2xl bg-primary/8 px-4 py-3 text-sm leading-6 text-primary">
       {AI_DISCLAIMER}
+    </div>
+  );
+}
+
+function AiActionRow({
+  onCopy,
+  onRegenerate,
+  copyLabel,
+  regenerateLabel,
+  copiedMessage,
+  extraAction,
+}: {
+  onCopy: () => Promise<void> | void;
+  onRegenerate: () => Promise<void> | void;
+  copyLabel: string;
+  regenerateLabel: string;
+  copiedMessage?: string;
+  extraAction?: ReactNode;
+}) {
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        onClick={onCopy}
+        className="rounded-full border border-outline-variant px-4 py-2 text-xs font-bold text-primary"
+      >
+        {copyLabel}
+      </button>
+      <button
+        type="button"
+        onClick={onRegenerate}
+        className="rounded-full border border-outline-variant px-4 py-2 text-xs font-bold text-primary"
+      >
+        {regenerateLabel}
+      </button>
+      {extraAction}
+      {copiedMessage ? <span className="text-xs font-semibold text-primary">{copiedMessage}</span> : null}
+    </div>
+  );
+}
+
+function AiStudentFeedback() {
+  const t = useText();
+  const [value, setValue] = useState<"helpful" | "not_helpful" | null>(null);
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-3">
+      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-outline">
+        {t("Quick feedback", "快速反馈")}
+      </span>
+      <button
+        type="button"
+        onClick={() => setValue("helpful")}
+        className={cn(
+          "rounded-full border px-4 py-2 text-xs font-bold transition-colors",
+          value === "helpful" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant text-primary"
+        )}
+      >
+        {t("Helpful", "有帮助")}
+      </button>
+      <button
+        type="button"
+        onClick={() => setValue("not_helpful")}
+        className={cn(
+          "rounded-full border px-4 py-2 text-xs font-bold transition-colors",
+          value === "not_helpful" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant text-primary"
+        )}
+      >
+        {t("Needs work", "还不够好")}
+      </button>
     </div>
   );
 }
@@ -1760,6 +1970,44 @@ function buildMeetingNoteSummary(result: {
     `后续待办：${result.followUps.join("；") || "未明确提及"}`,
     `风险提醒：${result.risks.join("；") || "未明确提及"}`,
   ].join("\n");
+}
+
+function buildWeeklyReportText(result: {
+  summary: string;
+  progress: string[];
+  risks: string[];
+  nextActions: string[];
+}) {
+  return [
+    `周报总结：${result.summary}`,
+    "",
+    `本周进展：${result.progress.join("；") || "未明确提及"}`,
+    `当前风险：${result.risks.join("；") || "未明确提及"}`,
+    `下周建议动作：${result.nextActions.join("；") || "未明确提及"}`,
+  ].join("\n");
+}
+
+function buildParentSummaryText(result: {
+  summary: string;
+  progress: string[];
+  nextFocus: string[];
+  parentSupport: string[];
+}) {
+  return [
+    `每周总结：${result.summary}`,
+    "",
+    `本周进展：${result.progress.join("；") || "未明确提及"}`,
+    `下周重点：${result.nextFocus.join("；") || "未明确提及"}`,
+    `家长支持建议：${result.parentSupport.join("；") || "未明确提及"}`,
+  ].join("\n");
+}
+
+async function copyToClipboard(value: string) {
+  await navigator.clipboard.writeText(value);
+}
+
+function stripLeadingListMarker(value: string) {
+  return value.replace(/^\s*\d+\.\s+/, "").trim();
 }
 
 export function ConsultantTaskComposer({ studentId }: { studentId: string }) {

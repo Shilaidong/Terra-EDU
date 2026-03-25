@@ -338,7 +338,7 @@ export default async function ConsultantStudentWorkspacePage({
 
           <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
             <SectionCard title={pickText(locale, "AI Weekly Report", "AI 学生周报")} eyebrow={pickText(locale, "Consultant summary", "顾问摘要")}>
-              <ConsultantWeeklyReportPanel studentId={student.id} />
+              <ConsultantWeeklyReportPanel studentId={student.id} studentName={student.name} />
             </SectionCard>
 
             <SectionCard title={pickText(locale, "AI Meeting Summary", "AI 会议摘要")} eyebrow={pickText(locale, "Transcript organizer", "转写整理")}>
