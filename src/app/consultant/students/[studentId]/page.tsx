@@ -51,6 +51,13 @@ export default async function ConsultantStudentWorkspacePage({
   ]);
 
   const ganttRange = buildDashboardRange(tasks, milestones);
+  const currentStudentSignal = overview.students.find((item) => item.id === student.id) ?? {
+    riskLevel: "low" as const,
+    riskScore: 0,
+    nextDeadlineDate: null,
+    nextDeadlineLabel: "No upcoming deadline",
+    nextDeadlineTitle: "No upcoming deadline",
+  };
   const ganttTasks = tasks.filter((task) => taskIntersectsRange(task, ganttRange.start, ganttRange.end));
   const ganttMilestones = milestones.filter((milestone) =>
     milestoneIntersectsRange(milestone, ganttRange.start, ganttRange.end)
@@ -68,6 +75,7 @@ export default async function ConsultantStudentWorkspacePage({
         <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<BriefcaseBusiness className="h-4 w-4" />} title="Phase" value={student.phase} />
           <HeroBadge icon={<Target className="h-4 w-4" />} title="Goal school" value={student.dreamSchools[0] ?? "TBD"} />
+          <HeroBadge icon={<CalendarRange className="h-4 w-4" />} title="Risk" value={currentStudentSignal.riskLevel} />
           <LogoutButton />
         </div>
       }
@@ -90,6 +98,11 @@ export default async function ConsultantStudentWorkspacePage({
                 school: item.school,
                 completion: item.completion,
                 phase: item.phase,
+                riskLevel: item.riskLevel,
+                riskScore: item.riskScore,
+                nextDeadlineLabel: item.nextDeadlineLabel,
+                nextDeadlineTitle: item.nextDeadlineTitle,
+                nextDeadlineDate: item.nextDeadlineDate,
               }))}
             />
           </SectionCard>
@@ -292,6 +305,45 @@ export default async function ConsultantStudentWorkspacePage({
                 />
               </SectionCard>
             </div>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+            <SectionCard title="Parent View Preview" eyebrow="Family-facing readout">
+              <SummaryCard
+                title={`${student.name} is currently in ${student.phase}`}
+                body={`A parent opening the family dashboard should mainly see three things: ${metrics.completion}% progress, ${metrics.checkInStreak} day check-in rhythm, and the next deadline "${currentStudentSignal.nextDeadlineTitle}" on ${currentStudentSignal.nextDeadlineLabel}.`}
+                footer="Use this preview to sanity-check whether consultant edits are clear enough for family visibility."
+              />
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl bg-surface-container-low p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Latest note preview</p>
+                  <p className="mt-2 text-sm text-secondary">{notes[0]?.summary ?? "No advisor note written yet."}</p>
+                </div>
+                <div className="rounded-2xl bg-surface-container-low p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Current risk</p>
+                  <p className="mt-2 text-sm text-secondary">
+                    {currentStudentSignal.riskLevel} risk with score {currentStudentSignal.riskScore}
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Consultant Focus Queue" eyebrow="Second-version workflow">
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-surface-container-low p-5">
+                  <p className="font-bold text-foreground">Why this student is ordered here</p>
+                  <p className="mt-2 text-sm leading-7 text-secondary">
+                    Risk sorting now considers completion, streak, mastery, open work, and deadline pressure together instead of only looking at one number.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-surface-container-low p-5">
+                  <p className="font-bold text-foreground">Next best consultant move</p>
+                  <p className="mt-2 text-sm leading-7 text-secondary">
+                    If the next deadline is close, use a template to create structured work immediately. If study rhythm is weak, review check-ins and leave an advisor note before changing the plan.
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
           </div>
 
           <div className="rounded-3xl bg-surface-container-low p-6">

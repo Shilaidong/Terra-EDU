@@ -43,6 +43,7 @@ export default async function ConsultantStudentsPage() {
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Goal</th>
                   <th className="px-4 py-3">Study rhythm</th>
+                  <th className="px-4 py-3">Risk</th>
                   <th className="px-4 py-3">Completion</th>
                 </tr>
               </thead>
@@ -70,6 +71,22 @@ export default async function ConsultantStudentsPage() {
                     <td className="px-4 py-3 text-secondary">
                       <p>{student.checkInStreak} day streak</p>
                       <p className="text-xs text-secondary">Mastery {student.masteryAverage}/5</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-1">
+                        <div
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${
+                            student.riskLevel === "high"
+                              ? "bg-error/10 text-error"
+                              : student.riskLevel === "medium"
+                                ? "bg-tertiary/15 text-tertiary"
+                                : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {student.riskLevel}
+                        </div>
+                        <p className="text-xs text-secondary">{student.nextDeadlineLabel}</p>
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-semibold text-primary">{student.completion}%</td>
                   </tr>

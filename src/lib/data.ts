@@ -296,16 +296,20 @@ export async function getConsultantLiveAnalyticsData() {
   ]);
 
   const studentsWithMetrics = await Promise.all(
-    students.map(async (student) => ({
-      ...student,
-      ...(await getStudentLiveMetricsData(student.id)),
-    }))
+    students.map(async (student) => {
+      const metrics = await getStudentLiveMetricsData(student.id);
+      const studentTasks = tasks.filter((task) => task.studentId === student.id);
+      const studentMilestones = milestones.filter((milestone) => milestone.studentId === student.id);
+
+      return {
+        ...student,
+        ...metrics,
+        ...getConsultantRiskSignals(metrics, studentTasks, studentMilestones),
+      };
+    })
   );
 
-  const atRiskCount = studentsWithMetrics.filter(
-    (student) =>
-      student.completion < 50 || student.checkInStreak < 3 || student.masteryAverage < 3.5
-  ).length;
+  const atRiskCount = studentsWithMetrics.filter((student) => student.riskLevel === "high").length;
 
   return {
     id: "live-consultant-analytics",
@@ -592,10 +596,17 @@ export async function getConsultantOverviewData() {
 
   const tasks = await getAllTasksData();
   const studentsWithMetrics = await Promise.all(
-    students.map(async (student) => ({
-      ...student,
-      ...(await getStudentLiveMetricsData(student.id)),
-    }))
+    students.map(async (student) => {
+      const metrics = await getStudentLiveMetricsData(student.id);
+      const studentTasks = tasks.filter((task) => task.studentId === student.id);
+      const studentMilestones = milestones.filter((milestone) => milestone.studentId === student.id);
+
+      return {
+        ...student,
+        ...metrics,
+        ...getConsultantRiskSignals(metrics, studentTasks, studentMilestones),
+      };
+    })
   );
 
   return {
@@ -1136,6 +1147,65 @@ function calculateMilestoneHitRate(milestones: Milestone[]) {
 
   const doneCount = milestones.filter((milestone) => milestone.status === "done").length;
   return Number((doneCount / milestones.length).toFixed(4));
+}
+
+function getConsultantRiskSignals(
+  metrics: StudentLiveMetrics,
+  tasks: Task[],
+  milestones: Milestone[]
+) {
+  let riskScore = 0;
+
+  if (metrics.completion < 50) {
+    riskScore += 3;
+  } else if (metrics.completion < 70) {
+    riskScore += 1;
+  }
+
+  if (metrics.checkInStreak < 3) {
+    riskScore += 3;
+  } else if (metrics.checkInStreak < 7) {
+    riskScore += 1;
+  }
+
+  if (metrics.masteryAverage < 3.5) {
+    riskScore += 2;
+  }
+
+  const openTasks = tasks.filter((task) => task.status !== "done");
+  if (openTasks.length >= 6) {
+    riskScore += 1;
+  }
+
+  const nextDeadline = milestones
+    .filter((milestone) => milestone.status !== "done")
+    .sort((left, right) => left.eventDate.localeCompare(right.eventDate))[0];
+
+  if (nextDeadline) {
+    const daysUntilDeadline = dayDiff(new Date(), parseDate(nextDeadline.eventDate));
+    if (daysUntilDeadline <= 14) {
+      riskScore += 2;
+    } else if (daysUntilDeadline <= 30) {
+      riskScore += 1;
+    }
+  }
+
+  return {
+    riskScore,
+    riskLevel: riskScore >= 6 ? "high" : riskScore >= 3 ? "medium" : "low",
+    nextDeadlineDate: nextDeadline?.eventDate ?? null,
+    nextDeadlineLabel: nextDeadline?.dateLabel ?? "No upcoming deadline",
+    nextDeadlineTitle: nextDeadline?.title ?? "No upcoming deadline",
+  } as const;
+}
+
+function dayDiff(start: Date, end: Date) {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((end.getTime() - start.getTime()) / millisecondsPerDay);
+}
+
+function parseDate(value: string) {
+  return new Date(`${value}T00:00:00`);
 }
 
 function calculateCheckInStreak(checkIns: CheckInRecord[]) {

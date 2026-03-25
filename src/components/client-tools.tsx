@@ -1227,6 +1227,47 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
 
 export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
   const today = getTodayString();
+  const taskTemplates: {
+    label: string;
+    title: string;
+    description: string;
+    timelineLane: TimelineLane;
+    priority: Task["priority"];
+    durationDays: number;
+  }[] = [
+    {
+      label: "Essay Review",
+      title: "Run essay revision review",
+      description: "Lock the advisor review slot, collect the latest draft, and return targeted comments.",
+      timelineLane: "application_progress",
+      priority: "High",
+      durationDays: 4,
+    },
+    {
+      label: "Deadline Prep",
+      title: "Prepare deadline submission pack",
+      description: "Verify documents, portal uploads, and payment steps before the deadline window closes.",
+      timelineLane: "application_progress",
+      priority: "High",
+      durationDays: 5,
+    },
+    {
+      label: "Exam Sprint",
+      title: "Launch standardized exam sprint",
+      description: "Set the mock exam date, review weak sections, and confirm score reporting readiness.",
+      timelineLane: "standardized_exams",
+      priority: "Medium",
+      durationDays: 7,
+    },
+    {
+      label: "Activity Checkpoint",
+      title: "Review activity progress checkpoint",
+      description: "Confirm leadership, research, or service progress and capture evidence for the profile build.",
+      timelineLane: "activities",
+      priority: "Medium",
+      durationDays: 6,
+    },
+  ];
   const [title, setTitle] = useState("Schedule final essay review");
   const [description, setDescription] = useState("Lock the advisor review slot and collect the latest draft.");
   const [timelineLane, setTimelineLane] = useState<TimelineLane>("application_progress");
@@ -1290,6 +1331,26 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
         onChange={(event) => setDescription(event.target.value)}
         className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
       />
+      <div className="flex flex-wrap gap-2">
+        {taskTemplates.map((template) => (
+          <button
+            key={template.label}
+            type="button"
+            onClick={() => {
+              setTitle(template.title);
+              setDescription(template.description);
+              setTimelineLane(template.timelineLane);
+              setPriority(template.priority);
+              setStartDate(today);
+              setEndDate(addDays(today, template.durationDays));
+              setMessage(`Loaded ${template.label.toLowerCase()} template.`);
+            }}
+            className="rounded-full border border-outline-variant px-3 py-2 text-xs font-bold text-primary"
+          >
+            {template.label}
+          </button>
+        ))}
+      </div>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-secondary">
           Timeline lane
@@ -1573,22 +1634,53 @@ export function ConsultantStudentPicker({
     school: string;
     completion: number;
     phase: string;
+    riskLevel: "low" | "medium" | "high";
+    riskScore: number;
+    nextDeadlineLabel: string;
+    nextDeadlineTitle: string;
+    nextDeadlineDate: string | null;
   }[];
   currentStudentId: string;
 }) {
   const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"risk" | "deadline" | "completion" | "name">("risk");
   const normalizedQuery = useDeferredValue(query).trim().toLowerCase();
 
-  const filteredStudents = students.filter((student) => {
-    if (!normalizedQuery) {
-      return true;
-    }
+  const filteredStudents = students
+    .filter((student) => {
+      if (!normalizedQuery) {
+        return true;
+      }
 
-    return [student.name, student.grade, student.school, student.phase]
-      .join(" ")
-      .toLowerCase()
-      .includes(normalizedQuery);
-  });
+      return [
+        student.name,
+        student.grade,
+        student.school,
+        student.phase,
+        student.riskLevel,
+        student.nextDeadlineTitle,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    })
+    .sort((left, right) => {
+      if (sortBy === "risk") {
+        return right.riskScore - left.riskScore || right.completion - left.completion;
+      }
+
+      if (sortBy === "deadline") {
+        const leftDate = left.nextDeadlineDate ?? "9999-12-31";
+        const rightDate = right.nextDeadlineDate ?? "9999-12-31";
+        return leftDate.localeCompare(rightDate) || right.riskScore - left.riskScore;
+      }
+
+      if (sortBy === "completion") {
+        return left.completion - right.completion || right.riskScore - left.riskScore;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
 
   return (
     <div className="space-y-4">
@@ -1598,6 +1690,28 @@ export function ConsultantStudentPicker({
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
         placeholder="Search students"
       />
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { value: "risk", label: "By Risk" },
+          { value: "deadline", label: "By Deadline" },
+          { value: "completion", label: "By Progress" },
+          { value: "name", label: "A-Z" },
+        ].map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setSortBy(option.value as typeof sortBy)}
+            className={cn(
+              "rounded-2xl px-3 py-2 text-sm font-semibold",
+              sortBy === option.value
+                ? "bg-primary/10 text-primary"
+                : "bg-surface-container-low text-secondary"
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
       <div className="space-y-3">
         {filteredStudents.map((student) => (
           <a
@@ -1621,7 +1735,28 @@ export function ConsultantStudentPicker({
                 {student.completion}%
               </div>
             </div>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-outline">{student.phase}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em]",
+                  student.riskLevel === "high"
+                    ? "bg-error/10 text-error"
+                    : student.riskLevel === "medium"
+                      ? "bg-tertiary/15 text-tertiary"
+                      : "bg-primary/10 text-primary"
+                )}
+              >
+                {student.riskLevel} risk
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-outline">
+                {student.phase}
+              </span>
+            </div>
+            <div className="mt-3 rounded-2xl bg-surface-container-low px-3 py-3">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Next deadline</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{student.nextDeadlineTitle}</p>
+              <p className="mt-1 text-xs text-secondary">{student.nextDeadlineLabel}</p>
+            </div>
           </a>
         ))}
       </div>
