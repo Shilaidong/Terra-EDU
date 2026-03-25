@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, CalendarRange, GraduationCap, NotebookPen, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarRange, GraduationCap, NotebookPen, Target } from "lucide-react";
 
 import {
   CheckInEditorControls,
@@ -73,6 +73,13 @@ export default async function ConsultantStudentWorkspacePage({
       activeHref="/consultant/students"
       hero={
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/consultant/students"
+            className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-white px-4 py-3 text-sm font-bold text-primary shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Students
+          </Link>
           <HeroBadge icon={<BriefcaseBusiness className="h-4 w-4" />} title="Phase" value={student.phase} />
           <HeroBadge icon={<Target className="h-4 w-4" />} title="Goal school" value={student.dreamSchools[0] ?? "TBD"} />
           <HeroBadge icon={<CalendarRange className="h-4 w-4" />} title="Risk" value={currentStudentSignal.riskLevel} />
@@ -86,9 +93,9 @@ export default async function ConsultantStudentWorkspacePage({
         <StatCard label="Mastery average" value={`${metrics.masteryAverage}/5`} hint="Average mastery across saved check-ins." tone="secondary" />
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[320px_1fr]">
-        <div className="space-y-8">
-          <SectionCard title="Student Selector" eyebrow="Cohort workspace">
+      <div className="mt-8 space-y-8">
+        <SectionCard title="Workspace Navigation" eyebrow="Faster switching">
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <ConsultantStudentPicker
               currentStudentId={student.id}
               students={overview.students.map((item) => ({
@@ -105,9 +112,6 @@ export default async function ConsultantStudentWorkspacePage({
                 nextDeadlineDate: item.nextDeadlineDate,
               }))}
             />
-          </SectionCard>
-
-          <SectionCard title="Workspace Guide" eyebrow="Quick jump">
             <div className="space-y-3">
               {[
                 { href: "#profile", label: "Edit student profile" },
@@ -125,8 +129,8 @@ export default async function ConsultantStudentWorkspacePage({
                 </a>
               ))}
             </div>
-          </SectionCard>
-        </div>
+          </div>
+        </SectionCard>
 
         <div className="space-y-8">
           <SectionCard
@@ -350,7 +354,8 @@ export default async function ConsultantStudentWorkspacePage({
             <div className="flex flex-wrap items-center gap-3 text-primary">
               <GraduationCap className="h-5 w-5" />
               <NotebookPen className="h-5 w-5" />
-              <Link href="/consultant/students" className="text-sm font-bold">
+              <Link href="/consultant/students" className="inline-flex items-center gap-2 text-sm font-bold">
+                <ArrowLeft className="h-4 w-4" />
                 Back to cohort table
               </Link>
             </div>
