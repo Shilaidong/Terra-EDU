@@ -44,7 +44,10 @@ export default async function StudentExplorePage() {
             studentId={student.id}
             page="/student/explore"
             feature="student_explore_recommendation"
-            prompt="Recommend schools, majors, and competitions that fit the student's current profile and stated goals."
+            prompt="请根据学生当前背景、目标国家、梦校和专业方向，用中文推荐更适合继续探索的学校、专业和竞赛方向。"
+            title={pickText(locale, "Exploration Suggestions", "探索建议")}
+            description={pickText(locale, "Generate Chinese exploration suggestions based on the student's current profile and goals.", "根据学生当前资料和目标，生成中文探索建议。")}
+            buttonLabel={pickText(locale, "Generate Exploration Suggestions", "生成探索建议")}
           />
           <SectionCard title={pickText(locale, "How content enters the product", "内容如何进入产品")} eyebrow={pickText(locale, "Operational note", "运营说明")}>
             <Notice title={pickText(locale, "Launch data source", "首发数据来源")}>

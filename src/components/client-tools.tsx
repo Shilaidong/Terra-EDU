@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 
 import { useText } from "@/components/locale-provider";
+import { AI_DISCLAIMER } from "@/lib/ai/provider";
 import { avatarPresets } from "@/lib/avatar-presets";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { shouldUseBrowserSupabaseAuth } from "@/lib/supabase/shared";
@@ -1140,11 +1141,17 @@ export function AiRecommendationPanel({
   page,
   feature,
   prompt,
+  title,
+  description,
+  buttonLabel,
 }: {
   studentId: string;
   page: string;
   feature: string;
   prompt: string;
+  title?: string;
+  description?: string;
+  buttonLabel?: string;
 }) {
   const t = useText();
   const [result, setResult] = useState<null | {
@@ -1155,6 +1162,7 @@ export function AiRecommendationPanel({
     decision_id: string;
   }>(null);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   return (
@@ -1162,12 +1170,15 @@ export function AiRecommendationPanel({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Recommendation", "AI 推荐")}</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Practical launch AI", "可落地的 AI 助手")}</h3>
+          <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">
+            {title ?? t("Practical launch AI", "可落地的 AI 助手")}
+          </h3>
           <p className="mt-3 text-sm leading-7 text-secondary">
-            {t(
-              "Generates recommendation summaries, logs the prompt version, and stores traceable artifacts for later bug fixing.",
-              "会生成建议摘要、记录提示词版本，并保存可追踪结果，方便后续排查和修复。"
-            )}
+            {description ??
+              t(
+                "Generates recommendation summaries, logs the prompt version, and stores traceable artifacts for later bug fixing.",
+                "会生成建议摘要、记录提示词版本，并保存可追踪结果，方便后续排查和修复。"
+              )}
           </p>
         </div>
         <button
@@ -1175,6 +1186,7 @@ export function AiRecommendationPanel({
           disabled={pending}
           onClick={async () => {
             setPending(true);
+            setError("");
             try {
               const payload = await jsonFetch<{
                 summary: string;
@@ -1189,18 +1201,23 @@ export function AiRecommendationPanel({
               });
               setResult(payload.data ?? null);
               router.refresh();
+            } catch (submissionError) {
+              setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
             } finally {
               setPending(false);
             }
           }}
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
         >
-          {pending ? t("Thinking...", "生成中...") : t("Generate", "生成")}
+          {pending ? t("Thinking...", "生成中...") : buttonLabel ?? t("Generate", "生成")}
         </button>
       </div>
 
+      {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+
       {result ? (
         <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
+          <AiDisclaimerBanner />
           <p className="text-sm leading-7 text-secondary">{result.summary}</p>
           <ul className="mt-4 space-y-2">
             {result.recommendations.map((item) => (
@@ -1220,14 +1237,22 @@ export function AiRecommendationPanel({
 
 export function AiChatWidget({ studentId }: { studentId: string }) {
   const t = useText();
-  const [question, setQuestion] = useState("What should I prioritize this week?");
+  const [question, setQuestion] = useState("这周我最应该优先做什么？");
   const [answer, setAnswer] = useState("");
   const [trace, setTrace] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Assistant", "AI 助手")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Question-driven support", "问题驱动的支持")}</h3>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Question-driven support", "随时提问的中文助手")}</h3>
+      <p className="mt-3 text-sm leading-7 text-secondary">
+        {t(
+          "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and traceable.",
+          "你可以自然地问优先级、规划方法、任务推进，甚至是任务太多时怎么稳住节奏。回答会尽量具体，并保留可追踪日志。"
+        )}
+      </p>
       <textarea
         value={question}
         onChange={(event) => setQuestion(event.target.value)}
@@ -1235,32 +1260,466 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
       />
       <button
         type="button"
+        disabled={pending}
         onClick={async () => {
-          const payload = await jsonFetch<{
-            summary: string;
-            trace_id: string;
-            decision_id: string;
-          }>("/api/ai/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentId, question }),
-          });
+          setPending(true);
+          setError("");
 
-          setAnswer(payload.data?.summary ?? "");
-          setTrace(`${payload.trace_id} · ${payload.data?.decision_id ?? ""}`);
+          try {
+            const payload = await jsonFetch<{
+              summary: string;
+              trace_id: string;
+              decision_id: string;
+            }>("/api/ai/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ studentId, question }),
+            });
+
+            setAnswer(payload.data?.summary ?? "");
+            setTrace(`${payload.trace_id} · ${payload.data?.decision_id ?? ""}`);
+          } catch (submissionError) {
+            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+          } finally {
+            setPending(false);
+          }
         }}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
-        {t("Ask AI", "向 AI 提问")}
+        {pending ? t("Thinking...", "生成中...") : t("Ask AI", "向 AI 提问")}
       </button>
+      {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {answer ? (
         <div className="mt-5 rounded-2xl bg-primary/5 p-4 text-sm leading-7 text-secondary">
+          <AiDisclaimerBanner />
           <p>{answer}</p>
           <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">{trace}</p>
         </div>
       ) : null}
     </div>
   );
+}
+
+export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) {
+  const t = useText();
+  const [goal, setGoal] = useState("比如：帮我拆解“准备暑校申请”这个任务");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<null | {
+    title: string;
+    summary: string;
+    steps: string[];
+    trace_id: string;
+    decision_id: string;
+  }>(null);
+
+  return (
+    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Task Breakdown", "任务拆解")}</p>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Break a big task into next steps", "把大任务拆成下一步")}</h3>
+      <p className="mt-3 text-sm leading-7 text-secondary">
+        {t(
+          "Paste one big task and get a practical sequence you can turn into draft tasks.",
+          "输入一个大任务，AI 会帮你拆成更容易执行的小步骤。当前只生成建议，不会直接改你的时间线。"
+        )}
+      </p>
+      <textarea
+        value={goal}
+        onChange={(event) => setGoal(event.target.value)}
+        className="mt-4 min-h-28 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+      />
+      <button
+        type="button"
+        disabled={pending}
+        onClick={async () => {
+          setPending(true);
+          setError("");
+
+          try {
+            const payload = await jsonFetch<{
+              title: string;
+              summary: string;
+              steps: string[];
+              trace_id: string;
+              decision_id: string;
+            }>("/api/ai/workflows", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "student_task_breakdown",
+                studentId,
+                page: "/student/timeline",
+                text: goal,
+              }),
+            });
+
+            setResult(payload.data ?? null);
+          } catch (submissionError) {
+            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+          } finally {
+            setPending(false);
+          }
+        }}
+        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+      >
+        {pending ? t("Thinking...", "生成中...") : t("Break Down", "拆解任务")}
+      </button>
+      {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+      {result ? (
+        <div className="mt-5 rounded-2xl bg-primary/5 p-4">
+          <AiDisclaimerBanner />
+          <p className="font-bold text-foreground">{result.title}</p>
+          <p className="mt-3 text-sm leading-7 text-secondary">{result.summary}</p>
+          <ol className="mt-4 space-y-2">
+            {result.steps.map((step, index) => (
+              <li key={`${index}-${step}`} className="rounded-2xl bg-white px-4 py-3 text-sm text-secondary">
+                {index + 1}. {step}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">
+            {result.trace_id} · {result.decision_id}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function ConsultantWeeklyReportPanel({
+  studentId,
+}: {
+  studentId: string;
+}) {
+  const t = useText();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<null | {
+    summary: string;
+    progress: string[];
+    risks: string[];
+    nextActions: string[];
+    trace_id: string;
+    decision_id: string;
+  }>(null);
+
+  return (
+    <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Weekly Report", "学生周报")}</p>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Single-student AI report", "单个学生 AI 周报")}</h3>
+      <p className="mt-3 text-sm leading-7 text-secondary">
+        {t(
+          "Generate a consultant-facing summary with progress, risks, and next actions.",
+          "为顾问生成正式中文周报，帮助你快速把握进展、风险和下周动作。"
+        )}
+      </p>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={async () => {
+          setPending(true);
+          setError("");
+
+          try {
+            const payload = await jsonFetch<{
+              summary: string;
+              progress: string[];
+              risks: string[];
+              nextActions: string[];
+              trace_id: string;
+              decision_id: string;
+            }>("/api/ai/workflows", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "consultant_weekly_report",
+                studentId,
+                page: "/consultant/students/[studentId]",
+              }),
+            });
+
+            setResult(payload.data ?? null);
+          } catch (submissionError) {
+            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+          } finally {
+            setPending(false);
+          }
+        }}
+        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+      >
+        {pending ? t("Thinking...", "生成中...") : t("Generate Weekly Report", "生成周报")}
+      </button>
+      {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+      {result ? (
+        <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
+          <AiDisclaimerBanner />
+          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
+          <AiBulletSection title={t("Risks", "当前风险")} items={result.risks} />
+          <AiBulletSection title={t("Next actions", "下周建议动作")} items={result.nextActions} />
+          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
+            {result.trace_id} · {result.decision_id}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function ConsultantMeetingSummaryPanel({
+  studentId,
+  studentName,
+}: {
+  studentId: string;
+  studentName: string;
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [transcript, setTranscript] = useState("");
+  const [pending, setPending] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<null | {
+    summary: string;
+    studentFeedback: string[];
+    parentFeedback: string[];
+    consultantAdvice: string[];
+    followUps: string[];
+    risks: string[];
+    trace_id: string;
+    decision_id: string;
+  }>(null);
+
+  return (
+    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Meeting Summary", "会议摘要")}</p>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Turn transcript into structured notes", "把会议转写整理成结构化纪要")}</h3>
+      <p className="mt-3 text-sm leading-7 text-secondary">
+        {t(
+          "Paste transcript text from a student or parent meeting and turn it into consultant-readable notes.",
+          "把你和学生、家长会议的转写文本贴进来，AI 会帮你整理成可阅读、可保存的结构化摘要。"
+        )}
+      </p>
+      <textarea
+        value={transcript}
+        onChange={(event) => setTranscript(event.target.value)}
+        placeholder={t("Paste transcript here", "把会议转写粘贴到这里")}
+        className="mt-4 min-h-40 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+      />
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={pending}
+          onClick={async () => {
+            setPending(true);
+            setError("");
+            setMessage("");
+
+            try {
+              const payload = await jsonFetch<{
+                summary: string;
+                studentFeedback: string[];
+                parentFeedback: string[];
+                consultantAdvice: string[];
+                followUps: string[];
+                risks: string[];
+                trace_id: string;
+                decision_id: string;
+              }>("/api/ai/workflows", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  kind: "consultant_meeting_summary",
+                  studentId,
+                  page: "/consultant/students/[studentId]",
+                  text: transcript,
+                }),
+              });
+
+              setResult(payload.data ?? null);
+            } catch (submissionError) {
+              setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+            } finally {
+              setPending(false);
+            }
+          }}
+          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+        >
+          {pending ? t("Thinking...", "生成中...") : t("Generate Meeting Summary", "生成会议摘要")}
+        </button>
+        <button
+          type="button"
+          disabled={!result || saving}
+          onClick={async () => {
+            if (!result) return;
+            setSaving(true);
+            setError("");
+            setMessage("");
+
+            try {
+              await jsonFetch("/api/consultant/notes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  studentId,
+                  title: `AI会议摘要｜${studentName}｜${new Date().toISOString().slice(0, 10)}`,
+                  summary: buildMeetingNoteSummary(result),
+                }),
+              });
+              setMessage(t("Saved to advisor notes.", "已保存到顾问备注。"));
+              router.refresh();
+            } catch (submissionError) {
+              setError(submissionError instanceof Error ? submissionError.message : t("Saving failed.", "保存失败。"));
+            } finally {
+              setSaving(false);
+            }
+          }}
+          className="rounded-full border border-outline-variant px-5 py-3 text-sm font-bold text-primary disabled:opacity-60"
+        >
+          {saving ? t("Saving...", "保存中...") : t("Save to Notes", "保存到备注")}
+        </button>
+      </div>
+      {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+      {message ? <p className="mt-4 text-sm font-semibold text-primary">{message}</p> : null}
+      {result ? (
+        <div className="mt-5 rounded-2xl bg-primary/5 p-4">
+          <AiDisclaimerBanner />
+          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <AiBulletSection title={t("Student feedback", "学生反馈")} items={result.studentFeedback} />
+          <AiBulletSection title={t("Parent feedback", "家长反馈")} items={result.parentFeedback} />
+          <AiBulletSection title={t("Consultant advice", "顾问建议")} items={result.consultantAdvice} />
+          <AiBulletSection title={t("Follow-ups", "后续待办")} items={result.followUps} />
+          <AiBulletSection title={t("Risks", "风险提醒")} items={result.risks} />
+          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
+            {result.trace_id} · {result.decision_id}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
+  const t = useText();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<null | {
+    summary: string;
+    progress: string[];
+    nextFocus: string[];
+    parentSupport: string[];
+    trace_id: string;
+    decision_id: string;
+  }>(null);
+
+  return (
+    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Weekly Summary", "每周进展总结")}</p>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Parent-facing AI summary", "家长端 AI 总结")}</h3>
+      <p className="mt-3 text-sm leading-7 text-secondary">
+        {t(
+          "Generate a calm weekly summary of progress, upcoming focus, and how the family can help.",
+          "生成适合家长查看的每周进展总结，重点说明当前进展、下周重点以及家长可以提供的支持。"
+        )}
+      </p>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={async () => {
+          setPending(true);
+          setError("");
+
+          try {
+            const payload = await jsonFetch<{
+              summary: string;
+              progress: string[];
+              nextFocus: string[];
+              parentSupport: string[];
+              trace_id: string;
+              decision_id: string;
+            }>("/api/ai/workflows", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "parent_weekly_summary",
+                studentId,
+                page: "/parent/dashboard",
+              }),
+            });
+
+            setResult(payload.data ?? null);
+          } catch (submissionError) {
+            setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
+          } finally {
+            setPending(false);
+          }
+        }}
+        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+      >
+        {pending ? t("Thinking...", "生成中...") : t("Generate Summary", "生成总结")}
+      </button>
+      {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+      {result ? (
+        <div className="mt-5 rounded-2xl bg-primary/5 p-4">
+          <AiDisclaimerBanner />
+          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
+          <AiBulletSection title={t("Next focus", "下周重点")} items={result.nextFocus} />
+          <AiBulletSection title={t("How family can help", "家长可以怎么支持")} items={result.parentSupport} />
+          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
+            {result.trace_id} · {result.decision_id}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function AiDisclaimerBanner() {
+  return (
+    <div className="mb-4 rounded-2xl bg-primary/8 px-4 py-3 text-sm leading-6 text-primary">
+      {AI_DISCLAIMER}
+    </div>
+  );
+}
+
+function AiBulletSection({ title, items }: { title: string; items: string[] }) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{title}</p>
+      <ul className="mt-3 space-y-2">
+        {items.map((item, index) => (
+          <li key={`${title}-${index}-${item}`} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function buildMeetingNoteSummary(result: {
+  summary: string;
+  studentFeedback: string[];
+  parentFeedback: string[];
+  consultantAdvice: string[];
+  followUps: string[];
+  risks: string[];
+}) {
+  return [
+    `会议总结：${result.summary}`,
+    "",
+    `学生反馈：${result.studentFeedback.join("；") || "未明确提及"}`,
+    `家长反馈：${result.parentFeedback.join("；") || "未明确提及"}`,
+    `顾问建议：${result.consultantAdvice.join("；") || "未明确提及"}`,
+    `后续待办：${result.followUps.join("；") || "未明确提及"}`,
+    `风险提醒：${result.risks.join("；") || "未明确提及"}`,
+  ].join("\n");
 }
 
 export function ConsultantTaskComposer({ studentId }: { studentId: string }) {

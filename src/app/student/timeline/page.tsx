@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { CalendarRange } from "lucide-react";
 
-import { LogoutButton, MilestoneEditorControls, StudentMilestoneComposer, StudentTimelineTaskComposer, TaskDeleteButton, TaskStatusControl } from "@/components/client-tools";
+import {
+  LogoutButton,
+  MilestoneEditorControls,
+  StudentMilestoneComposer,
+  StudentTaskBreakdownPanel,
+  StudentTimelineTaskComposer,
+  TaskDeleteButton,
+  TaskStatusControl,
+} from "@/components/client-tools";
 import { AuditFeed, HeroBadge, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import { getCurrentStudentData, getRecentAuditLogsData, getStudentLiveMetricsData, getStudentMilestonesData, getStudentTasksData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -145,6 +153,10 @@ export default async function StudentTimelinePage({
             />
           </div>
         </SectionCard>
+      </div>
+
+      <div className="mt-8">
+        <StudentTaskBreakdownPanel studentId={student.id} />
       </div>
 
       <div className="mt-8">

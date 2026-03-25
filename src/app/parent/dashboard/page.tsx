@@ -1,6 +1,6 @@
 import { CalendarRange, HeartHandshake, ShieldCheck, Target } from "lucide-react";
 
-import { LogoutButton } from "@/components/client-tools";
+import { LogoutButton, ParentWeeklySummaryPanel } from "@/components/client-tools";
 import { HeroBadge, InfoPill, RoleShell, SectionCard, StatCard, SummaryCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import { getParentOverviewData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -90,13 +90,19 @@ export default async function ParentDashboardPage() {
       </div>
 
       <div className="mt-8">
-        <SectionCard title={pickText(locale, "Parent View Guidance", "家长查看建议")} eyebrow={pickText(locale, "What to watch", "查看重点")}>
-          <SummaryCard
-            title={pickText(locale, "Focus on rhythm, not constant intervention", "关注节奏，而不是频繁干预")}
-            body={pickText(locale, "Use this dashboard to spot deadline clusters, confirm steady study cadence, and stay aligned with the consultant's latest notes. The student remains the editor of tasks and check-ins.", "你可以用这个页面关注截止日期集中情况、确认学习节奏是否稳定，并查看顾问最新备注。任务和打卡仍由学生本人维护。")}
-            footer={pickText(locale, "This view is intentionally read-only so family visibility stays clear and low-friction.", "这个页面刻意保持只读，方便家长清晰查看而不过度干扰。")}
-          />
-        </SectionCard>
+        <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          <SectionCard title={pickText(locale, "Parent View Guidance", "家长查看建议")} eyebrow={pickText(locale, "What to watch", "查看重点")}>
+            <SummaryCard
+              title={pickText(locale, "Focus on rhythm, not constant intervention", "关注节奏，而不是频繁干预")}
+              body={pickText(locale, "Use this dashboard to spot deadline clusters, confirm steady study cadence, and stay aligned with the consultant's latest notes. The student remains the editor of tasks and check-ins.", "你可以用这个页面关注截止日期集中情况、确认学习节奏是否稳定，并查看顾问最新备注。任务和打卡仍由学生本人维护。")}
+              footer={pickText(locale, "This view is intentionally read-only so family visibility stays clear and low-friction.", "这个页面刻意保持只读，方便家长清晰查看而不过度干扰。")}
+            />
+          </SectionCard>
+
+          <SectionCard title={pickText(locale, "AI Weekly Summary", "AI 每周总结")} eyebrow={pickText(locale, "Family snapshot", "家长摘要")}>
+            <ParentWeeklySummaryPanel studentId={student.id} />
+          </SectionCard>
+        </div>
       </div>
     </RoleShell>
   );

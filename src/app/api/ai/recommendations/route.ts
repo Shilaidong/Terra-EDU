@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { generateRecommendationPayload } from "@/lib/ai/provider";
-import { getCurrentStudentData, getStudentTasksData } from "@/lib/data";
+import {
+  getCurrentStudentData,
+  getStudentCheckInsData,
+  getStudentMilestonesData,
+  getStudentNotesData,
+  getStudentTasksData,
+} from "@/lib/data";
 import { createTraceContext, finishTrace, logAiArtifact } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
@@ -45,7 +51,14 @@ export async function POST(request: Request) {
   }
 
   const student = await getCurrentStudentData(session);
-  const tasks = student ? await getStudentTasksData(student.id) : [];
+  const [tasks, milestones, checkIns, notes] = student
+    ? await Promise.all([
+        getStudentTasksData(student.id),
+        getStudentMilestonesData(student.id),
+        getStudentCheckInsData(student.id),
+        getStudentNotesData(student.id),
+      ])
+    : [[], [], [], []];
 
   try {
     const result = await generateRecommendationPayload({
@@ -54,6 +67,9 @@ export async function POST(request: Request) {
       prompt: parsed.data.prompt,
       student,
       tasks,
+      milestones,
+      checkIns,
+      notes,
     });
 
     logAiArtifact({

@@ -92,7 +92,14 @@ export default async function StudentDashboardPage() {
             studentId={student.id}
             page="/student/dashboard"
             feature="student_dashboard_recommendation"
-            prompt="Summarize the student's next best actions using tasks, milestones, and study cadence."
+            prompt="请根据当前任务、截止日期和打卡节奏，生成这位学生本周最重要的行动建议。"
+            title={pickText(locale, "Weekly Action Suggestions", "本周行动建议")}
+            description={pickText(
+              locale,
+              "Generate the three to five most important actions for this week, based on deadlines, task priority, and study rhythm.",
+              "根据截止日期、任务优先级和学习节奏，生成这周最值得先做的 3-5 个动作。"
+            )}
+            buttonLabel={pickText(locale, "Generate Weekly Plan", "生成本周建议")}
           />
         </div>
       </div>

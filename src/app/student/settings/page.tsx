@@ -67,7 +67,10 @@ export default async function StudentSettingsPage() {
             studentId={student.id}
             page="/student/settings"
             feature="student_profile_ai_twin"
-            prompt="Summarize the student's profile strength, gaps, and next best advising moves."
+            prompt="请用中文总结这位学生当前资料的优势、缺口，以及下一步最值得完善的方向。"
+            title={pickText(locale, "AI Profile Summary", "AI 档案摘要")}
+            description={pickText(locale, "Summarize profile strengths, gaps, and the next most helpful updates.", "总结当前资料的优势、缺口，以及最值得先补齐的下一步。")}
+            buttonLabel={pickText(locale, "Generate Profile Summary", "生成档案摘要")}
           />
         </div>
       </div>
