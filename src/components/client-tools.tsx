@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { useText } from "@/components/locale-provider";
 import { AI_DISCLAIMER } from "@/lib/ai/provider";
@@ -1218,11 +1220,11 @@ export function AiRecommendationPanel({
       {result ? (
         <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
           <AiDisclaimerBanner />
-          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <ul className="mt-4 space-y-2">
             {result.recommendations.map((item) => (
-              <li key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
-                {item}
+              <li key={item} className="rounded-2xl bg-surface-container-low px-4 py-3">
+                <MarkdownText className="text-sm text-secondary">{item}</MarkdownText>
               </li>
             ))}
           </ul>
@@ -1292,7 +1294,7 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
       {answer ? (
         <div className="mt-5 rounded-2xl bg-primary/5 p-4 text-sm leading-7 text-secondary">
           <AiDisclaimerBanner />
-          <p>{answer}</p>
+          <MarkdownText>{answer}</MarkdownText>
           <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">{trace}</p>
         </div>
       ) : null}
@@ -1369,11 +1371,11 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
         <div className="mt-5 rounded-2xl bg-primary/5 p-4">
           <AiDisclaimerBanner />
           <p className="font-bold text-foreground">{result.title}</p>
-          <p className="mt-3 text-sm leading-7 text-secondary">{result.summary}</p>
+          <MarkdownText className="mt-3 text-sm text-secondary">{result.summary}</MarkdownText>
           <ol className="mt-4 space-y-2">
             {result.steps.map((step, index) => (
-              <li key={`${index}-${step}`} className="rounded-2xl bg-white px-4 py-3 text-sm text-secondary">
-                {index + 1}. {step}
+              <li key={`${index}-${step}`} className="rounded-2xl bg-white px-4 py-3">
+                <MarkdownText className="text-sm text-secondary">{`${index + 1}. ${step}`}</MarkdownText>
               </li>
             ))}
           </ol>
@@ -1453,7 +1455,7 @@ export function ConsultantWeeklyReportPanel({
       {result ? (
         <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
           <AiDisclaimerBanner />
-          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
           <AiBulletSection title={t("Risks", "当前风险")} items={result.risks} />
           <AiBulletSection title={t("Next actions", "下周建议动作")} items={result.nextActions} />
@@ -1585,7 +1587,7 @@ export function ConsultantMeetingSummaryPanel({
       {result ? (
         <div className="mt-5 rounded-2xl bg-primary/5 p-4">
           <AiDisclaimerBanner />
-          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <AiBulletSection title={t("Student feedback", "学生反馈")} items={result.studentFeedback} />
           <AiBulletSection title={t("Parent feedback", "家长反馈")} items={result.parentFeedback} />
           <AiBulletSection title={t("Consultant advice", "顾问建议")} items={result.consultantAdvice} />
@@ -1663,7 +1665,7 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
       {result ? (
         <div className="mt-5 rounded-2xl bg-primary/5 p-4">
           <AiDisclaimerBanner />
-          <p className="text-sm leading-7 text-secondary">{result.summary}</p>
+          <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
           <AiBulletSection title={t("Next focus", "下周重点")} items={result.nextFocus} />
           <AiBulletSection title={t("How family can help", "家长可以怎么支持")} items={result.parentSupport} />
@@ -1694,11 +1696,49 @@ function AiBulletSection({ title, items }: { title: string; items: string[] }) {
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{title}</p>
       <ul className="mt-3 space-y-2">
         {items.map((item, index) => (
-          <li key={`${title}-${index}-${item}`} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
-            {item}
+          <li key={`${title}-${index}-${item}`} className="rounded-2xl bg-surface-container-low px-4 py-3">
+            <MarkdownText className="text-sm text-secondary">{item}</MarkdownText>
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function MarkdownText({
+  children,
+  className,
+}: {
+  children: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("leading-7", className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+          strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+          em: ({ children }) => <em className="italic">{children}</em>,
+          ul: ({ children }) => <ul className="my-3 list-disc space-y-2 pl-5">{children}</ul>,
+          ol: ({ children }) => <ol className="my-3 list-decimal space-y-2 pl-5">{children}</ol>,
+          li: ({ children }) => <li>{children}</li>,
+          code: ({ children }) => (
+            <code className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[0.95em] text-foreground">{children}</code>
+          ),
+          pre: ({ children }) => <pre className="my-3 overflow-x-auto rounded-2xl bg-black/5 p-4 text-sm">{children}</pre>,
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noreferrer" className="font-semibold text-primary underline underline-offset-2">
+              {children}
+            </a>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="my-3 border-l-4 border-primary/30 pl-4 text-secondary">{children}</blockquote>
+          ),
+        }}
+      >
+        {children}
+      </ReactMarkdown>
     </div>
   );
 }
