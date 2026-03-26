@@ -5,7 +5,7 @@ import { getDefaultRoute } from "@/lib/routes";
 import { parseSessionValue } from "@/lib/session";
 import { updateSupabaseSession } from "@/lib/supabase/proxy";
 
-const protectedPrefixes = ["/student", "/parent", "/consultant"];
+const protectedPrefixes = ["/student", "/parent", "/consultant", "/admin"];
 
 export function proxy(request: NextRequest) {
   return handleProxy(request);
@@ -37,9 +37,13 @@ async function handleProxy(request: NextRequest) {
     return NextResponse.redirect(new URL(getDefaultRoute(session.role), request.url));
   }
 
+  if (pathname.startsWith("/admin") && session.role !== "admin") {
+    return NextResponse.redirect(new URL(getDefaultRoute(session.role), request.url));
+  }
+
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/student/:path*", "/parent/:path*", "/consultant/:path*"],
+  matcher: ["/student/:path*", "/parent/:path*", "/consultant/:path*", "/admin/:path*"],
 };

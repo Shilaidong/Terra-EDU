@@ -10,8 +10,27 @@ import { requireSession } from "@/lib/server/guards";
 export default async function ParentMessagesPage() {
   const locale = await getLocale();
   const session = await requireSession("parent");
-  const overview = await getParentOverviewData();
+  const overview = await getParentOverviewData(session);
   const { student } = overview;
+
+  if (!student) {
+    return (
+      <RoleShell
+        session={session}
+        title={pickText(locale, "Parent AI Messages", "家长 AI 沟通助手")}
+        subtitle={pickText(locale, "This account is waiting for a student binding before messages can use live context.", "这个账号需要先绑定学生，消息助手才能使用真实上下文。")}
+        activeHref="/parent/messages"
+        hero={<LogoutButton />}
+      >
+        <SectionCard title={pickText(locale, "Binding pending", "等待绑定")} eyebrow={pickText(locale, "Admin action needed", "需要管理员操作")}>
+          <p className="text-sm leading-7 text-secondary">
+            {pickText(locale, "Ask the admin to connect this parent account to a student. After that, this page will answer using tasks, deadlines, and application profile data.", "请让管理员先把这个家长账号绑定到学生。绑定后，这里就会用任务、截止日期和申请档案来回答问题。")}
+          </p>
+        </SectionCard>
+      </RoleShell>
+    );
+  }
+
   const applicationProfile = await getStudentApplicationProfileData(student.id);
 
   return (

@@ -1,4 +1,4 @@
-export type UserRole = "student" | "parent" | "consultant";
+export type UserRole = "student" | "parent" | "consultant" | "admin";
 export type TimelineView = "year" | "three_years" | "month";
 export type TimelineLane =
   | "standardized_exams"
@@ -80,6 +80,18 @@ export interface StudentApplicationProfile {
   additionalContext: string;
   competitions: StudentCompetitionEntry[];
   activities: StudentActivityEntry[];
+}
+
+export interface StudentParentLink {
+  id: string;
+  studentId: string;
+  parentUserId: string;
+}
+
+export interface StudentConsultantLink {
+  id: string;
+  studentId: string;
+  consultantUserId: string;
 }
 
 export interface Task {

@@ -41,11 +41,11 @@ export default async function ConsultantStudentWorkspacePage({
   const session = await requireSession("consultant");
   const { studentId } = await params;
   const [overview, student] = await Promise.all([
-    getConsultantOverviewData(),
+    getConsultantOverviewData(session),
     getStudentByIdData(studentId),
   ]);
 
-  if (!student) {
+  if (!student || !overview.students.some((item) => item.id === student.id)) {
     return null;
   }
 

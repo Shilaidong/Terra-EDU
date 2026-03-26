@@ -89,7 +89,9 @@ export function LoginForm() {
               ? "/student/dashboard"
               : role === "parent"
                 ? "/parent/dashboard"
-                : "/consultant/students"
+                : role === "consultant"
+                  ? "/consultant/students"
+                  : "/admin/dashboard"
           );
           router.refresh();
         } catch (submissionError) {
@@ -102,14 +104,14 @@ export function LoginForm() {
         }
       }}
     >
-      <div className="grid grid-cols-3 gap-3">
-        {(["student", "parent", "consultant"] as UserRole[]).map((item) => (
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {(["student", "parent", "consultant", "admin"] as UserRole[]).map((item) => (
           <button
             key={item}
             type="button"
             onClick={() => {
               setRole(item);
-              setEmail(`${item}@terra.edu`);
+              setEmail(item === "admin" ? "admin@terra.edu" : `${item}@terra.edu`);
               setPassword("terra123");
             }}
             className={
@@ -145,6 +147,311 @@ export function LoginForm() {
       </button>
       {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
     </form>
+  );
+}
+
+export function RegistrationForm() {
+  const t = useText();
+  const router = useRouter();
+  const [role, setRole] = useState<Exclude<UserRole, "admin">>("student");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [grade, setGrade] = useState("");
+  const [school, setSchool] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setPending(true);
+        setError("");
+        setSuccess("");
+
+        try {
+          await jsonFetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              role,
+              name,
+              email,
+              password,
+              grade,
+              school,
+            }),
+          });
+          setSuccess(
+            role === "student"
+              ? t("Registration complete. You can log in now.", "注册成功，现在可以登录了。")
+              : t(
+                  "Registration complete. Please wait for an administrator to bind this account to a student.",
+                  "注册成功，请等待管理员把这个账号绑定到对应学生。"
+                )
+          );
+          startTransition(() => router.push("/login"));
+        } catch (submissionError) {
+          setError(
+            submissionError instanceof Error ? submissionError.message : t("Registration failed", "注册失败")
+          );
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <div className="grid grid-cols-3 gap-3">
+        {(["student", "parent", "consultant"] as const).map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setRole(item)}
+            className={
+              role === item
+                ? "rounded-2xl border-2 border-primary bg-primary/5 p-3 text-center text-sm font-bold text-primary"
+                : "rounded-2xl border border-outline-variant bg-white p-3 text-center text-sm font-bold text-secondary"
+            }
+          >
+            {translateRole(item, t)}
+          </button>
+        ))}
+      </div>
+
+      <input
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Full name", "姓名")}
+      />
+
+      <input
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        type="email"
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Email address", "邮箱地址")}
+      />
+
+      <input
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        type="password"
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Password (at least 6 characters)", "密码（至少 6 位）")}
+      />
+
+      {role === "student" ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <input
+            value={grade}
+            onChange={(event) => setGrade(event.target.value)}
+            className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Current grade", "当前年级")}
+          />
+          <input
+            value={school}
+            onChange={(event) => setSchool(event.target.value)}
+            className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Current school", "当前学校")}
+          />
+        </div>
+      ) : null}
+
+      {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
+      {success ? <p className="text-sm font-semibold text-primary">{success}</p> : null}
+
+      <button
+        type="submit"
+        disabled={pending}
+        className="w-full rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary"
+      >
+        {pending ? t("Creating account...", "创建中...") : t("Create account", "创建账号")}
+      </button>
+    </form>
+  );
+}
+
+export function AdminBindingManager({
+  students,
+  parents,
+  consultants,
+  parentLinks,
+  consultantLinks,
+}: {
+  students: { id: string; name: string; grade: string; school: string }[];
+  parents: { id: string; name: string; email: string }[];
+  consultants: { id: string; name: string; email: string }[];
+  parentLinks: { id: string; studentId: string; parentUserId: string }[];
+  consultantLinks: { id: string; studentId: string; consultantUserId: string }[];
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [selectedParentId, setSelectedParentId] = useState(parents[0]?.id ?? "");
+  const [selectedParentStudentId, setSelectedParentStudentId] = useState(students[0]?.id ?? "");
+  const [selectedConsultantId, setSelectedConsultantId] = useState(consultants[0]?.id ?? "");
+  const [selectedConsultantStudentId, setSelectedConsultantStudentId] = useState(students[0]?.id ?? "");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState<"" | "parent" | "consultant">("");
+
+  const submitBinding = async (kind: "parent" | "consultant") => {
+    setPending(kind);
+    setMessage("");
+    setError("");
+
+    try {
+      await jsonFetch("/api/admin/bindings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          studentId: kind === "parent" ? selectedParentStudentId : selectedConsultantStudentId,
+          userId: kind === "parent" ? selectedParentId : selectedConsultantId,
+        }),
+      });
+      setMessage(
+        kind === "parent"
+          ? t("Parent binding saved.", "家长绑定已保存。")
+          : t("Consultant binding saved.", "顾问绑定已保存。")
+      );
+      router.refresh();
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("Binding failed.", "绑定失败。"));
+    } finally {
+      setPending("");
+    }
+  };
+
+  const resolveStudent = (studentId: string) => students.find((student) => student.id === studentId);
+  const resolveParent = (userId: string) => parents.find((user) => user.id === userId);
+  const resolveConsultant = (userId: string) => consultants.find((user) => user.id === userId);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl bg-white p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Bind parent", "绑定家长")}</p>
+          <div className="mt-4 space-y-4">
+            <select
+              value={selectedParentId}
+              onChange={(event) => setSelectedParentId(event.target.value)}
+              className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            >
+              {parents.map((parent) => (
+                <option key={parent.id} value={parent.id}>
+                  {parent.name} · {parent.email}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedParentStudentId}
+              onChange={(event) => setSelectedParentStudentId(event.target.value)}
+              className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            >
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name} · {student.grade} · {student.school}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!selectedParentId || !selectedParentStudentId || pending !== ""}
+              onClick={() => void submitBinding("parent")}
+              className="rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary"
+            >
+              {pending === "parent" ? t("Saving...", "保存中...") : t("Bind parent to student", "把家长绑定到学生")}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Bind consultant", "绑定顾问")}</p>
+          <div className="mt-4 space-y-4">
+            <select
+              value={selectedConsultantId}
+              onChange={(event) => setSelectedConsultantId(event.target.value)}
+              className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            >
+              {consultants.map((consultant) => (
+                <option key={consultant.id} value={consultant.id}>
+                  {consultant.name} · {consultant.email}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedConsultantStudentId}
+              onChange={(event) => setSelectedConsultantStudentId(event.target.value)}
+              className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            >
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name} · {student.grade} · {student.school}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!selectedConsultantId || !selectedConsultantStudentId || pending !== ""}
+              onClick={() => void submitBinding("consultant")}
+              className="rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary"
+            >
+              {pending === "consultant" ? t("Saving...", "保存中...") : t("Bind consultant to student", "把顾问绑定到学生")}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl bg-white p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Current parent bindings", "当前家长绑定")}</p>
+          <div className="mt-4 space-y-3">
+            {parentLinks.length > 0 ? (
+              parentLinks.map((link) => {
+                const student = resolveStudent(link.studentId);
+                const parent = resolveParent(link.parentUserId);
+                return (
+                  <div key={link.id} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-foreground">
+                    {parent?.name ?? link.parentUserId} → {student?.name ?? link.studentId}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+                {t("No parent bindings yet.", "还没有家长绑定。")}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Current consultant bindings", "当前顾问绑定")}</p>
+          <div className="mt-4 space-y-3">
+            {consultantLinks.length > 0 ? (
+              consultantLinks.map((link) => {
+                const student = resolveStudent(link.studentId);
+                const consultant = resolveConsultant(link.consultantUserId);
+                return (
+                  <div key={link.id} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-foreground">
+                    {consultant?.name ?? link.consultantUserId} → {student?.name ?? link.studentId}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+                {t("No consultant bindings yet.", "还没有顾问绑定。")}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -244,6 +551,7 @@ const timelineLaneOptions: {
 ];
 
 function translateRole(role: UserRole, t: ReturnType<typeof useText>) {
+  if (role === "admin") return t("admin", "管理员");
   if (role === "parent") return t("parent", "家长");
   if (role === "consultant") return t("consultant", "顾问");
   return t("student", "学生");

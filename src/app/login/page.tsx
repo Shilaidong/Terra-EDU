@@ -56,7 +56,9 @@ export default async function LoginPage() {
               {accounts.map((account) => (
                 <div key={account.role} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
                   <p className="font-semibold capitalize text-foreground">
-                    {account.role === "student"
+                    {account.role === "admin"
+                      ? pickText(locale, "admin", "管理员")
+                      : account.role === "student"
                       ? pickText(locale, "student", "学生")
                       : account.role === "parent"
                         ? pickText(locale, "parent", "家长")
@@ -85,6 +87,9 @@ export default async function LoginPage() {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-4 text-sm text-secondary">
+            <Link href="/register" className="hover:text-primary">
+              {pickText(locale, "Create account", "注册账号")}
+            </Link>
             <Link href="/privacy" className="hover:text-primary">
               {pickText(locale, "Privacy Policy", "隐私政策")}
             </Link>

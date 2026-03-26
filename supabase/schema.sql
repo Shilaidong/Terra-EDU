@@ -3,7 +3,7 @@ create extension if not exists "pgcrypto";
 create table if not exists users (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
-  role text not null check (role in ('student', 'parent', 'consultant')),
+  role text not null check (role in ('student', 'parent', 'consultant', 'admin')),
   name text not null,
   avatar text,
   created_at timestamptz not null default now()

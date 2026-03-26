@@ -10,7 +10,7 @@ import { requireSession } from "@/lib/server/guards";
 export default async function ConsultantAnalyticsPage() {
   const locale = await getLocale();
   const session = await requireSession("consultant");
-  const [overview, logs] = await Promise.all([getConsultantOverviewData(), getRecentAuditLogsData(6)]);
+  const [overview, logs] = await Promise.all([getConsultantOverviewData(session), getRecentAuditLogsData(6)]);
   const analytics = overview.analytics;
   const averageMastery =
     overview.students.length > 0

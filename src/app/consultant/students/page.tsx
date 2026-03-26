@@ -12,11 +12,29 @@ import { requireSession } from "@/lib/server/guards";
 export default async function ConsultantStudentsPage() {
   const locale = await getLocale();
   const session = await requireSession("consultant");
-  const overview = await getConsultantOverviewData();
+  const overview = await getConsultantOverviewData(session);
   const firstStudent = overview.students[0];
   const upcomingMilestones = overview.milestones
     .filter((milestone) => milestone.status !== "done")
     .slice(0, 6);
+
+  if (!firstStudent) {
+    return (
+      <RoleShell
+        session={session}
+        title={pickText(locale, "Student Management", "学生管理")}
+        subtitle={pickText(locale, "This consultant account is waiting for admin assignment.", "这个顾问账号还在等待管理员分配学生。")}
+        activeHref="/consultant/students"
+        hero={<LogoutButton />}
+      >
+        <SectionCard title={pickText(locale, "No assigned students yet", "还没有分配学生")} eyebrow={pickText(locale, "Admin action needed", "需要管理员操作")}>
+          <p className="text-sm leading-7 text-secondary">
+            {pickText(locale, "Once the admin binds students to this consultant, the student table, workspace, and planning tools will appear here.", "管理员把学生绑定给这个顾问后，这里的学生列表、工作台和规划工具就会出现。")}
+          </p>
+        </SectionCard>
+      </RoleShell>
+    );
+  }
 
   return (
     <RoleShell

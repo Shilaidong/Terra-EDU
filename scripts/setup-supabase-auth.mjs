@@ -34,6 +34,12 @@ const demoUsers = [
     name: "Sofia Martinez",
     role: "consultant",
   },
+  {
+    email: "admin@terra.edu",
+    password: "terra123",
+    name: "Terra Admin",
+    role: "admin",
+  },
 ];
 
 for (const user of demoUsers) {

@@ -106,11 +106,13 @@ export async function RoleShell({
                   {pickText(
                     locale,
                     `${session.role} portal`,
-                    session.role === "student"
-                      ? "学生端"
-                      : session.role === "parent"
-                        ? "家长端"
-                        : "顾问端"
+                    session.role === "admin"
+                      ? "管理后台"
+                      : session.role === "student"
+                        ? "学生端"
+                        : session.role === "parent"
+                          ? "家长端"
+                          : "顾问端"
                   )}
                 </p>
               </div>
@@ -669,7 +671,7 @@ export async function PlaceholderCard({
               {pickText(locale, "Return to active workflow", "返回当前可用流程")}
             </Link>
             <Link
-              href={role === "consultant" ? "/consultant/analytics" : `/${role}/settings`}
+              href={role === "consultant" ? "/consultant/analytics" : role === "admin" ? "/admin/dashboard" : `/${role}/settings`}
               className="rounded-full border border-outline-variant px-5 py-3 text-sm font-bold text-primary"
             >
               {pickText(locale, "Review current setup", "查看当前配置")}
@@ -702,6 +704,10 @@ function translateTimelineLabel(label: string) {
 }
 
 function getAvatarForRole(role: UserRole) {
+  if (role === "admin") {
+    return "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80";
+  }
+
   if (role === "student") {
     return "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=300&q=80";
   }
@@ -941,6 +947,10 @@ function translateTaskStatus(status: string, locale: Awaited<ReturnType<typeof g
 }
 
 function translateActorRole(role: string, locale: Awaited<ReturnType<typeof getLocale>>) {
+  if (role === "admin") {
+    return pickText(locale, "admin", "管理员");
+  }
+
   if (role === "consultant") {
     return pickText(locale, "consultant", "顾问");
   }

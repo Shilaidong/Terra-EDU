@@ -17,6 +17,19 @@ Terra Edu is a launch-ready Next.js web app built from the Stitch UI designs in 
 - Student: `student@terra.edu` / `terra123`
 - Parent: `parent@terra.edu` / `terra123`
 - Consultant: `consultant@terra.edu` / `terra123`
+- Admin: `admin@terra.edu` / `terra123`
+
+## Public registration and admin binding
+
+- Public signup is available at [`/register`](/Users/shi/projects/edu-platform/terra-edu/src/app/register/page.tsx)
+- Students can register directly and get their own student record immediately
+- Parent and consultant accounts can register directly, but they must be bound to a student by an admin before student data appears
+- Admin bindings are managed from [`/admin/dashboard`](/Users/shi/projects/edu-platform/terra-edu/src/app/admin/dashboard/page.tsx)
+
+If your current Supabase project was created before admin support was added, run:
+
+- [`supabase/patches/008_add_admin_and_public_registration.sql`](/Users/shi/projects/edu-platform/terra-edu/supabase/patches/008_add_admin_and_public_registration.sql)
+- Then run `npm run setup:supabase-auth` again so the admin auth user is created too
 
 ## Auth modes
 

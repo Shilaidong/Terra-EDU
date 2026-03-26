@@ -49,6 +49,30 @@ export function getUserById(userId: string) {
   return store.users.find((user) => user.id === userId) ?? null;
 }
 
+export async function getUserByIdData(userId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getUserById(userId);
+  }
+
+  const { data } = await supabase.from("users").select("*").eq("id", userId).maybeSingle();
+
+  if (!data) {
+    return getUserById(userId);
+  }
+
+  return {
+    id: String(data.id),
+    email: String(data.email),
+    password: "",
+    name: String(data.name),
+    role: data.role as UserRole,
+    profileId: "",
+    avatar: String(data.avatar ?? ""),
+  } satisfies User;
+}
+
 export async function getUserRecordByEmail(email: string) {
   const supabase = getSupabaseAdminClient();
 
@@ -96,6 +120,30 @@ export async function getCurrentUserData(session: SessionPayload) {
     profileId: fallbackUser?.profileId ?? "",
     avatar: String(data.avatar ?? fallbackUser?.avatar ?? session.avatar ?? ""),
   } satisfies User;
+}
+
+export async function getAllUsersData() {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore().users;
+  }
+
+  const { data } = await supabase.from("users").select("*").order("created_at", { ascending: false });
+
+  if (!data?.length) {
+    return getStore().users;
+  }
+
+  return data.map((row) => ({
+    id: String(row.id),
+    email: String(row.email),
+    password: "",
+    name: String(row.name),
+    role: row.role as UserRole,
+    profileId: "",
+    avatar: String(row.avatar ?? ""),
+  })) satisfies User[];
 }
 
 export async function getCurrentStudentData(session: SessionPayload) {
@@ -688,8 +736,117 @@ export async function getStudentLiveMetricsData(studentId: string): Promise<Stud
   };
 }
 
-export async function getParentOverviewData() {
-  const baseStudent = (await getAllStudentsData())[0];
+export async function getLinkedStudentIdsForParent(parentUserId: string) {
+  const links = await getStudentParentLinksData();
+  return links.filter((link) => link.parentUserId === parentUserId).map((link) => link.studentId);
+}
+
+export async function getLinkedStudentIdsForConsultant(consultantUserId: string) {
+  const links = await getStudentConsultantLinksData();
+  return links.filter((link) => link.consultantUserId === consultantUserId).map((link) => link.studentId);
+}
+
+export async function getStudentParentLinksData() {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore().studentParentLinks;
+  }
+
+  const { data } = await supabase.from("student_parent_links").select("*").order("created_at", { ascending: false });
+  if (!data?.length) {
+    return getStore().studentParentLinks;
+  }
+
+  return data.map((row) => ({
+    id: String(row.id),
+    studentId: String(row.student_id),
+    parentUserId: String(row.parent_user_id),
+  }));
+}
+
+export async function getStudentConsultantLinksData() {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore().studentConsultantLinks;
+  }
+
+  const { data } = await supabase
+    .from("student_consultant_links")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (!data?.length) {
+    return getStore().studentConsultantLinks;
+  }
+
+  return data.map((row) => ({
+    id: String(row.id),
+    studentId: String(row.student_id),
+    consultantUserId: String(row.consultant_user_id),
+  }));
+}
+
+export async function createStudentParentLink(studentId: string, parentUserId: string) {
+  const existing = (await getStudentParentLinksData()).find(
+    (link) => link.studentId === studentId && link.parentUserId === parentUserId
+  );
+
+  if (existing) {
+    return existing;
+  }
+
+  const link = {
+    id: crypto.randomUUID(),
+    studentId,
+    parentUserId,
+  };
+
+  getStore().studentParentLinks.unshift(link);
+  void persistStudentParentLink(link);
+  return link;
+}
+
+export async function createStudentConsultantLink(studentId: string, consultantUserId: string) {
+  const existing = (await getStudentConsultantLinksData()).find(
+    (link) => link.studentId === studentId && link.consultantUserId === consultantUserId
+  );
+
+  if (existing) {
+    return existing;
+  }
+
+  const link = {
+    id: crypto.randomUUID(),
+    studentId,
+    consultantUserId,
+  };
+
+  getStore().studentConsultantLinks.unshift(link);
+  void persistStudentConsultantLink(link);
+  return link;
+}
+
+export async function getParentOverviewData(session?: SessionPayload) {
+  const parentUserId = session?.userId;
+  const linkedStudentIds = parentUserId ? await getLinkedStudentIdsForParent(parentUserId) : [];
+  const students = await getAllStudentsData();
+  const baseStudent =
+    linkedStudentIds.length > 0
+      ? students.find((student) => linkedStudentIds.includes(student.id)) ?? null
+      : session?.role === "parent"
+        ? null
+        : (students[0] ?? null);
+
+  if (!baseStudent) {
+    return {
+      student: null,
+      tasks: [],
+      milestones: [],
+      notes: [],
+    };
+  }
+
   const metrics = await getStudentLiveMetricsData(baseStudent.id);
   const student = {
     ...baseStudent,
@@ -703,7 +860,7 @@ export async function getParentOverviewData() {
   };
 }
 
-export async function getConsultantOverviewData() {
+export async function getConsultantOverviewData(session?: SessionPayload) {
   const [students, content, analytics, milestones] = await Promise.all([
     getAllStudentsData(),
     getContentItemsData(),
@@ -712,11 +869,23 @@ export async function getConsultantOverviewData() {
   ]);
 
   const tasks = await getAllTasksData();
+  const linkedStudentIds =
+    session?.role === "consultant" ? await getLinkedStudentIdsForConsultant(session.userId) : [];
+  const scopedStudents =
+    session?.role === "consultant" && linkedStudentIds.length > 0
+      ? students.filter((student) => linkedStudentIds.includes(student.id))
+      : session?.role === "consultant"
+        ? []
+        : students;
+  const scopedTasks = tasks.filter((task) => scopedStudents.some((student) => student.id === task.studentId));
+  const scopedMilestones = milestones.filter((milestone) =>
+    scopedStudents.some((student) => student.id === milestone.studentId)
+  );
   const studentsWithMetrics = await Promise.all(
-    students.map(async (student) => {
+    scopedStudents.map(async (student) => {
       const metrics = await getStudentLiveMetricsData(student.id);
-      const studentTasks = tasks.filter((task) => task.studentId === student.id);
-      const studentMilestones = milestones.filter((milestone) => milestone.studentId === student.id);
+      const studentTasks = scopedTasks.filter((task) => task.studentId === student.id);
+      const studentMilestones = scopedMilestones.filter((milestone) => milestone.studentId === student.id);
 
       return {
         ...student,
@@ -728,11 +897,39 @@ export async function getConsultantOverviewData() {
 
   return {
     students: studentsWithMetrics,
-    tasks,
-    milestones,
-    notes: getStore().advisorNotes,
-    analytics,
+    tasks: scopedTasks,
+    milestones: scopedMilestones,
+    notes: getStore().advisorNotes.filter((note) =>
+      scopedStudents.some((student) => student.id === note.studentId)
+    ),
+    analytics:
+      session?.role === "consultant"
+        ? {
+            id: "scoped-consultant-analytics",
+            date: new Date().toISOString().slice(0, 10),
+            activeStudents: studentsWithMetrics.length,
+            taskCompletionRate: calculateTaskCompletion(scopedTasks) / 100,
+            milestoneHitRate: calculateMilestoneHitRate(scopedMilestones),
+            atRiskCount: studentsWithMetrics.filter((student) => student.riskLevel === "high").length,
+          }
+        : analytics,
     content,
+  };
+}
+
+export async function getAdminOverviewData() {
+  const [users, students, parentLinks, consultantLinks] = await Promise.all([
+    getAllUsersData(),
+    getAllStudentsData(),
+    getStudentParentLinksData(),
+    getStudentConsultantLinksData(),
+  ]);
+
+  return {
+    users,
+    students,
+    parentLinks,
+    consultantLinks,
   };
 }
 
@@ -1045,6 +1242,32 @@ async function persistStudentApplicationProfile(profile: StudentApplicationProfi
     additional_context: profile.additionalContext,
     competitions: profile.competitions,
     activities: profile.activities,
+  });
+}
+
+async function persistStudentParentLink(link: { id: string; studentId: string; parentUserId: string }) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("student_parent_links").upsert({
+    id: link.id,
+    student_id: link.studentId,
+    parent_user_id: link.parentUserId,
+  });
+}
+
+async function persistStudentConsultantLink(link: {
+  id: string;
+  studentId: string;
+  consultantUserId: string;
+}) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("student_consultant_links").upsert({
+    id: link.id,
+    student_id: link.studentId,
+    consultant_user_id: link.consultantUserId,
   });
 }
 

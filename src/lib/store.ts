@@ -8,6 +8,8 @@ import type {
   Milestone,
   Profile,
   StudentApplicationProfile,
+  StudentConsultantLink,
+  StudentParentLink,
   StudentRecord,
   Task,
   User,
@@ -23,6 +25,8 @@ export interface TerraStore {
   profiles: Profile[];
   students: StudentRecord[];
   applicationProfiles: StudentApplicationProfile[];
+  studentParentLinks: StudentParentLink[];
+  studentConsultantLinks: StudentConsultantLink[];
   tasks: Task[];
   milestones: Milestone[];
   checkIns: CheckInRecord[];
@@ -70,6 +74,15 @@ function seedStore(): TerraStore {
         profileId: "profile_consultant_1",
         avatar: avatars.consultant,
       },
+      {
+        id: "44444444-3333-3333-3333-333333333333",
+        email: "admin@terra.edu",
+        password: "terra123",
+        name: "Terra Admin",
+        role: "admin",
+        profileId: "profile_admin_1",
+        avatar: avatars.consultant,
+      },
     ],
     profiles: [
       {
@@ -89,6 +102,12 @@ function seedStore(): TerraStore {
         school: "Terra Edu",
         gradeOrTitle: "Senior Admissions Consultant",
         bio: "Managing a cohort of international applicants across the US and UK.",
+      },
+      {
+        id: "profile_admin_1",
+        school: "Terra Edu",
+        gradeOrTitle: "Platform Administrator",
+        bio: "Managing registrations, student assignments, and account bindings.",
       },
     ],
     students: [
@@ -184,6 +203,20 @@ function seedStore(): TerraStore {
               }
             : { name: "", role: "", grades: "", timeCommitment: "", impact: "" }
         ),
+      },
+    ],
+    studentParentLinks: [
+      {
+        id: "link_parent_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        parentUserId: "22222222-2222-2222-2222-222222222222",
+      },
+    ],
+    studentConsultantLinks: [
+      {
+        id: "link_consultant_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        consultantUserId: "33333333-3333-3333-3333-333333333333",
       },
     ],
     tasks: [
@@ -463,6 +496,14 @@ export function getStore(): TerraStore {
 
   if (!global.__terraStore.applicationProfiles) {
     global.__terraStore.applicationProfiles = [];
+  }
+
+  if (!global.__terraStore.studentParentLinks) {
+    global.__terraStore.studentParentLinks = [];
+  }
+
+  if (!global.__terraStore.studentConsultantLinks) {
+    global.__terraStore.studentConsultantLinks = [];
   }
 
   return global.__terraStore;

@@ -11,6 +11,7 @@ import {
 } from "@/lib/ai/provider";
 import {
   getCurrentStudentData,
+  getLinkedStudentIdsForConsultant,
   getParentOverviewData,
   getStudentApplicationProfileData,
   getStudentByIdData,
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
     session.role === "student"
       ? await getCurrentStudentData(session)
       : session.role === "parent"
-        ? (await getParentOverviewData()).student
+        ? (await getParentOverviewData(session)).student
         : await getStudentByIdData(studentId);
 
   if (!student) {
@@ -99,6 +100,13 @@ export async function POST(request: Request) {
 
   if (session.role !== "consultant" && student.id !== studentId) {
     return unauthorized(trace);
+  }
+
+  if (session.role === "consultant") {
+    const linkedStudentIds = await getLinkedStudentIdsForConsultant(session.userId);
+    if (!linkedStudentIds.includes(student.id)) {
+      return unauthorized(trace);
+    }
   }
 
   const [applicationProfile, tasks, milestones, checkIns, notes] = await Promise.all([

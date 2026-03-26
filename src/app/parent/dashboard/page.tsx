@@ -11,8 +11,27 @@ import type { Milestone, Task } from "@/lib/types";
 export default async function ParentDashboardPage() {
   const locale = await getLocale();
   const session = await requireSession("parent");
-  const overview = await getParentOverviewData();
+  const overview = await getParentOverviewData(session);
   const { student, tasks, milestones, notes } = overview;
+
+  if (!student) {
+    return (
+      <RoleShell
+        session={session}
+        title={pickText(locale, "Parent Dashboard", "家长仪表盘")}
+        subtitle={pickText(locale, "This account is waiting for an admin to bind a student.", "这个家长账号还在等待管理员绑定学生。")}
+        activeHref="/parent/dashboard"
+        hero={<LogoutButton />}
+      >
+        <SectionCard title={pickText(locale, "Binding pending", "等待绑定")} eyebrow={pickText(locale, "Admin action needed", "需要管理员操作")}>
+          <p className="text-sm leading-7 text-secondary">
+            {pickText(locale, "Once the admin links this parent account to a student, progress, deadlines, and AI summaries will appear here.", "管理员把这个家长账号绑定到学生后，这里就会出现进度、截止日期和 AI 摘要。")}
+          </p>
+        </SectionCard>
+      </RoleShell>
+    );
+  }
+
   const ganttRange = buildDashboardRange(tasks, milestones);
   const ganttTasks = tasks.filter((task) => taskIntersectsRange(task, ganttRange.start, ganttRange.end));
   const ganttMilestones = milestones.filter((milestone) =>

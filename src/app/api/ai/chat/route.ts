@@ -4,6 +4,7 @@ import { z } from "zod";
 import { generateChatSummary } from "@/lib/ai/provider";
 import {
   getCurrentStudentData,
+  getLinkedStudentIdsForConsultant,
   getParentOverviewData,
   getStudentApplicationProfileData,
   getStudentByIdData,
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
     session.role === "student"
       ? await getCurrentStudentData(session)
       : session.role === "parent"
-        ? (await getParentOverviewData()).student
+        ? (await getParentOverviewData(session)).student
         : await getStudentByIdData(parsed.data.studentId);
 
   if (!student) {
@@ -88,6 +89,21 @@ export async function POST(request: Request) {
       },
       { status: 401 }
     );
+  }
+
+  if (session.role === "consultant") {
+    const linkedStudentIds = await getLinkedStudentIdsForConsultant(session.userId);
+    if (!linkedStudentIds.includes(student.id)) {
+      return NextResponse.json(
+        {
+          success: false,
+          trace_id: trace.traceId,
+          decision_id: trace.decisionId,
+          message: "This student is not assigned to the current consultant.",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const [applicationProfile, tasks, milestones, checkIns, notes] = student

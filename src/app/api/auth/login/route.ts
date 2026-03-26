@@ -10,7 +10,7 @@ import { setSession } from "@/lib/session";
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-  role: z.enum(["student", "parent", "consultant"]),
+  role: z.enum(["student", "parent", "consultant", "admin"]),
 });
 
 export async function POST(request: Request) {

@@ -10,10 +10,26 @@ import { requireSession } from "@/lib/server/guards";
 export default async function ConsultantMessagesPage() {
   const locale = await getLocale();
   const session = await requireSession("consultant");
-  const overview = await getConsultantOverviewData();
+  const overview = await getConsultantOverviewData(session);
   const firstStudent = overview.students[0];
 
-  if (!firstStudent) return null;
+  if (!firstStudent) {
+    return (
+      <RoleShell
+        session={session}
+        title={pickText(locale, "Consultant AI Messages", "顾问 AI 提问助手")}
+        subtitle={pickText(locale, "This consultant account is waiting for admin assignment before AI can use student context.", "这个顾问账号需要先由管理员分配学生，AI 才能使用真实学生上下文。")}
+        activeHref="/consultant/messages"
+        hero={<LogoutButton />}
+      >
+        <SectionCard title={pickText(locale, "No assigned students yet", "还没有分配学生")} eyebrow={pickText(locale, "Admin action needed", "需要管理员操作")}>
+          <p className="text-sm leading-7 text-secondary">
+            {pickText(locale, "After admin assignment, this page will let the consultant switch between students and ask with the correct context.", "管理员分配学生后，这里就能让顾问切换学生并用正确上下文提问。")}
+          </p>
+        </SectionCard>
+      </RoleShell>
+    );
+  }
 
   return (
     <RoleShell

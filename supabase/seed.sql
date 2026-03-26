@@ -2,14 +2,16 @@ insert into users (id, email, role, name, avatar)
 values
   ('11111111-1111-1111-1111-111111111111', 'student@terra.edu', 'student', 'Amara Chen', '/api/assets/avatar/a1.png'),
   ('22222222-2222-2222-2222-222222222222', 'parent@terra.edu', 'parent', 'Li Wei', '/api/assets/avatar/a3.png'),
-  ('33333333-3333-3333-3333-333333333333', 'consultant@terra.edu', 'consultant', 'Sofia Martinez', '/api/assets/avatar/a2.png')
+  ('33333333-3333-3333-3333-333333333333', 'consultant@terra.edu', 'consultant', 'Sofia Martinez', '/api/assets/avatar/a2.png'),
+  ('44444444-3333-3333-3333-333333333333', 'admin@terra.edu', 'admin', 'Terra Admin', '/api/assets/avatar/a5.png')
 on conflict (id) do nothing;
 
 insert into profiles (user_id, school, grade_or_title, bio)
 values
   ('11111111-1111-1111-1111-111111111111', 'Westside Academy', 'Grade 11 Student', 'Ambitious environmental engineering applicant balancing STEM depth and extracurricular leadership.'),
   ('22222222-2222-2222-2222-222222222222', 'Parent Account', 'Family Oversight', 'Monitoring academic progress and consultant follow-ups.'),
-  ('33333333-3333-3333-3333-333333333333', 'Terra Edu', 'Senior Admissions Consultant', 'Managing a cohort of international applicants across the US and UK.')
+  ('33333333-3333-3333-3333-333333333333', 'Terra Edu', 'Senior Admissions Consultant', 'Managing a cohort of international applicants across the US and UK.'),
+  ('44444444-3333-3333-3333-333333333333', 'Terra Edu', 'Platform Administrator', 'Managing registrations, bindings, and access control.')
 on conflict do nothing;
 
 insert into students (

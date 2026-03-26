@@ -8,6 +8,9 @@ export interface NavItem {
 
 export function getRoleNav(locale: Locale): Record<UserRole, NavItem[]> {
   return {
+    admin: [
+      { label: pickText(locale, "Dashboard", "仪表盘"), href: "/admin/dashboard" },
+    ],
     student: [
       { label: pickText(locale, "Dashboard", "仪表盘"), href: "/student/dashboard" },
       { label: pickText(locale, "Timeline", "时间线"), href: "/student/timeline" },
