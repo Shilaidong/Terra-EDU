@@ -12,6 +12,7 @@ import {
 import {
   getCurrentStudentData,
   getParentOverviewData,
+  getStudentApplicationProfileData,
   getStudentByIdData,
   getStudentCheckInsData,
   getStudentMilestonesData,
@@ -100,7 +101,8 @@ export async function POST(request: Request) {
     return unauthorized(trace);
   }
 
-  const [tasks, milestones, checkIns, notes] = await Promise.all([
+  const [applicationProfile, tasks, milestones, checkIns, notes] = await Promise.all([
+    getStudentApplicationProfileData(student.id),
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
     getStudentCheckInsData(student.id),
@@ -112,6 +114,7 @@ export async function POST(request: Request) {
       kind,
       text,
       student,
+      applicationProfile,
       tasks,
       milestones,
       checkIns,
@@ -207,6 +210,7 @@ async function runWorkflow(input: {
   kind: AiWorkflowKind;
   text?: string;
   student: NonNullable<Awaited<ReturnType<typeof getStudentByIdData>>>;
+  applicationProfile: Awaited<ReturnType<typeof getStudentApplicationProfileData>>;
   tasks: Awaited<ReturnType<typeof getStudentTasksData>>;
   milestones: Awaited<ReturnType<typeof getStudentMilestonesData>>;
   checkIns: Awaited<ReturnType<typeof getStudentCheckInsData>>;
@@ -220,6 +224,7 @@ async function runWorkflow(input: {
     const result = await generateTaskBreakdown({
       goal: input.text,
       student: input.student,
+      applicationProfile: input.applicationProfile,
       tasks: input.tasks,
       milestones: input.milestones,
     });
@@ -241,6 +246,7 @@ async function runWorkflow(input: {
   if (input.kind === "consultant_weekly_report") {
     const result = await generateConsultantWeeklyReport({
       student: input.student,
+      applicationProfile: input.applicationProfile,
       tasks: input.tasks,
       milestones: input.milestones,
       checkIns: input.checkIns,
@@ -269,6 +275,7 @@ async function runWorkflow(input: {
 
     const result = await generateMeetingSummary({
       student: input.student,
+      applicationProfile: input.applicationProfile,
       transcript: input.text,
     });
 
@@ -290,10 +297,11 @@ async function runWorkflow(input: {
   }
 
   const result = await generateParentWeeklySummary({
-    student: input.student,
-    tasks: input.tasks,
-    milestones: input.milestones,
-    checkIns: input.checkIns,
+      student: input.student,
+      applicationProfile: input.applicationProfile,
+      tasks: input.tasks,
+      milestones: input.milestones,
+      checkIns: input.checkIns,
     notes: input.notes,
   });
 

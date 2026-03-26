@@ -6,6 +6,7 @@ import {
   ConsultantMeetingSummaryPanel,
   ConsultantMilestoneComposer,
   ConsultantNoteComposer,
+  ConsultantStudentApplicationProfileEditor,
   ConsultantStudentPicker,
   ConsultantStudentProfileEditor,
   ConsultantTaskComposer,
@@ -18,6 +19,7 @@ import {
 import { HeroBadge, RoleShell, SectionCard, StatCard, SummaryCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import {
   getConsultantOverviewData,
+  getStudentApplicationProfileData,
   getStudentByIdData,
   getStudentCheckInsData,
   getStudentLiveMetricsData,
@@ -47,12 +49,13 @@ export default async function ConsultantStudentWorkspacePage({
     return null;
   }
 
-  const [tasks, milestones, checkIns, notes, metrics] = await Promise.all([
+  const [tasks, milestones, checkIns, notes, metrics, applicationProfile] = await Promise.all([
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
     getStudentCheckInsData(student.id),
     getStudentNotesData(student.id),
     getStudentLiveMetricsData(student.id),
+    getStudentApplicationProfileData(student.id),
   ]);
 
   const ganttRange = buildDashboardRange(tasks, milestones);
@@ -142,6 +145,7 @@ export default async function ConsultantStudentWorkspacePage({
             <div className="space-y-3">
               {[
                 { href: "#profile", label: pickText(locale, "Edit student profile", "编辑学生资料") },
+                { href: "#application-intake", label: pickText(locale, "Edit application intake", "编辑申请档案") },
                 { href: "#planning", label: pickText(locale, "Plan tasks and deadlines", "安排任务与截止日期") },
                 { href: "#checkins", label: pickText(locale, "Review check-ins", "查看打卡") },
                 { href: "#notes", label: pickText(locale, "Write advisor notes", "记录顾问备注") },
@@ -210,6 +214,50 @@ export default async function ConsultantStudentWorkspacePage({
               </div>
             </SectionCard>
           </div>
+
+          {applicationProfile ? (
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="application-intake">
+              <SectionCard title={pickText(locale, "Application Intake", "申请档案")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
+                <ConsultantStudentApplicationProfileEditor
+                  studentId={student.id}
+                  profile={applicationProfile}
+                />
+              </SectionCard>
+
+              <SectionCard title={pickText(locale, "Application Snapshot", "申请档案摘要")} eyebrow={pickText(locale, "Advisor quick read", "顾问速览")}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-surface-container-low p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Citizenship", "国籍")}</p>
+                    <p className="mt-2 text-sm text-secondary">{applicationProfile.citizenship || pickText(locale, "Missing", "待填写")}</p>
+                  </div>
+                  <div className="rounded-2xl bg-surface-container-low p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Curriculum", "课程体系")}</p>
+                    <p className="mt-2 text-sm text-secondary">{applicationProfile.curriculumSystem || pickText(locale, "Missing", "待填写")}</p>
+                  </div>
+                  <div className="rounded-2xl bg-surface-container-low p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Competitions", "竞赛数量")}</p>
+                    <p className="mt-2 text-sm text-secondary">
+                      {pickText(
+                        locale,
+                        `${applicationProfile.competitions.filter((item) => item.name.trim()).length} filled`,
+                        `已填 ${applicationProfile.competitions.filter((item) => item.name.trim()).length} 条`
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-surface-container-low p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Activities", "活动数量")}</p>
+                    <p className="mt-2 text-sm text-secondary">
+                      {pickText(
+                        locale,
+                        `${applicationProfile.activities.filter((item) => item.name.trim()).length} filled`,
+                        `已填 ${applicationProfile.activities.filter((item) => item.name.trim()).length} 条`
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+          ) : null}
 
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="planning">
             <SectionCard title={pickText(locale, "Current Tasks", "当前任务")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>

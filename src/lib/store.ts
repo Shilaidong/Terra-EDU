@@ -7,6 +7,7 @@ import type {
   ContentItem,
   Milestone,
   Profile,
+  StudentApplicationProfile,
   StudentRecord,
   Task,
   User,
@@ -21,6 +22,7 @@ export interface TerraStore {
   users: User[];
   profiles: Profile[];
   students: StudentRecord[];
+  applicationProfiles: StudentApplicationProfile[];
   tasks: Task[];
   milestones: Milestone[];
   checkIns: CheckInRecord[];
@@ -134,6 +136,54 @@ function seedStore(): TerraStore {
         checkInStreak: 7,
         masteryAverage: 4.3,
         avatar: avatars.consultant,
+      },
+    ],
+    applicationProfiles: [
+      {
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        legalFirstName: "Amara",
+        legalLastName: "Chen",
+        preferredName: "Amara",
+        dateOfBirth: "2008-08-16",
+        citizenship: "China",
+        birthCountry: "China",
+        phoneNumber: "+86 138 0000 0000",
+        addressLine1: "88 Riverside Avenue",
+        city: "Shanghai",
+        stateProvince: "Shanghai",
+        postalCode: "200000",
+        countryOfResidence: "China",
+        highSchoolName: "Westside Academy",
+        curriculumSystem: "AP",
+        graduationYear: "2027",
+        gpa: "3.86/4.00",
+        classRank: "Top 10%",
+        englishProficiencyStatus: "Plan to submit IELTS",
+        intendedStartTerm: "Fall 2027",
+        passportCountry: "China",
+        additionalContext: "Interested in sustainability, research, and environmental systems.",
+        competitions: Array.from({ length: 10 }, (_, index) =>
+          index === 0
+            ? {
+                name: "International Young Eco-Hero Summit",
+                field: "Environmental research",
+                year: "2025",
+                level: "International",
+                result: "Global finalist",
+              }
+            : { name: "", field: "", year: "", level: "", result: "" }
+        ),
+        activities: Array.from({ length: 20 }, (_, index) =>
+          index === 0
+            ? {
+                name: "Environmental Action Club",
+                role: "Founder & President",
+                grades: "10-11",
+                timeCommitment: "3 hrs/week, 30 weeks/year",
+                impact: "Led 18 members and launched campus recycling campaign.",
+              }
+            : { name: "", role: "", grades: "", timeCommitment: "", impact: "" }
+        ),
       },
     ],
     tasks: [
@@ -409,6 +459,10 @@ function seedStore(): TerraStore {
 export function getStore(): TerraStore {
   if (!global.__terraStore) {
     global.__terraStore = seedStore();
+  }
+
+  if (!global.__terraStore.applicationProfiles) {
+    global.__terraStore.applicationProfiles = [];
   }
 
   return global.__terraStore;

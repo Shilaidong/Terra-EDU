@@ -39,6 +39,49 @@ export interface StudentRecord {
   avatar: string;
 }
 
+export interface StudentCompetitionEntry {
+  name: string;
+  field: string;
+  year: string;
+  level: string;
+  result: string;
+}
+
+export interface StudentActivityEntry {
+  name: string;
+  role: string;
+  grades: string;
+  timeCommitment: string;
+  impact: string;
+}
+
+export interface StudentApplicationProfile {
+  studentId: string;
+  legalFirstName: string;
+  legalLastName: string;
+  preferredName: string;
+  dateOfBirth: string;
+  citizenship: string;
+  birthCountry: string;
+  phoneNumber: string;
+  addressLine1: string;
+  city: string;
+  stateProvince: string;
+  postalCode: string;
+  countryOfResidence: string;
+  highSchoolName: string;
+  curriculumSystem: string;
+  graduationYear: string;
+  gpa: string;
+  classRank: string;
+  englishProficiencyStatus: string;
+  intendedStartTerm: string;
+  passportCountry: string;
+  additionalContext: string;
+  competitions: StudentCompetitionEntry[];
+  activities: StudentActivityEntry[];
+}
+
 export interface Task {
   id: string;
   studentId: string;

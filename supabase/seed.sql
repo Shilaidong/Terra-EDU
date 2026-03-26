@@ -33,6 +33,61 @@ values
   )
 on conflict (id) do nothing;
 
+insert into student_application_profiles (
+  student_id,
+  legal_first_name,
+  legal_last_name,
+  preferred_name,
+  date_of_birth,
+  citizenship,
+  birth_country,
+  phone_number,
+  address_line_1,
+  city,
+  state_province,
+  postal_code,
+  country_of_residence,
+  high_school_name,
+  curriculum_system,
+  graduation_year,
+  gpa,
+  class_rank,
+  english_proficiency_status,
+  intended_start_term,
+  passport_country,
+  additional_context,
+  competitions,
+  activities
+)
+values
+  (
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'Amara',
+    'Chen',
+    'Amara',
+    '2008-08-16',
+    'China',
+    'China',
+    '+86 138 0000 0000',
+    '88 Riverside Avenue',
+    'Shanghai',
+    'Shanghai',
+    '200000',
+    'China',
+    'Westside Academy',
+    'AP',
+    '2027',
+    '3.86/4.00',
+    'Top 10%',
+    'Plan to submit IELTS',
+    'Fall 2027',
+    'China',
+    'Interested in sustainability, research, and environmental systems.',
+    '[{"name":"International Young Eco-Hero Summit","field":"Environmental research","year":"2025","level":"International","result":"Global finalist"}]'::jsonb,
+    '[{"name":"Environmental Action Club","role":"Founder & President","grades":"10-11","timeCommitment":"3 hrs/week, 30 weeks/year","impact":"Led 18 members and launched campus recycling campaign."}]'::jsonb
+  )
+on conflict (student_id) do nothing;
+
 insert into student_parent_links (student_id, parent_user_id)
 values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222')
 on conflict do nothing;

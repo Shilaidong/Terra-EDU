@@ -9,6 +9,9 @@ import type {
   ContentItem,
   Milestone,
   SessionPayload,
+  StudentActivityEntry,
+  StudentApplicationProfile,
+  StudentCompetitionEntry,
   StudentRecord,
   Task,
   TimelineLane,
@@ -127,6 +130,27 @@ export async function getStudentByIdData(studentId: string) {
 
   const { data } = await supabase.from("students").select("*").eq("id", studentId).maybeSingle();
   return data ? mapStudent(data) : getStudentByIdFallback(studentId);
+}
+
+export async function getStudentApplicationProfileData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStudentApplicationProfileFallback(studentId);
+  }
+
+  const { data } = await supabase
+    .from("student_application_profiles")
+    .select("*")
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (data) {
+    return mapStudentApplicationProfile(data);
+  }
+
+  const student = await getStudentByIdData(studentId);
+  return createDefaultStudentApplicationProfile(studentId, student);
 }
 
 export async function getStudentTasksData(studentId: string) {
@@ -531,6 +555,29 @@ export function updateUserProfile(
   return user;
 }
 
+export function updateStudentApplicationProfile(
+  studentId: string,
+  input: Omit<StudentApplicationProfile, "studentId">
+) {
+  const store = getStore();
+  store.applicationProfiles ??= [];
+  const existingProfile = store.applicationProfiles.find((item) => item.studentId === studentId);
+
+  if (existingProfile) {
+    Object.assign(existingProfile, input);
+    void persistStudentApplicationProfile(existingProfile);
+    return existingProfile;
+  }
+
+  const profile: StudentApplicationProfile = {
+    studentId,
+    ...input,
+  };
+  store.applicationProfiles.unshift(profile);
+  void persistStudentApplicationProfile(profile);
+  return profile;
+}
+
 export function createContentItem(input: Omit<ContentItem, "id">) {
   const item: ContentItem = {
     id: crypto.randomUUID(),
@@ -745,6 +792,22 @@ function getStudentCheckInsFallback(studentId: string) {
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
+function getStudentApplicationProfileFallback(studentId: string) {
+  const existing =
+    (getStore().applicationProfiles ?? []).find((profile) => profile.studentId === studentId) ?? null;
+
+  if (existing) {
+    return {
+      ...existing,
+      competitions: normalizeCompetitionEntries(existing.competitions),
+      activities: normalizeActivityEntries(existing.activities),
+    };
+  }
+
+  const student = getStudentByIdFallback(studentId);
+  return createDefaultStudentApplicationProfile(studentId, student);
+}
+
 function getStudentNotesFallback(studentId: string) {
   return getStore()
     .advisorNotes.filter((note) => note.studentId === studentId)
@@ -950,6 +1013,38 @@ async function persistStudent(student: StudentRecord) {
     check_in_streak: student.checkInStreak,
     mastery_average: student.masteryAverage,
     avatar: student.avatar,
+  });
+}
+
+async function persistStudentApplicationProfile(profile: StudentApplicationProfile) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("student_application_profiles").upsert({
+    student_id: profile.studentId,
+    legal_first_name: profile.legalFirstName,
+    legal_last_name: profile.legalLastName,
+    preferred_name: profile.preferredName,
+    date_of_birth: profile.dateOfBirth,
+    citizenship: profile.citizenship,
+    birth_country: profile.birthCountry,
+    phone_number: profile.phoneNumber,
+    address_line_1: profile.addressLine1,
+    city: profile.city,
+    state_province: profile.stateProvince,
+    postal_code: profile.postalCode,
+    country_of_residence: profile.countryOfResidence,
+    high_school_name: profile.highSchoolName,
+    curriculum_system: profile.curriculumSystem,
+    graduation_year: profile.graduationYear,
+    gpa: profile.gpa,
+    class_rank: profile.classRank,
+    english_proficiency_status: profile.englishProficiencyStatus,
+    intended_start_term: profile.intendedStartTerm,
+    passport_country: profile.passportCountry,
+    additional_context: profile.additionalContext,
+    competitions: profile.competitions,
+    activities: profile.activities,
   });
 }
 
@@ -1211,6 +1306,104 @@ function mapStudent(row: DbRow): StudentRecord {
     masteryAverage: Number(row.mastery_average ?? 0),
     avatar: String(row.avatar ?? ""),
   };
+}
+
+function mapStudentApplicationProfile(row: DbRow): StudentApplicationProfile {
+  return {
+    studentId: String(row.student_id),
+    legalFirstName: String(row.legal_first_name ?? ""),
+    legalLastName: String(row.legal_last_name ?? ""),
+    preferredName: String(row.preferred_name ?? ""),
+    dateOfBirth: String(row.date_of_birth ?? ""),
+    citizenship: String(row.citizenship ?? ""),
+    birthCountry: String(row.birth_country ?? ""),
+    phoneNumber: String(row.phone_number ?? ""),
+    addressLine1: String(row.address_line_1 ?? ""),
+    city: String(row.city ?? ""),
+    stateProvince: String(row.state_province ?? ""),
+    postalCode: String(row.postal_code ?? ""),
+    countryOfResidence: String(row.country_of_residence ?? ""),
+    highSchoolName: String(row.high_school_name ?? ""),
+    curriculumSystem: String(row.curriculum_system ?? ""),
+    graduationYear: String(row.graduation_year ?? ""),
+    gpa: String(row.gpa ?? ""),
+    classRank: String(row.class_rank ?? ""),
+    englishProficiencyStatus: String(row.english_proficiency_status ?? ""),
+    intendedStartTerm: String(row.intended_start_term ?? ""),
+    passportCountry: String(row.passport_country ?? ""),
+    additionalContext: String(row.additional_context ?? ""),
+    competitions: normalizeCompetitionEntries(row.competitions),
+    activities: normalizeActivityEntries(row.activities),
+  };
+}
+
+function createDefaultStudentApplicationProfile(
+  studentId: string,
+  student: StudentRecord | null
+): StudentApplicationProfile {
+  const [legalFirstName = "", ...restName] = (student?.name ?? "").split(" ");
+  return {
+    studentId,
+    legalFirstName,
+    legalLastName: restName.join(" "),
+    preferredName: legalFirstName,
+    dateOfBirth: "",
+    citizenship: "",
+    birthCountry: "",
+    phoneNumber: "",
+    addressLine1: "",
+    city: "",
+    stateProvince: "",
+    postalCode: "",
+    countryOfResidence: "",
+    highSchoolName: student?.school ?? "",
+    curriculumSystem: "",
+    graduationYear: "",
+    gpa: "",
+    classRank: "",
+    englishProficiencyStatus: "",
+    intendedStartTerm: "",
+    passportCountry: "",
+    additionalContext: student?.intendedMajor
+      ? `Interested in ${student.intendedMajor}.`
+      : "",
+    competitions: normalizeCompetitionEntries([]),
+    activities: normalizeActivityEntries([]),
+  };
+}
+
+function normalizeCompetitionEntries(value: unknown): StudentCompetitionEntry[] {
+  const entries = Array.isArray(value) ? value : [];
+  const normalized = entries.map((entry) => ({
+    name: String((entry as Record<string, unknown>)?.name ?? ""),
+    field: String((entry as Record<string, unknown>)?.field ?? ""),
+    year: String((entry as Record<string, unknown>)?.year ?? ""),
+    level: String((entry as Record<string, unknown>)?.level ?? ""),
+    result: String((entry as Record<string, unknown>)?.result ?? ""),
+  }));
+
+  while (normalized.length < 10) {
+    normalized.push({ name: "", field: "", year: "", level: "", result: "" });
+  }
+
+  return normalized.slice(0, 10);
+}
+
+function normalizeActivityEntries(value: unknown): StudentActivityEntry[] {
+  const entries = Array.isArray(value) ? value : [];
+  const normalized = entries.map((entry) => ({
+    name: String((entry as Record<string, unknown>)?.name ?? ""),
+    role: String((entry as Record<string, unknown>)?.role ?? ""),
+    grades: String((entry as Record<string, unknown>)?.grades ?? ""),
+    timeCommitment: String((entry as Record<string, unknown>)?.timeCommitment ?? ""),
+    impact: String((entry as Record<string, unknown>)?.impact ?? ""),
+  }));
+
+  while (normalized.length < 20) {
+    normalized.push({ name: "", role: "", grades: "", timeCommitment: "", impact: "" });
+  }
+
+  return normalized.slice(0, 20);
 }
 
 function mapTask(row: DbRow): Task {

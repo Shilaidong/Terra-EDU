@@ -4,6 +4,7 @@ import { z } from "zod";
 import { generateRecommendationPayload } from "@/lib/ai/provider";
 import {
   getCurrentStudentData,
+  getStudentApplicationProfileData,
   getStudentCheckInsData,
   getStudentMilestonesData,
   getStudentNotesData,
@@ -51,14 +52,15 @@ export async function POST(request: Request) {
   }
 
   const student = await getCurrentStudentData(session);
-  const [tasks, milestones, checkIns, notes] = student
+  const [applicationProfile, tasks, milestones, checkIns, notes] = student
     ? await Promise.all([
+        getStudentApplicationProfileData(student.id),
         getStudentTasksData(student.id),
         getStudentMilestonesData(student.id),
         getStudentCheckInsData(student.id),
         getStudentNotesData(student.id),
       ])
-    : [[], [], [], []];
+    : [null, [], [], [], []];
 
   try {
     const result = await generateRecommendationPayload({
@@ -66,6 +68,7 @@ export async function POST(request: Request) {
       feature: parsed.data.feature,
       prompt: parsed.data.prompt,
       student,
+      applicationProfile,
       tasks,
       milestones,
       checkIns,

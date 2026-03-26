@@ -1,4 +1,12 @@
-import type { AdvisorNote, CheckInRecord, Milestone, StudentRecord, Task } from "@/lib/types";
+import type {
+  AdvisorNote,
+  CheckInRecord,
+  Milestone,
+  StudentApplicationProfile,
+  StudentRecord,
+  Task,
+  UserRole,
+} from "@/lib/types";
 
 export type TerraAiProvider = "mock" | "minimax_anthropic";
 export type AiWorkflowKind =
@@ -21,6 +29,7 @@ type AnthropicMessagesResponse = {
 
 type StudentContextPayload = {
   student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
   tasks?: Task[];
   milestones?: Milestone[];
   checkIns?: CheckInRecord[];
@@ -55,6 +64,7 @@ export async function generateRecommendationPayload(input: {
   feature: string;
   prompt: string;
   student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
   tasks: Task[];
   milestones?: Milestone[];
   checkIns?: CheckInRecord[];
@@ -99,13 +109,15 @@ export async function generateRecommendationPayload(input: {
     promptVersion: config.promptVersion,
     summary: normalizeString(response.data.summary, "AI 已生成建议，请结合当前任务和顾问意见一起判断。"),
     recommendations: normalizeStringList(response.data.recommendations, 5),
-    sources: ["学生资料", "任务清单", "截止日期"],
+    sources: ["学生资料", "申请档案", "任务清单", "截止日期"],
   };
 }
 
 export async function generateChatSummary(input: {
   question: string;
+  audience: UserRole;
   student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
   tasks: Task[];
   milestones?: Milestone[];
   checkIns?: CheckInRecord[];
@@ -118,12 +130,8 @@ export async function generateChatSummary(input: {
       provider: config.provider,
       model: "mock-simulated",
       promptVersion: config.promptVersion,
-      summary: [
-        `${input.student?.name ?? "这位同学"}，这周先不要把所有事情一起抓，先盯最紧急的截止项和一件最关键的高优任务。`,
-        "建议你先确认最近 7 天内最早到期的任务，然后给自己安排两个固定学习时段，先把最容易拖延的那件事推进到可以交付的程度。",
-        "如果你现在有点慌，也没关系，先做完最关键的一步，再决定下一步。",
-      ].join(" "),
-      sources: ["学生资料", "任务清单"],
+      summary: buildMockChatSummary(input.audience, input.student?.name ?? "这位同学"),
+      sources: ["学生资料", "申请档案", "任务清单"],
     };
   }
 
@@ -132,8 +140,7 @@ export async function generateChatSummary(input: {
     sources: string[];
   }>({
     system: [
-      "你是 Terra Edu 的学生陪伴式规划助手。",
-      "你面向学生回答，语气要自然、温和、口语一点，但不能敷衍。",
+      getChatRoleInstruction(input.audience),
       "必须只根据给定资料回答，不能虚构申请结果、分数或学校政策。",
       "如果学生表达焦虑、害怕问顾问、任务太多，请先安抚，再给可执行建议，并温和建议和顾问沟通。",
       "禁止承诺录取结果，禁止医学或心理诊断。",
@@ -142,7 +149,8 @@ export async function generateChatSummary(input: {
     ].join(""),
     user: [
       `学生问题：${input.question}`,
-      "回答结构：1. 先说这周最该做什么。2. 给出 2-4 条明确步骤。3. 最后给一句温和提醒。",
+      `回答对象：${input.audience === "student" ? "学生本人" : input.audience === "parent" ? "家长" : "顾问"}`,
+      getChatStructureInstruction(input.audience),
       "",
       buildFullStudentContext(input),
       "",
@@ -156,13 +164,14 @@ export async function generateChatSummary(input: {
     model: response.model || config.model,
     promptVersion: config.promptVersion,
     summary: normalizeString(response.data.summary, "AI 已生成回答，请结合你的真实进度和顾问建议一起参考。"),
-    sources: ["学生资料", "任务清单", "截止日期", "打卡记录", "顾问备注"],
+    sources: ["学生资料", "申请档案", "任务清单", "截止日期", "打卡记录", "顾问备注"],
   };
 }
 
 export async function generateTaskBreakdown(input: {
   goal: string;
   student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
   tasks: Task[];
   milestones?: Milestone[];
 }) {
@@ -206,6 +215,7 @@ export async function generateTaskBreakdown(input: {
       "",
       buildFullStudentContext({
         student: input.student,
+        applicationProfile: input.applicationProfile,
         tasks: input.tasks,
         milestones: input.milestones,
       }),
@@ -222,7 +232,7 @@ export async function generateTaskBreakdown(input: {
     title: normalizeString(response.data.title, "任务拆解建议"),
     summary: normalizeString(response.data.summary, "AI 已根据当前资料生成任务拆解建议。"),
     steps: normalizeStringList(response.data.steps, 8),
-    sources: ["学生资料", "当前任务", "截止日期"],
+    sources: ["学生资料", "申请档案", "当前任务", "截止日期"],
   };
 }
 
@@ -290,6 +300,7 @@ export async function generateConsultantWeeklyReport(input: StudentContextPayloa
 
 export async function generateMeetingSummary(input: {
   student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
   transcript: string;
 }) {
   const config = getAiProviderConfig();
@@ -329,6 +340,7 @@ export async function generateMeetingSummary(input: {
     user: [
       `学生：${input.student?.name ?? "未识别"}`,
       `当前阶段：${input.student?.phase ?? "未识别"}`,
+      buildApplicationProfileContext(input.applicationProfile),
       "",
       "以下是会议转写内容：",
       input.transcript,
@@ -413,6 +425,54 @@ export async function generateParentWeeklySummary(input: StudentContextPayload) 
   };
 }
 
+function getChatRoleInstruction(audience: UserRole) {
+  if (audience === "parent") {
+    return "你是 Terra Edu 的家长沟通助手，面向家长回答，语气要正式、稳定、清楚，不制造焦虑。";
+  }
+
+  if (audience === "consultant") {
+    return "你是 Terra Edu 的顾问分析助手，面向顾问回答，语气要专业、直接、可执行。";
+  }
+
+  return "你是 Terra Edu 的学生陪伴式规划助手，面向学生回答，语气要自然、温和、口语一点，但不能敷衍。";
+}
+
+function getChatStructureInstruction(audience: UserRole) {
+  if (audience === "parent") {
+    return "回答结构：1. 先概括当前情况。2. 给出 2-4 条家长可理解的重点。3. 最后给一句稳妥提醒。";
+  }
+
+  if (audience === "consultant") {
+    return "回答结构：1. 先给判断。2. 给出 2-4 条顾问动作建议。3. 最后补一句风险提醒。";
+  }
+
+  return "回答结构：1. 先说这周最该做什么。2. 给出 2-4 条明确步骤。3. 最后给一句温和提醒。";
+}
+
+function buildMockChatSummary(audience: UserRole, studentName: string) {
+  if (audience === "parent") {
+    return [
+      `${studentName}当前最需要的是保持节奏，而不是同时推进太多方向。`,
+      "建议家长重点关注最近的截止日期、固定学习时间以及与顾问的同步频率。",
+      "如果最近任务偏多，可以先帮助孩子把重点压缩到 2 到 3 件最关键的事情上。",
+    ].join(" ");
+  }
+
+  if (audience === "consultant") {
+    return [
+      `${studentName}当前更适合收缩任务范围，优先处理最近的关键截止项。`,
+      "建议先核对学生档案里的课程体系、竞赛和活动信息，再判断下周任务应该怎么排。",
+      "如果高优任务还在堆积，下一次沟通应先处理执行阻力和节奏问题。",
+    ].join(" ");
+  }
+
+  return [
+    `${studentName}，这周先不要把所有事情一起抓，先盯最紧急的截止项和一件最关键的高优任务。`,
+    "建议你先确认最近 7 天内最早到期的任务，然后给自己安排两个固定学习时段，先把最容易拖延的那件事推进到可以交付的程度。",
+    "如果你现在有点慌，也没关系，先做完最关键的一步，再决定下一步。",
+  ].join(" ");
+}
+
 async function callMiniMaxJson<T>({
   system,
   user,
@@ -479,6 +539,7 @@ function buildMockRecommendationPayload(
   input: {
     feature: string;
     student: StudentRecord | null;
+    applicationProfile?: StudentApplicationProfile | null;
     tasks: Task[];
     milestones?: Milestone[];
   }
@@ -523,7 +584,7 @@ function buildMockRecommendationPayload(
     promptVersion,
     summary: selected.summary,
     recommendations: selected.recommendations,
-    sources: ["学生资料", "任务清单", "截止日期"],
+    sources: ["学生资料", "申请档案", "任务清单", "截止日期"],
   };
 }
 
@@ -546,6 +607,7 @@ function getRecommendationInstruction(feature: string) {
 function buildFullStudentContext(input: StudentContextPayload) {
   return [
     buildStudentContext(input.student),
+    buildApplicationProfileContext(input.applicationProfile),
     buildTaskContext(input.tasks ?? []),
     buildMilestoneContext(input.milestones ?? []),
     buildCheckInContext(input.checkIns ?? []),
@@ -568,6 +630,36 @@ function buildStudentContext(student: StudentRecord | null) {
     `- 目标国家：${student.targetCountries.join("、") || "未填写"}`,
     `- 梦校：${student.dreamSchools.join("、") || "未填写"}`,
     `- 目标专业：${student.intendedMajor || "未填写"}`,
+  ].join("\n");
+}
+
+function buildApplicationProfileContext(profile?: StudentApplicationProfile | null) {
+  if (!profile) {
+    return "申请档案：暂无";
+  }
+
+  const competitionHighlights = profile.competitions
+    .filter((item) => item.name.trim())
+    .slice(0, 5)
+    .map((item) => `${item.name}${item.result ? `（${item.result}）` : ""}`);
+  const activityHighlights = profile.activities
+    .filter((item) => item.name.trim())
+    .slice(0, 6)
+    .map((item) => `${item.name}${item.role ? `（${item.role}）` : ""}`);
+
+  return [
+    "申请档案：",
+    `- 法定姓名：${[profile.legalFirstName, profile.legalLastName].filter(Boolean).join(" ").trim() || "未填写"}`,
+    `- 常用姓名：${profile.preferredName || "未填写"}`,
+    `- 国籍：${profile.citizenship || "未填写"}`,
+    `- 护照国家：${profile.passportCountry || "未填写"}`,
+    `- 当前高中：${profile.highSchoolName || "未填写"}`,
+    `- 课程体系：${profile.curriculumSystem || "未填写"}`,
+    `- 毕业年份：${profile.graduationYear || "未填写"}`,
+    `- GPA：${profile.gpa || "未填写"}`,
+    `- 年级排名：${profile.classRank || "未填写"}`,
+    `- 竞赛亮点：${competitionHighlights.join("、") || "未填写"}`,
+    `- 活动亮点：${activityHighlights.join("、") || "未填写"}`,
   ].join("\n");
 }
 

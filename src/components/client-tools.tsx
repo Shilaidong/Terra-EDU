@@ -12,7 +12,7 @@ import { avatarPresets } from "@/lib/avatar-presets";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { shouldUseBrowserSupabaseAuth } from "@/lib/supabase/shared";
 import { cn } from "@/lib/utils";
-import type { ApiResponse, CheckInRecord, ContentItem, Milestone, Task, TimelineLane, UserRole } from "@/lib/types";
+import type { ApiResponse, CheckInRecord, ContentItem, Milestone, StudentActivityEntry, StudentApplicationProfile, StudentCompetitionEntry, Task, TimelineLane, UserRole } from "@/lib/types";
 
 type StudentPhaseValue = "Planning" | "Application" | "Submission" | "Decision" | "Visa";
 
@@ -1106,6 +1106,359 @@ export function StudentProfileEditor({
   );
 }
 
+function ApplicationProfileEditorForm({
+  profile,
+  savePath,
+  successMessage,
+  buttonLabel,
+}: {
+  profile: StudentApplicationProfile;
+  savePath: string;
+  successMessage: { en: string; zh: string };
+  buttonLabel: { en: string; zh: string };
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [legalFirstName, setLegalFirstName] = useState(profile.legalFirstName);
+  const [legalLastName, setLegalLastName] = useState(profile.legalLastName);
+  const [preferredName, setPreferredName] = useState(profile.preferredName);
+  const [dateOfBirth, setDateOfBirth] = useState(profile.dateOfBirth);
+  const [citizenship, setCitizenship] = useState(profile.citizenship);
+  const [birthCountry, setBirthCountry] = useState(profile.birthCountry);
+  const [phoneNumber, setPhoneNumber] = useState(profile.phoneNumber);
+  const [addressLine1, setAddressLine1] = useState(profile.addressLine1);
+  const [city, setCity] = useState(profile.city);
+  const [stateProvince, setStateProvince] = useState(profile.stateProvince);
+  const [postalCode, setPostalCode] = useState(profile.postalCode);
+  const [countryOfResidence, setCountryOfResidence] = useState(profile.countryOfResidence);
+  const [highSchoolName, setHighSchoolName] = useState(profile.highSchoolName);
+  const [curriculumSystem, setCurriculumSystem] = useState(profile.curriculumSystem);
+  const [graduationYear, setGraduationYear] = useState(profile.graduationYear);
+  const [gpa, setGpa] = useState(profile.gpa);
+  const [classRank, setClassRank] = useState(profile.classRank);
+  const englishProficiencyStatus = profile.englishProficiencyStatus;
+  const intendedStartTerm = profile.intendedStartTerm;
+  const [passportCountry, setPassportCountry] = useState(profile.passportCountry);
+  const additionalContext = profile.additionalContext;
+  const [competitions, setCompetitions] = useState<StudentCompetitionEntry[]>(profile.competitions);
+  const [activities, setActivities] = useState<StudentActivityEntry[]>(profile.activities);
+  const [message, setMessage] = useState("");
+
+  return (
+    <form
+      className="space-y-6"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        await jsonFetch(savePath, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            legalFirstName,
+            legalLastName,
+            preferredName,
+            dateOfBirth,
+            citizenship,
+            birthCountry,
+            phoneNumber,
+            addressLine1,
+            city,
+            stateProvince,
+            postalCode,
+            countryOfResidence,
+            highSchoolName,
+            curriculumSystem,
+            graduationYear,
+            gpa,
+            classRank,
+            englishProficiencyStatus,
+            intendedStartTerm,
+            passportCountry,
+            additionalContext,
+            competitions,
+            activities,
+            ...(savePath.includes("/api/student/")
+              ? { studentId: profile.studentId }
+              : {}),
+          }),
+        });
+        setMessage(t(successMessage.en, successMessage.zh));
+        router.refresh();
+      }}
+    >
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4 rounded-3xl bg-white p-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
+              {t("Personal", "个人信息")}
+            </p>
+            <h3 className="mt-2 text-lg font-semibold text-foreground">
+              {t("Identity basics", "身份基础信息")}
+            </h3>
+          </div>
+          <input value={legalFirstName} onChange={(event) => setLegalFirstName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Legal first name", "法定名字")} />
+          <input value={legalLastName} onChange={(event) => setLegalLastName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Legal last name", "法定姓氏")} />
+          <input value={preferredName} onChange={(event) => setPreferredName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Preferred name", "常用名")} />
+          <input value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Date of birth (YYYY-MM-DD)", "出生日期（YYYY-MM-DD）")} />
+          <input value={citizenship} onChange={(event) => setCitizenship(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Citizenship", "国籍")} />
+          <input value={birthCountry} onChange={(event) => setBirthCountry(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Birth country", "出生国家")} />
+          <input value={passportCountry} onChange={(event) => setPassportCountry(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Passport country", "护照签发国家")} />
+        </div>
+
+        <div className="space-y-4 rounded-3xl bg-white p-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
+              {t("Contact", "联系信息")}
+            </p>
+            <h3 className="mt-2 text-lg font-semibold text-foreground">
+              {t("Reachable details", "联系与居住信息")}
+            </h3>
+          </div>
+          <input value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Phone number", "手机号")} />
+          <input value={addressLine1} onChange={(event) => setAddressLine1(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Address line", "地址")} />
+          <input value={city} onChange={(event) => setCity(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("City", "城市")} />
+          <input value={stateProvince} onChange={(event) => setStateProvince(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("State / Province", "州 / 省")} />
+          <input value={postalCode} onChange={(event) => setPostalCode(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Postal code", "邮编")} />
+          <input value={countryOfResidence} onChange={(event) => setCountryOfResidence(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Country of residence", "当前居住国家")} />
+        </div>
+
+        <div className="space-y-4 rounded-3xl bg-white p-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
+              {t("Education", "教育背景")}
+            </p>
+            <h3 className="mt-2 text-lg font-semibold text-foreground">
+              {t("High school snapshot", "高中信息概览")}
+            </h3>
+          </div>
+          <input value={highSchoolName} onChange={(event) => setHighSchoolName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current high school", "当前高中")} />
+          <select value={curriculumSystem} onChange={(event) => setCurriculumSystem(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3">
+            {["AP", "A-Level", "IBDP", "US High School", "Canadian High School", "Other"].map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <input value={graduationYear} onChange={(event) => setGraduationYear(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Graduation year", "毕业年份")} />
+          <input value={gpa} onChange={(event) => setGpa(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("GPA", "GPA")} />
+          <input value={classRank} onChange={(event) => setClassRank(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Class rank / percentile", "班级排名 / 百分位")} />
+        </div>
+
+      </div>
+
+      <div className="space-y-6 rounded-3xl bg-white p-5">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
+            {t("Competitions", "竞赛")}
+          </p>
+          <h3 className="mt-2 text-lg font-semibold text-foreground">
+            {t("Top 10 competition entries", "10 个竞赛格子")}
+          </h3>
+          <p className="mt-2 text-sm text-secondary">
+            {t(
+              "Fill in the strongest competitions only. Use one row per competition and keep the result concise.",
+              "这里只填最重要的竞赛经历。一行一条，结果尽量写清楚但不要过长。"
+            )}
+          </p>
+        </div>
+        <div className="overflow-x-auto rounded-3xl border border-black/5">
+          <table className="min-w-[980px] w-full text-left text-sm">
+            <thead className="bg-surface-container-low text-secondary">
+              <tr>
+                <th className="px-3 py-3">#</th>
+                <th className="px-3 py-3">{t("Competition name", "竞赛名称")}</th>
+                <th className="px-3 py-3">{t("Field", "学科 / 方向")}</th>
+                <th className="px-3 py-3">{t("Year", "年份")}</th>
+                <th className="px-3 py-3">{t("Level", "级别")}</th>
+                <th className="px-3 py-3">{t("Result / honor", "结果 / 奖项")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {competitions.map((entry, index) => (
+                <CompetitionEntryRow
+                  key={`competition-${index}`}
+                  index={index}
+                  entry={entry}
+                  onChange={(nextEntry) =>
+                    setCompetitions((current) =>
+                      current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
+                    )
+                  }
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {[
+            t("Competition name: official or commonly used name.", "竞赛名称：填正式名称或大家常用名称。"),
+            t("Level: school, regional, national, or international.", "级别：比如校级、地区级、国家级、国际级。"),
+            t("Result: award, finalist, qualification, or ranking.", "结果：写获奖、入围、晋级、排名等。"),
+          ].map((item) => (
+            <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-6 rounded-3xl bg-white p-5">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
+            {t("Activities", "活动")}
+          </p>
+          <h3 className="mt-2 text-lg font-semibold text-foreground">
+            {t("Top 20 activity entries", "20 个活动格子")}
+          </h3>
+          <p className="mt-2 text-sm text-secondary">
+            {t(
+              "This follows the Common App style more closely. Focus on role, grade span, weekly time, and real impact.",
+              "这里更接近 Common App 的活动填写逻辑。重点写角色、年级跨度、时间投入和真实影响。"
+            )}
+          </p>
+        </div>
+        <div className="overflow-x-auto rounded-3xl border border-black/5">
+          <table className="min-w-[1080px] w-full text-left text-sm">
+            <thead className="bg-surface-container-low text-secondary">
+              <tr>
+                <th className="px-3 py-3">#</th>
+                <th className="px-3 py-3">{t("Activity name", "活动名称")}</th>
+                <th className="px-3 py-3">{t("Role / title", "角色 / 职务")}</th>
+                <th className="px-3 py-3">{t("Grades", "参与年级")}</th>
+                <th className="px-3 py-3">{t("Time commitment", "时间投入")}</th>
+                <th className="px-3 py-3">{t("Impact / description", "影响 / 简述")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activities.map((entry, index) => (
+                <ActivityEntryRow
+                  key={`activity-${index}`}
+                  index={index}
+                  entry={entry}
+                  onChange={(nextEntry) =>
+                    setActivities((current) =>
+                      current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
+                    )
+                  }
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {[
+            t("Role / title: founder, captain, member, researcher, volunteer.", "角色 / 职务：比如创始人、队长、成员、研究助理、志愿者。"),
+            t("Grades: list when you participated, such as 9-11.", "参与年级：写你参加的年级，比如 9-11。"),
+            t("Impact: write what changed, led, built, or achieved.", "影响 / 简述：写你做成了什么、带来了什么变化。"),
+          ].map((item) => (
+            <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
+          {t(buttonLabel.en, buttonLabel.zh)}
+        </button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+function CompetitionEntryRow({
+  index,
+  entry,
+  onChange,
+}: {
+  index: number;
+  entry: StudentCompetitionEntry;
+  onChange: (entry: StudentCompetitionEntry) => void;
+}) {
+  return (
+    <tr className="border-t border-black/5">
+      <td className="px-3 py-3 text-xs font-bold text-secondary">{index + 1}</td>
+      <td className="px-3 py-3">
+        <input value={entry.name} onChange={(event) => onChange({ ...entry, name: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.field} onChange={(event) => onChange({ ...entry, field: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.year} onChange={(event) => onChange({ ...entry, year: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.level} onChange={(event) => onChange({ ...entry, level: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.result} onChange={(event) => onChange({ ...entry, result: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+    </tr>
+  );
+}
+
+function ActivityEntryRow({
+  index,
+  entry,
+  onChange,
+}: {
+  index: number;
+  entry: StudentActivityEntry;
+  onChange: (entry: StudentActivityEntry) => void;
+}) {
+  return (
+    <tr className="border-t border-black/5">
+      <td className="px-3 py-3 text-xs font-bold text-secondary">{index + 1}</td>
+      <td className="px-3 py-3">
+        <input value={entry.name} onChange={(event) => onChange({ ...entry, name: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.role} onChange={(event) => onChange({ ...entry, role: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.grades} onChange={(event) => onChange({ ...entry, grades: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <input value={entry.timeCommitment} onChange={(event) => onChange({ ...entry, timeCommitment: event.target.value })} className="w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+      <td className="px-3 py-3">
+        <textarea value={entry.impact} onChange={(event) => onChange({ ...entry, impact: event.target.value })} className="min-h-20 w-full rounded-2xl bg-surface-container-low px-3 py-2" />
+      </td>
+    </tr>
+  );
+}
+
+export function StudentApplicationProfileEditor({
+  profile,
+}: {
+  profile: StudentApplicationProfile;
+}) {
+  return (
+    <ApplicationProfileEditorForm
+      profile={profile}
+      savePath="/api/student/application-profile"
+      successMessage={{ en: "Application information updated.", zh: "申请信息已更新。" }}
+      buttonLabel={{ en: "Save Application Profile", zh: "保存申请信息" }}
+    />
+  );
+}
+
+export function ConsultantStudentApplicationProfileEditor({
+  studentId,
+  profile,
+}: {
+  studentId: string;
+  profile: StudentApplicationProfile;
+}) {
+  return (
+    <ApplicationProfileEditorForm
+      profile={profile}
+      savePath={`/api/consultant/students/${studentId}/application-profile`}
+      successMessage={{ en: "Student application information updated.", zh: "学生申请信息已更新。" }}
+      buttonLabel={{ en: "Save Application Intake", zh: "保存申请档案" }}
+    />
+  );
+}
+
 export function ParentProfileEditor({
   userId,
   defaultName,
@@ -1298,9 +1651,35 @@ export function AiRecommendationPanel({
   );
 }
 
-export function AiChatWidget({ studentId }: { studentId: string }) {
+export function AiChatWidget({
+  studentId,
+  page = "/student/dashboard",
+  title,
+  description,
+  defaultQuestion,
+  buttonLabel,
+  audience = "student",
+  studentOptions,
+}: {
+  studentId: string;
+  page?: string;
+  title?: string;
+  description?: string;
+  defaultQuestion?: string;
+  buttonLabel?: string;
+  audience?: UserRole;
+  studentOptions?: { id: string; label: string; sublabel?: string }[];
+}) {
   const t = useText();
-  const [question, setQuestion] = useState("这周我最应该优先做什么？");
+  const [activeStudentId, setActiveStudentId] = useState(studentId);
+  const [question, setQuestion] = useState(
+    defaultQuestion ??
+      (audience === "consultant"
+        ? "请根据这位学生当前的任务、截止日期、打卡和申请档案，告诉我下一次沟通最该抓什么。"
+        : audience === "parent"
+          ? "请根据孩子目前的进度，告诉我这周家长最该关注什么。"
+          : "这周我最应该优先做什么？")
+  );
   const [answer, setAnswer] = useState("");
   const [trace, setTrace] = useState("");
   const [pending, setPending] = useState(false);
@@ -1320,7 +1699,7 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
       }>("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, question }),
+        body: JSON.stringify({ studentId: activeStudentId, question, page }),
       });
 
       setAnswer(payload.data?.summary ?? "");
@@ -1335,13 +1714,32 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
   return (
     <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Assistant", "AI 助手")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Question-driven support", "随时提问的中文助手")}</h3>
+      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">
+        {title ?? t("Question-driven support", "随时提问的中文助手")}
+      </h3>
       <p className="mt-3 text-sm leading-7 text-secondary">
-        {t(
-          "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and traceable.",
-          "你可以自然地问优先级、规划方法、任务推进，甚至是任务太多时怎么稳住节奏。回答会尽量具体，并保留可追踪日志。"
-        )}
+        {description ??
+          t(
+            "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and traceable.",
+            "你可以自然地问优先级、规划方法、任务推进，甚至是任务太多时怎么稳住节奏。回答会尽量具体，并保留可追踪日志。"
+          )}
       </p>
+      {studentOptions && studentOptions.length > 1 ? (
+        <label className="mt-4 block text-sm font-semibold text-secondary">
+          {t("Student context", "学生上下文")}
+          <select
+            value={activeStudentId}
+            onChange={(event) => setActiveStudentId(event.target.value)}
+            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          >
+            {studentOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.sublabel ? `${option.label} · ${option.sublabel}` : option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
       <textarea
         value={question}
         onChange={(event) => setQuestion(event.target.value)}
@@ -1353,7 +1751,7 @@ export function AiChatWidget({ studentId }: { studentId: string }) {
         onClick={runChat}
         className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
       >
-        {pending ? t("Thinking...", "生成中...") : t("Ask AI", "向 AI 提问")}
+        {pending ? t("Thinking...", "生成中...") : buttonLabel ?? t("Ask AI", "向 AI 提问")}
       </button>
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {answer ? (
