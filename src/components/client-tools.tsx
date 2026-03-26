@@ -48,10 +48,15 @@ async function jsonFetch<T>(input: RequestInfo, init?: RequestInit) {
   return payload;
 }
 
-export function LoginForm() {
+export function LoginForm({
+  allowedRoles = ["student", "parent", "consultant", "admin"],
+}: {
+  allowedRoles?: UserRole[];
+}) {
   const t = useText();
-  const [role, setRole] = useState<UserRole>("student");
-  const [email, setEmail] = useState("student@terra.edu");
+  const initialRole = allowedRoles[0] ?? "student";
+  const [role, setRole] = useState<UserRole>(initialRole);
+  const [email, setEmail] = useState(initialRole === "admin" ? "admin@terra.edu" : `${initialRole}@terra.edu`);
   const [password, setPassword] = useState("terra123");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -104,8 +109,8 @@ export function LoginForm() {
         }
       }}
     >
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {(["student", "parent", "consultant", "admin"] as UserRole[]).map((item) => (
+      <div className={`grid gap-3 ${allowedRoles.length === 1 ? "grid-cols-1" : allowedRoles.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"}`}>
+        {allowedRoles.map((item) => (
           <button
             key={item}
             type="button"
@@ -451,6 +456,138 @@ export function AdminBindingManager({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function AdminMemberManager({
+  members,
+}: {
+  members: {
+    id: string;
+    name: string;
+    email: string;
+    role: Exclude<UserRole, "admin">;
+    linkedStudents: string[];
+  }[];
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [confirmingUserId, setConfirmingUserId] = useState("");
+  const [confirmationText, setConfirmationText] = useState("");
+  const [pendingDeleteUserId, setPendingDeleteUserId] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  return (
+    <div className="space-y-4">
+      {members.map((member) => (
+        <div key={member.id} className="rounded-3xl bg-white p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="font-semibold text-foreground">{member.name}</p>
+              <p className="mt-1 text-sm text-secondary">
+                {member.email} · {translateRole(member.role, t)}
+              </p>
+              <p className="mt-2 text-xs text-outline">
+                {member.linkedStudents.length > 0
+                  ? t(
+                      `Linked students: ${member.linkedStudents.join(", ")}`,
+                      `已绑定学生：${member.linkedStudents.join("、")}`
+                    )
+                  : t("No linked students yet", "还没有绑定学生")}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={`/api/admin/members/${member.id}/export`}
+                className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+              >
+                {t("Export member data", "导出成员数据")}
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmingUserId((current) => (current === member.id ? "" : member.id));
+                  setConfirmationText("");
+                  setError("");
+                  setMessage("");
+                }}
+                className="rounded-full bg-error px-4 py-2 text-sm font-bold text-white"
+              >
+                {t("Delete member", "删除成员")}
+              </button>
+            </div>
+          </div>
+
+          {confirmingUserId === member.id ? (
+            <div className="mt-4 rounded-2xl bg-error/5 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                {t("Second confirmation required", "需要二次确认")}
+              </p>
+              <p className="mt-2 text-sm leading-7 text-secondary">
+                {t(
+                  `Type ${member.email} to confirm deleting this account and all related records.`,
+                  `请输入 ${member.email} 以确认删除这个账号及其关联记录。`
+                )}
+              </p>
+              <input
+                value={confirmationText}
+                onChange={(event) => setConfirmationText(event.target.value)}
+                className="mt-3 w-full rounded-2xl bg-white px-4 py-3"
+                placeholder={member.email}
+              />
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  disabled={pendingDeleteUserId === member.id}
+                  onClick={async () => {
+                    setPendingDeleteUserId(member.id);
+                    setError("");
+                    setMessage("");
+                    try {
+                      await jsonFetch(`/api/admin/members/${member.id}`, {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ confirmation: confirmationText }),
+                      });
+                      setMessage(t("Member deleted.", "成员已删除。"));
+                      setConfirmingUserId("");
+                      setConfirmationText("");
+                      router.refresh();
+                    } catch (submissionError) {
+                      setError(
+                        submissionError instanceof Error
+                          ? submissionError.message
+                          : t("Deletion failed.", "删除失败。")
+                      );
+                    } finally {
+                      setPendingDeleteUserId("");
+                    }
+                  }}
+                  className="rounded-full bg-error px-4 py-2 text-sm font-bold text-white"
+                >
+                  {pendingDeleteUserId === member.id ? t("Deleting...", "删除中...") : t("Confirm delete", "确认删除")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmingUserId("");
+                    setConfirmationText("");
+                  }}
+                  className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+                >
+                  {t("Cancel", "取消")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ))}
+
+      {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
     </div>
   );
 }

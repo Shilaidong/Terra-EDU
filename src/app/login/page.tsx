@@ -17,7 +17,7 @@ export default async function LoginPage() {
     redirect(getDefaultRoute(session.role));
   }
 
-  const accounts = getDemoAccounts();
+  const accounts = getDemoAccounts().filter((account) => account.role !== "admin");
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">
@@ -48,7 +48,7 @@ export default async function LoginPage() {
             <LocaleSwitcher />
           </div>
 
-          <LoginForm />
+          <LoginForm allowedRoles={["student", "parent", "consultant"]} />
 
           <div className="mt-8 rounded-3xl bg-surface-container-low p-5">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Demo accounts", "演示账号")}</p>

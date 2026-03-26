@@ -933,6 +933,105 @@ export async function getAdminOverviewData() {
   };
 }
 
+export async function getAdminMemberExportData(userId: string) {
+  const user = await getUserByIdData(userId);
+
+  if (!user || user.role === "admin") {
+    return null;
+  }
+
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return buildAdminMemberExportFallback(userId);
+  }
+
+  const student =
+    user.role === "student"
+      ? await getCurrentStudentData({
+          userId,
+          role: "student",
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+        })
+      : null;
+
+  const [applicationProfile, tasks, milestones, checkIns, notes, parentLinks, consultantLinks, aiArtifacts, auditLogs] =
+    await Promise.all([
+      student ? getStudentApplicationProfileData(student.id) : Promise.resolve(null),
+      student ? getStudentTasksData(student.id) : Promise.resolve([]),
+      student ? getStudentMilestonesData(student.id) : Promise.resolve([]),
+      student ? getStudentCheckInsData(student.id) : Promise.resolve([]),
+      user.role === "consultant"
+        ? supabase.from("advisor_notes").select("*").eq("consultant_id", userId)
+        : student
+          ? supabase.from("advisor_notes").select("*").eq("student_id", student.id)
+          : Promise.resolve({ data: [] }),
+      supabase.from("student_parent_links").select("*").eq("parent_user_id", userId),
+      supabase.from("student_consultant_links").select("*").eq("consultant_user_id", userId),
+      student
+        ? supabase.from("ai_artifacts").select("*").eq("student_id", student.id)
+        : supabase.from("ai_artifacts").select("*").eq("role", user.role),
+      supabase.from("audit_logs").select("*").eq("actor_id", userId),
+    ]);
+
+  return {
+    exportedAt: new Date().toISOString(),
+    user,
+    student,
+    applicationProfile,
+    tasks,
+    milestones,
+    checkIns,
+    notes: "data" in notes ? notes.data ?? [] : [],
+    parentLinks: parentLinks.data ?? [],
+    consultantLinks: consultantLinks.data ?? [],
+    aiArtifacts: aiArtifacts.data ?? [],
+    auditLogs: auditLogs.data ?? [],
+  };
+}
+
+export async function deleteMemberAccount(userId: string) {
+  const user = await getUserByIdData(userId);
+
+  if (!user || user.role === "admin") {
+    return null;
+  }
+
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return deleteMemberAccountFallback(userId, user.role);
+  }
+
+  if (user.role === "student") {
+    const { data: studentRows } = await supabase.from("students").select("id").eq("user_id", userId);
+    const studentIds = (studentRows ?? []).map((row) => String(row.id));
+
+    if (studentIds.length > 0) {
+      await supabase.from("student_application_profiles").delete().in("student_id", studentIds);
+      await supabase.from("student_parent_links").delete().in("student_id", studentIds);
+      await supabase.from("student_consultant_links").delete().in("student_id", studentIds);
+      await supabase.from("students").delete().in("id", studentIds);
+    }
+  }
+
+  if (user.role === "parent") {
+    await supabase.from("student_parent_links").delete().eq("parent_user_id", userId);
+  }
+
+  if (user.role === "consultant") {
+    await supabase.from("student_consultant_links").delete().eq("consultant_user_id", userId);
+  }
+
+  await supabase.from("profiles").delete().eq("user_id", userId);
+  await supabase.from("users").delete().eq("id", userId);
+  await supabase.auth.admin.deleteUser(userId);
+
+  return user;
+}
+
 export function getProfiles() {
   return getStore().profiles;
 }
@@ -1013,6 +1112,84 @@ function getStudentNotesFallback(studentId: string) {
 
 function getAllStudentsFallback() {
   return getStore().students;
+}
+
+function buildAdminMemberExportFallback(userId: string) {
+  const store = getStore();
+  const user = store.users.find((item) => item.id === userId) ?? null;
+
+  if (!user || user.role === "admin") {
+    return null;
+  }
+
+  const student = store.students.find((item) => item.userId === userId) ?? null;
+
+  return {
+    exportedAt: new Date().toISOString(),
+    user,
+    student,
+    applicationProfile: student
+      ? (store.applicationProfiles ?? []).find((item) => item.studentId === student.id) ?? null
+      : null,
+    tasks: student ? store.tasks.filter((item) => item.studentId === student.id) : [],
+    milestones: student ? store.milestones.filter((item) => item.studentId === student.id) : [],
+    checkIns: student ? store.checkIns.filter((item) => item.studentId === student.id) : [],
+    notes:
+      user.role === "consultant"
+        ? store.advisorNotes.filter((item) => item.consultantId === userId)
+        : student
+          ? store.advisorNotes.filter((item) => item.studentId === student.id)
+          : [],
+    parentLinks: store.studentParentLinks.filter((item) => item.parentUserId === userId || item.studentId === student?.id),
+    consultantLinks: store.studentConsultantLinks.filter(
+      (item) => item.consultantUserId === userId || item.studentId === student?.id
+    ),
+    aiArtifacts: student ? store.aiArtifacts.filter((item) => item.studentId === student.id) : [],
+    auditLogs: store.auditLogs.filter((item) => item.actorId === userId),
+  };
+}
+
+function deleteMemberAccountFallback(userId: string, role: UserRole) {
+  const store = getStore();
+  const user = store.users.find((item) => item.id === userId) ?? null;
+
+  if (!user || role === "admin") {
+    return null;
+  }
+
+  store.users = store.users.filter((item) => item.id !== userId);
+  store.profiles = store.profiles.filter((profile) => profile.id !== user.profileId);
+  store.auditLogs = store.auditLogs.filter((log) => log.actorId !== userId);
+
+  if (role === "student") {
+    const studentIds = store.students.filter((student) => student.userId === userId).map((student) => student.id);
+    store.students = store.students.filter((student) => student.userId !== userId);
+    store.applicationProfiles = (store.applicationProfiles ?? []).filter(
+      (profile) => !studentIds.includes(profile.studentId)
+    );
+    store.tasks = store.tasks.filter((task) => !studentIds.includes(task.studentId));
+    store.milestones = store.milestones.filter((milestone) => !studentIds.includes(milestone.studentId));
+    store.checkIns = store.checkIns.filter((checkIn) => !studentIds.includes(checkIn.studentId));
+    store.advisorNotes = store.advisorNotes.filter((note) => !studentIds.includes(note.studentId));
+    store.studentParentLinks = store.studentParentLinks.filter((link) => !studentIds.includes(link.studentId));
+    store.studentConsultantLinks = store.studentConsultantLinks.filter(
+      (link) => !studentIds.includes(link.studentId)
+    );
+    store.aiArtifacts = store.aiArtifacts.filter((artifact) => !studentIds.includes(artifact.studentId ?? ""));
+  }
+
+  if (role === "parent") {
+    store.studentParentLinks = store.studentParentLinks.filter((link) => link.parentUserId !== userId);
+  }
+
+  if (role === "consultant") {
+    store.studentConsultantLinks = store.studentConsultantLinks.filter(
+      (link) => link.consultantUserId !== userId
+    );
+    store.advisorNotes = store.advisorNotes.filter((note) => note.consultantId !== userId);
+  }
+
+  return user;
 }
 
 function getContentItemsFallback() {

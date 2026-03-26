@@ -15,6 +15,10 @@ async function handleProxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const supabaseResponse = await updateSupabaseSession(request);
 
+  if (pathname === "/admin/login") {
+    return supabaseResponse;
+  }
+
   if (!protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     return supabaseResponse;
   }

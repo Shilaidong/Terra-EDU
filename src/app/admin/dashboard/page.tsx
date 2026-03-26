@@ -1,6 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 
-import { AdminBindingManager, LogoutButton } from "@/components/client-tools";
+import { AdminBindingManager, AdminMemberManager, LogoutButton } from "@/components/client-tools";
 import { HeroBadge, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
 import { getAdminOverviewData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -15,6 +15,30 @@ export default async function AdminDashboardPage() {
   const parents = overview.users.filter((user) => user.role === "parent");
   const consultants = overview.users.filter((user) => user.role === "consultant");
   const students = overview.students;
+  const members = overview.users
+    .filter(
+      (
+        user
+      ): user is (typeof overview.users)[number] & {
+        role: "student" | "parent" | "consultant";
+      } => user.role !== "admin"
+    )
+    .map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      linkedStudents:
+        user.role === "parent"
+          ? overview.parentLinks
+              .filter((link) => link.parentUserId === user.id)
+              .map((link) => students.find((student) => student.id === link.studentId)?.name ?? link.studentId)
+          : user.role === "consultant"
+            ? overview.consultantLinks
+                .filter((link) => link.consultantUserId === user.id)
+                .map((link) => students.find((student) => student.id === link.studentId)?.name ?? link.studentId)
+            : students.filter((student) => student.userId === user.id).map((student) => student.name),
+    }));
 
   return (
     <RoleShell
@@ -81,6 +105,15 @@ export default async function AdminDashboardPage() {
             </div>
           </SectionCard>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <SectionCard
+          title={pickText(locale, "Member exports and deletion", "成员导出与删除")}
+          eyebrow={pickText(locale, "High-risk operations", "高风险操作")}
+        >
+          <AdminMemberManager members={members} />
+        </SectionCard>
       </div>
     </RoleShell>
   );
