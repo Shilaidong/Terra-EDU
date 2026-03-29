@@ -6,6 +6,7 @@ import {
   generateMeetingSummary,
   generateParentWeeklySummary,
   generateTaskBreakdown,
+  generateTranscriptSummary,
   getAiProviderConfig,
   type AiWorkflowKind,
 } from "@/lib/ai/provider";
@@ -25,6 +26,7 @@ import { getSession } from "@/lib/session";
 
 const schema = z.object({
   kind: z.enum([
+    "student_transcript_parse",
     "student_task_breakdown",
     "consultant_weekly_report",
     "consultant_meeting_summary",
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
 
   const { kind, studentId, page, text } = parsed.data;
 
-  if (kind === "student_task_breakdown" && session.role !== "student") {
+  if ((kind === "student_task_breakdown" || kind === "student_transcript_parse") && session.role !== "student") {
     return unauthorized(trace);
   }
 
@@ -246,6 +248,30 @@ async function runWorkflow(input: {
         title: result.title,
         summary: result.summary,
         steps: result.steps,
+        sources: result.sources,
+      },
+    };
+  }
+
+  if (input.kind === "student_transcript_parse") {
+    if (!input.text?.trim()) {
+      throw new Error("Please paste the transcript markdown before asking AI to parse it.");
+    }
+
+    const result = await generateTranscriptSummary({
+      transcriptMarkdown: input.text,
+      student: input.student,
+      applicationProfile: input.applicationProfile,
+    });
+
+    return {
+      model: result.model,
+      promptVersion: result.promptVersion,
+      sources: result.sources,
+      summary: result.summary,
+      payload: {
+        summary: result.summary,
+        parsedMarkdown: result.parsedMarkdown,
         sources: result.sources,
       },
     };

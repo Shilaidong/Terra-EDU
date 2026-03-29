@@ -144,6 +144,9 @@ export async function POST(request: Request) {
           intendedStartTerm: "",
           passportCountry: "",
           additionalContext: "",
+          transcriptSourceMarkdown: "",
+          transcriptStructuredMarkdown: "",
+          planningBookMarkdown: "",
           competitions: Array.from({ length: 10 }, () => ({ name: "", field: "", year: "", level: "", result: "" })),
           activities: Array.from({ length: 20 }, () => ({ name: "", role: "", grades: "", timeCommitment: "", impact: "" })),
         };
@@ -171,6 +174,9 @@ export async function POST(request: Request) {
           intended_start_term: applicationProfile.intendedStartTerm,
           passport_country: applicationProfile.passportCountry,
           additional_context: applicationProfile.additionalContext,
+          transcript_source_markdown: applicationProfile.transcriptSourceMarkdown,
+          transcript_structured_markdown: applicationProfile.transcriptStructuredMarkdown,
+          planning_book_markdown: applicationProfile.planningBookMarkdown,
           competitions: applicationProfile.competitions,
           activities: applicationProfile.activities,
         });
@@ -263,6 +269,9 @@ export async function POST(request: Request) {
         intendedStartTerm: "",
         passportCountry: "",
         additionalContext: "",
+        transcriptSourceMarkdown: "",
+        transcriptStructuredMarkdown: "",
+        planningBookMarkdown: "",
         competitions: Array.from({ length: 10 }, () => ({ name: "", field: "", year: "", level: "", result: "" })),
         activities: Array.from({ length: 20 }, () => ({ name: "", role: "", grades: "", timeCommitment: "", impact: "" })),
       });

@@ -1,6 +1,11 @@
 import { ShieldCheck } from "lucide-react";
 
-import { AdminBindingManager, AdminMemberManager, LogoutButton } from "@/components/client-tools";
+import {
+  AdminBindingManager,
+  AdminMemberManager,
+  AdminStudentImportManager,
+  LogoutButton,
+} from "@/components/client-tools";
 import { HeroBadge, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
 import { getAdminOverviewData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -105,6 +110,15 @@ export default async function AdminDashboardPage() {
             </div>
           </SectionCard>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <SectionCard
+          title={pickText(locale, "Student workbook import", "学生工作簿导入")}
+          eyebrow={pickText(locale, "Migration helper", "迁移辅助")}
+        >
+          <AdminStudentImportManager />
+        </SectionCard>
       </div>
 
       <div className="mt-8">

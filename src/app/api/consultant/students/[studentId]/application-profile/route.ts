@@ -6,27 +6,30 @@ import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
 const schema = z.object({
-  legalFirstName: z.string().min(1),
-  legalLastName: z.string().min(1),
-  preferredName: z.string().min(1),
-  dateOfBirth: z.string().min(1),
-  citizenship: z.string().min(1),
-  birthCountry: z.string().min(1),
-  phoneNumber: z.string().min(1),
-  addressLine1: z.string().min(1),
-  city: z.string().min(1),
-  stateProvince: z.string().min(1),
-  postalCode: z.string().min(1),
-  countryOfResidence: z.string().min(1),
-  highSchoolName: z.string().min(1),
-  curriculumSystem: z.string().min(1),
-  graduationYear: z.string().min(1),
-  gpa: z.string().min(1),
-  classRank: z.string().min(1),
-  englishProficiencyStatus: z.string().min(1),
-  intendedStartTerm: z.string().min(1),
-  passportCountry: z.string().min(1),
+  legalFirstName: z.string().default(""),
+  legalLastName: z.string().default(""),
+  preferredName: z.string().default(""),
+  dateOfBirth: z.string().default(""),
+  citizenship: z.string().default(""),
+  birthCountry: z.string().default(""),
+  phoneNumber: z.string().default(""),
+  addressLine1: z.string().default(""),
+  city: z.string().default(""),
+  stateProvince: z.string().default(""),
+  postalCode: z.string().default(""),
+  countryOfResidence: z.string().default(""),
+  highSchoolName: z.string().default(""),
+  curriculumSystem: z.string().default(""),
+  graduationYear: z.string().default(""),
+  gpa: z.string().default(""),
+  classRank: z.string().default(""),
+  englishProficiencyStatus: z.string().default(""),
+  intendedStartTerm: z.string().default(""),
+  passportCountry: z.string().default(""),
   additionalContext: z.string().default(""),
+  transcriptSourceMarkdown: z.string().default(""),
+  transcriptStructuredMarkdown: z.string().default(""),
+  planningBookMarkdown: z.string().default(""),
   competitions: z.array(
     z.object({
       name: z.string(),
@@ -80,27 +83,39 @@ export async function PATCH(
     );
   }
 
-  const studentId = (await context.params).studentId;
-  const profile = updateStudentApplicationProfile(studentId, parsed.data);
+  try {
+    const studentId = (await context.params).studentId;
+    const profile = await updateStudentApplicationProfile(studentId, parsed.data);
 
-  finishTrace(trace, {
-    actorId: session.userId,
-    actorRole: session.role,
-    page: "/consultant/students/[studentId]",
-    action: "consultant_student_application_profile_updated",
-    targetType: "student_application_profile",
-    targetId: studentId,
-    status: "success",
-    inputSummary: "Consultant updated Common App style student application profile, competitions, and activities",
-    outputSummary: `${profile.highSchoolName}, ${profile.curriculumSystem}, ${profile.competitions.filter((item) => item.name.trim()).length} competitions, ${profile.activities.filter((item) => item.name.trim()).length} activities`,
-  });
+    finishTrace(trace, {
+      actorId: session.userId,
+      actorRole: session.role,
+      page: "/consultant/students/[studentId]",
+      action: "consultant_student_application_profile_updated",
+      targetType: "student_application_profile",
+      targetId: studentId,
+      status: "success",
+      inputSummary: "Consultant updated Common App style student application profile, competitions, and activities",
+      outputSummary: `${profile.highSchoolName}, ${profile.curriculumSystem}, ${profile.competitions.filter((item) => item.name.trim()).length} competitions, ${profile.activities.filter((item) => item.name.trim()).length} activities`,
+    });
 
-  return NextResponse.json({
-    success: true,
-    entity_id: studentId,
-    trace_id: trace.traceId,
-    decision_id: trace.decisionId,
-    message: "Student application profile updated.",
-    data: profile,
-  });
+    return NextResponse.json({
+      success: true,
+      entity_id: studentId,
+      trace_id: trace.traceId,
+      decision_id: trace.decisionId,
+      message: "Student application profile updated.",
+      data: profile,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: error instanceof Error ? error.message : "Student application profile update failed.",
+      },
+      { status: 500 }
+    );
+  }
 }

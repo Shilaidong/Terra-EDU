@@ -78,6 +78,9 @@ export interface StudentApplicationProfile {
   intendedStartTerm: string;
   passportCountry: string;
   additionalContext: string;
+  transcriptSourceMarkdown: string;
+  transcriptStructuredMarkdown: string;
+  planningBookMarkdown: string;
   competitions: StudentCompetitionEntry[];
   activities: StudentActivityEntry[];
 }

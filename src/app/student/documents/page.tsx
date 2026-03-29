@@ -1,6 +1,9 @@
 import { FileText } from "lucide-react";
 
-import { LogoutButton, StudentApplicationProfileEditor } from "@/components/client-tools";
+import {
+  LogoutButton,
+  StudentDocumentsWorkspace,
+} from "@/components/client-tools";
 import { HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
 import { getCurrentStudentData, getRecentAuditLogsData, getStudentApplicationProfileData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -76,41 +79,51 @@ export default async function StudentDocumentsPage() {
           hint={pickText(locale, "Common App style activity slots.", "Common App 风格活动栏位。")}
           tone="secondary"
         />
+        <StatCard
+          label={pickText(locale, "Transcript source", "成绩单原文")}
+          value={applicationProfile.transcriptSourceMarkdown.trim() ? pickText(locale, "Added", "已录入") : pickText(locale, "Missing", "待录入")}
+          hint={pickText(locale, "Paste markdown transcript text now; real file upload can come later.", "现在先贴 Markdown 成绩单原文，后面再补真实文件上传。")}
+          tone="tertiary"
+        />
+        <StatCard
+          label={pickText(locale, "Planning book", "规划书")}
+          value={applicationProfile.planningBookMarkdown.trim() ? pickText(locale, "Synced", "已同步") : pickText(locale, "Missing", "待同步")}
+          hint={pickText(locale, "Consultants can maintain a long planning book and this page will show it read-only.", "顾问端可以维护长规划书，学生端会在这里只读同步。")}
+          tone="secondary"
+        />
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-8 grid gap-8 xl:grid-cols-[1.12fr_0.88fr]">
         <SectionCard
-          title={pickText(locale, "Common App style student profile", "Common App 风格学生档案")}
-          eyebrow={pickText(locale, "Structured input", "结构化录入")}
+          title={pickText(locale, "Documents Hub", "材料中心")}
+          eyebrow={pickText(locale, "Collapsible sections", "折叠模块")}
         >
-          <StudentApplicationProfileEditor profile={applicationProfile} />
+          <StudentDocumentsWorkspace studentId={student.id} profile={applicationProfile} />
         </SectionCard>
 
         <div className="space-y-8">
           <SectionCard
-            title={pickText(locale, "How to fill this out", "填写建议")}
-            eyebrow={pickText(locale, "Student profile", "学生档案")}
+            title={pickText(locale, "How this page works", "这个页面怎么用")}
+            eyebrow={pickText(locale, "Compact workflow", "更紧凑的工作流")}
           >
             <Notice title={pickText(locale, "Student-friendly reminder", "学生填写提示")}>
               {pickText(
                 locale,
-                "You do not need to finish everything today. Start with identity, school, curriculum, competitions, and activities, then refine the rest with your consultant later.",
-                "你不用今天就把所有材料都填完。先把身份信息、学校信息、课程体系、竞赛和活动填清楚，后面再和顾问一起慢慢补全。"
+                "Open only the section you need. This keeps the page lighter while still letting you fully edit the details inside each module.",
+                "只展开当前需要编辑的模块就可以，这样页面会更轻，也不会一下子把所有材料都摊开。"
               )}
             </Notice>
           </SectionCard>
 
           <SectionCard
-            title={pickText(locale, "Best fields to fill first", "最值得优先填写的内容")}
-            eyebrow={pickText(locale, "Priority order", "优先填写")}
+            title={pickText(locale, "Suggested fill order", "建议填写顺序")}
+            eyebrow={pickText(locale, "Start here", "先从这里开始")}
           >
             <div className="space-y-3">
               {[
-                pickText(locale, "Citizenship and passport country", "国籍与护照国家"),
-                pickText(locale, "Current high school and curriculum system", "当前高中与课程体系"),
-                pickText(locale, "Graduation year, GPA, and class rank", "毕业年份、GPA 和年级排名"),
-                pickText(locale, "Top competitions and the strongest activities", "最重要的竞赛与最强活动经历"),
-                pickText(locale, "Major interests and advisor-verified profile basics", "专业方向兴趣与顾问已确认的基础信息"),
+                pickText(locale, "Application profile: identity, school, curriculum, GPA, competitions, and activities", "申请档案：身份、学校、课程体系、GPA、竞赛和活动"),
+                pickText(locale, "Transcript intake: paste transcript markdown, then let AI organize it", "成绩单模块：先贴成绩单 Markdown，再让 AI 整理"),
+                pickText(locale, "Planning book: review the consultant plan here when it becomes available", "规划书：顾问同步后在这里查看长期规划"),
               ].map((item) => (
                 <div key={item} className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-foreground">
                   {item}
@@ -132,6 +145,18 @@ export default async function StudentDocumentsPage() {
               ))}
             </div>
           </SectionCard>
+          <SectionCard
+            title={pickText(locale, "How these documents help AI", "这些文档如何帮助 AI")}
+            eyebrow={pickText(locale, "AI context", "AI 上下文")}
+          >
+            <Notice title={pickText(locale, "Why this matters", "为什么值得填")}>
+              {pickText(
+                locale,
+                "The transcript markdown and planning book are now part of the AI context. That means the assistant can better understand your academic pattern, curriculum rigor, and the long-form strategy your consultant already wrote.",
+                "成绩单 Markdown 和规划书现在都会进入 AI 上下文。也就是说，AI 能更好理解你的学业表现、课程难度，以及顾问已经写好的长期策略。"
+              )}
+            </Notice>
+          </SectionCard>
         </div>
       </div>
     </RoleShell>
@@ -140,7 +165,12 @@ export default async function StudentDocumentsPage() {
 
 function calculateApplicationProfileCompletion(profile: StudentApplicationProfile) {
   const scalarEntries = Object.entries(profile).filter(
-    ([key, value]) => key !== "studentId" && !Array.isArray(value)
+    ([key, value]) =>
+      key !== "studentId" &&
+      key !== "transcriptSourceMarkdown" &&
+      key !== "transcriptStructuredMarkdown" &&
+      key !== "planningBookMarkdown" &&
+      !Array.isArray(value)
   );
   const scalarCompleted = scalarEntries.filter(([, value]) => String(value).trim()).length;
   const competitionsCompleted = profile.competitions.some((item) =>
@@ -153,6 +183,12 @@ function calculateApplicationProfileCompletion(profile: StudentApplicationProfil
   )
     ? 1
     : 0;
-  const total = scalarEntries.length + 2;
-  return Math.round(((scalarCompleted + competitionsCompleted + activitiesCompleted) / total) * 100);
+  const transcriptCompleted = profile.transcriptSourceMarkdown.trim() ? 1 : 0;
+  const planningBookCompleted = profile.planningBookMarkdown.trim() ? 1 : 0;
+  const total = scalarEntries.length + 4;
+  return Math.round(
+    ((scalarCompleted + competitionsCompleted + activitiesCompleted + transcriptCompleted + planningBookCompleted) /
+      total) *
+      100
+  );
 }

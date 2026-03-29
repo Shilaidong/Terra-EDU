@@ -58,6 +58,9 @@ create table if not exists student_application_profiles (
   intended_start_term text not null default '',
   passport_country text not null default '',
   additional_context text not null default '',
+  transcript_source_markdown text not null default '',
+  transcript_structured_markdown text not null default '',
+  planning_book_markdown text not null default '',
   competitions jsonb not null default '[]'::jsonb,
   activities jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()

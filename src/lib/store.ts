@@ -181,6 +181,11 @@ function seedStore(): TerraStore {
         intendedStartTerm: "Fall 2027",
         passportCountry: "China",
         additionalContext: "Interested in sustainability, research, and environmental systems.",
+        transcriptSourceMarkdown: "## Grade 10-11 Transcript Notes\n\n- AP Calculus AB: A\n- AP Physics 1: A-\n- AP Environmental Science: A\n- English 10 Honors: A\n",
+        transcriptStructuredMarkdown:
+          "## Transcript Snapshot\n\n- **Curriculum:** AP\n- **Visible strengths:** Calculus, Physics, Environmental Science\n- **Pattern:** STEM-heavy with consistent A range performance\n",
+        planningBookMarkdown:
+          "## Student Planning Book\n\n### Positioning\nAmara is building a sustainability-focused engineering profile with a clear blend of STEM rigor, research interest, and leadership.\n\n### Priority Themes\n- Strengthen engineering narrative\n- Maintain GPA consistency\n- Build one deeper research or impact project\n\n### Near-Term Focus\n- Finish language testing plan\n- Tighten essay storyline\n- Keep competition and activity evidence organized\n",
         competitions: Array.from({ length: 10 }, (_, index) =>
           index === 0
             ? {

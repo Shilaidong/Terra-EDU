@@ -563,7 +563,7 @@ export async function deleteCheckIn(checkInId: string) {
   return persistedRecord;
 }
 
-export function updateStudentProfile(
+export async function updateStudentProfile(
   studentId: string,
   input: Partial<
     Pick<
@@ -572,18 +572,35 @@ export function updateStudentProfile(
     >
   >
 ) {
-  const student = getStore().students.find((item) => item.id === studentId);
+  const store = getStore();
+  const localStudent = store.students.find((item) => item.id === studentId);
+  const baseStudent = localStudent ?? (await getStudentByIdData(studentId));
 
-  if (!student) {
+  if (!baseStudent) {
     return null;
   }
 
-  Object.assign(student, input);
-  const matchingUser = getStore().users.find((user) => user.id === student.userId);
-  if (matchingUser && input.name) {
-    matchingUser.name = input.name;
-    void persistAppUser(matchingUser.id, matchingUser.name, matchingUser.email, matchingUser.role);
+  const student: StudentRecord = {
+    ...baseStudent,
+    ...input,
+  };
+
+  upsertStudentInStore(student);
+
+  const localUser = store.users.find((user) => user.id === student.userId);
+  const matchingUser = localUser ?? (student.userId ? await getUserByIdData(student.userId) : null);
+
+  if (matchingUser && (input.name || input.avatar)) {
+    const nextUser: User = {
+      ...matchingUser,
+      name: input.name ?? matchingUser.name,
+      avatar: input.avatar ?? matchingUser.avatar,
+    };
+
+    upsertUserInStore(nextUser);
+    void persistAppUser(nextUser.id, nextUser.name, nextUser.email, nextUser.role, nextUser.avatar);
   }
+
   void persistStudent(student);
   return student;
 }
@@ -603,26 +620,32 @@ export function updateUserProfile(
   return user;
 }
 
-export function updateStudentApplicationProfile(
+export async function updateStudentApplicationProfile(
   studentId: string,
   input: Omit<StudentApplicationProfile, "studentId">
 ) {
   const store = getStore();
   store.applicationProfiles ??= [];
-  const existingProfile = store.applicationProfiles.find((item) => item.studentId === studentId);
+  const localProfile = store.applicationProfiles.find((item) => item.studentId === studentId);
+  const existingProfile = localProfile ?? (await getStudentApplicationProfileData(studentId));
 
   if (existingProfile) {
-    Object.assign(existingProfile, input);
-    void persistStudentApplicationProfile(existingProfile);
-    return existingProfile;
+    const profile: StudentApplicationProfile = {
+      ...existingProfile,
+      ...input,
+      studentId,
+    };
+    upsertApplicationProfileInStore(profile);
+    await persistStudentApplicationProfile(profile);
+    return profile;
   }
 
   const profile: StudentApplicationProfile = {
     studentId,
     ...input,
   };
-  store.applicationProfiles.unshift(profile);
-  void persistStudentApplicationProfile(profile);
+  upsertApplicationProfileInStore(profile);
+  await persistStudentApplicationProfile(profile);
   return profile;
 }
 
@@ -1394,7 +1417,7 @@ async function persistStudentApplicationProfile(profile: StudentApplicationProfi
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
 
-  await supabase.from("student_application_profiles").upsert({
+  const { error } = await supabase.from("student_application_profiles").upsert({
     student_id: profile.studentId,
     legal_first_name: profile.legalFirstName,
     legal_last_name: profile.legalLastName,
@@ -1417,9 +1440,16 @@ async function persistStudentApplicationProfile(profile: StudentApplicationProfi
     intended_start_term: profile.intendedStartTerm,
     passport_country: profile.passportCountry,
     additional_context: profile.additionalContext,
+    transcript_source_markdown: profile.transcriptSourceMarkdown,
+    transcript_structured_markdown: profile.transcriptStructuredMarkdown,
+    planning_book_markdown: profile.planningBookMarkdown,
     competitions: profile.competitions,
     activities: profile.activities,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 async function persistStudentParentLink(link: { id: string; studentId: string; parentUserId: string }) {
@@ -1732,6 +1762,9 @@ function mapStudentApplicationProfile(row: DbRow): StudentApplicationProfile {
     intendedStartTerm: String(row.intended_start_term ?? ""),
     passportCountry: String(row.passport_country ?? ""),
     additionalContext: String(row.additional_context ?? ""),
+    transcriptSourceMarkdown: String(row.transcript_source_markdown ?? ""),
+    transcriptStructuredMarkdown: String(row.transcript_structured_markdown ?? ""),
+    planningBookMarkdown: String(row.planning_book_markdown ?? ""),
     competitions: normalizeCompetitionEntries(row.competitions),
     activities: normalizeActivityEntries(row.activities),
   };
@@ -1767,6 +1800,9 @@ function createDefaultStudentApplicationProfile(
     additionalContext: student?.intendedMajor
       ? `Interested in ${student.intendedMajor}.`
       : "",
+    transcriptSourceMarkdown: "",
+    transcriptStructuredMarkdown: "",
+    planningBookMarkdown: "",
     competitions: normalizeCompetitionEntries([]),
     activities: normalizeActivityEntries([]),
   };
@@ -2154,4 +2190,41 @@ function upsertTaskInStore(task: Task) {
   }
 
   store.tasks[index] = task;
+}
+
+function upsertStudentInStore(student: StudentRecord) {
+  const store = getStore();
+  const index = store.students.findIndex((item) => item.id === student.id);
+
+  if (index === -1) {
+    store.students.unshift(student);
+    return;
+  }
+
+  store.students[index] = student;
+}
+
+function upsertUserInStore(user: User) {
+  const store = getStore();
+  const index = store.users.findIndex((item) => item.id === user.id);
+
+  if (index === -1) {
+    store.users.unshift(user);
+    return;
+  }
+
+  store.users[index] = user;
+}
+
+function upsertApplicationProfileInStore(profile: StudentApplicationProfile) {
+  const store = getStore();
+  store.applicationProfiles ??= [];
+  const index = store.applicationProfiles.findIndex((item) => item.studentId === profile.studentId);
+
+  if (index === -1) {
+    store.applicationProfiles.unshift(profile);
+    return;
+  }
+
+  store.applicationProfiles[index] = profile;
 }

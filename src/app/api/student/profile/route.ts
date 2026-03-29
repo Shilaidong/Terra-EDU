@@ -14,9 +14,9 @@ const schema = z.object({
   grade: z.string().min(1),
   school: z.string().min(1),
   phase: z.enum(studentPhaseValues),
-  targetCountries: z.array(z.string()).min(1),
-  dreamSchools: z.array(z.string()).min(1),
-  intendedMajor: z.string().min(1),
+  targetCountries: z.array(z.string()),
+  dreamSchools: z.array(z.string()),
+  intendedMajor: z.string(),
   avatar: z.enum(avatarPresetValues),
 });
 
@@ -51,7 +51,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const student = updateStudentProfile(parsed.data.studentId, parsed.data);
+  const student = await updateStudentProfile(parsed.data.studentId, parsed.data);
 
   if (!student) {
     return NextResponse.json(

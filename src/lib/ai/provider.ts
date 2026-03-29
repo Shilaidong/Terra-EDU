@@ -11,6 +11,7 @@ import type {
 export type TerraAiProvider = "mock" | "minimax_anthropic";
 export type AiWorkflowKind =
   | "student_weekly_actions"
+  | "student_transcript_parse"
   | "student_task_breakdown"
   | "consultant_weekly_report"
   | "consultant_meeting_summary"
@@ -233,6 +234,75 @@ export async function generateTaskBreakdown(input: {
     summary: normalizeString(response.data.summary, "AI 已根据当前资料生成任务拆解建议。"),
     steps: normalizeStringList(response.data.steps, 8),
     sources: ["学生资料", "申请档案", "当前任务", "截止日期"],
+  };
+}
+
+export async function generateTranscriptSummary(input: {
+  transcriptMarkdown: string;
+  student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
+}) {
+  const config = getAiProviderConfig();
+
+  if (config.provider === "mock") {
+    return {
+      provider: config.provider,
+      model: "mock-simulated",
+      promptVersion: config.promptVersion,
+      summary: "已根据当前成绩单材料生成一版结构化摘要，可继续人工校对课程名、分数和学段。",
+      parsedMarkdown: [
+        "## Transcript Snapshot",
+        "",
+        "- **Source received:** yes",
+        "- **Suggested next step:** manually verify course names and term labels",
+        "",
+        "## Raw Highlights",
+        "",
+        input.transcriptMarkdown.trim() || "_No transcript content provided._",
+      ].join("\n"),
+      sources: ["成绩单原文", "学生资料", "申请档案"],
+    };
+  }
+
+  const response = await callMiniMaxJson<{
+    summary: string;
+    parsedMarkdown: string;
+    sources: string[];
+  }>({
+    system: [
+      "你是 Terra Edu 的成绩单整理助手。",
+      "你的任务是把学生提供的 Markdown 成绩单原文整理成更清晰、可读、可继续校对的 Markdown。",
+      "不能杜撰课程、成绩、学分、排名或 GPA。",
+      "原文没有写的内容，不要补。",
+      "输出必须为简体中文。",
+      "只返回 JSON，键名必须是 summary、parsedMarkdown、sources。",
+    ].join(""),
+    user: [
+      "请把下面的成绩单材料整理成结构化 Markdown。",
+      "建议输出结构：总体说明、按学段或学年分组、课程与成绩列表、待确认项。",
+      "",
+      buildStudentContext(input.student),
+      "",
+      buildApplicationProfileContext(input.applicationProfile),
+      "",
+      "成绩单原文：",
+      input.transcriptMarkdown,
+      "",
+      '返回 JSON：{"summary":"string","parsedMarkdown":"string","sources":["string"]}',
+    ].join("\n"),
+    maxTokens: 1800,
+  });
+
+  return {
+    provider: config.provider,
+    model: response.model || config.model,
+    promptVersion: config.promptVersion,
+    summary: normalizeString(response.data.summary, "AI 已生成一版成绩单整理结果，请人工核对后再使用。"),
+    parsedMarkdown: normalizeString(
+      response.data.parsedMarkdown,
+      "## Transcript Snapshot\n\n暂无可整理内容，请补充更完整的成绩单 Markdown 原文。"
+    ),
+    sources: ["成绩单原文", "学生资料", "申请档案"],
   };
 }
 
@@ -660,6 +730,8 @@ function buildApplicationProfileContext(profile?: StudentApplicationProfile | nu
     `- 年级排名：${profile.classRank || "未填写"}`,
     `- 竞赛亮点：${competitionHighlights.join("、") || "未填写"}`,
     `- 活动亮点：${activityHighlights.join("、") || "未填写"}`,
+    `- 成绩单整理：${profile.transcriptStructuredMarkdown ? clipForContext(profile.transcriptStructuredMarkdown, 900) : "暂无"}`,
+    `- 长规划书：${profile.planningBookMarkdown ? clipForContext(profile.planningBookMarkdown, 1800) : "暂无"}`,
   ].join("\n");
 }
 
@@ -760,6 +832,15 @@ function extractText(payload: AnthropicMessagesResponse) {
     .map((block) => block.text?.trim() || "")
     .filter(Boolean)
     .join("\n");
+}
+
+function clipForContext(value: string, maxLength: number) {
+  const compact = value.replace(/\n{3,}/g, "\n\n").trim();
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  return `${compact.slice(0, maxLength)}...`;
 }
 
 function safeJsonParse<T>(value: string) {

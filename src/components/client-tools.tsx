@@ -592,6 +592,180 @@ export function AdminMemberManager({
   );
 }
 
+export function AdminStudentImportManager() {
+  const t = useText();
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [details, setDetails] = useState<{
+    studentName?: string;
+    createdUser?: boolean;
+    createdStudent?: boolean;
+    tasksImported?: number;
+    milestonesImported?: number;
+    notesImported?: number;
+    parentBindings?: number;
+    consultantBindings?: number;
+    warnings?: string[];
+  } | null>(null);
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl bg-white p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          {t("Workbook import", "工作簿导入")}
+        </p>
+        <h3 className="mt-2 text-lg font-semibold text-foreground">
+          {t("Import one student's full record", "一次导入一个学生的完整资料")}
+        </h3>
+        <p className="mt-2 text-sm leading-7 text-secondary">
+          {t(
+            "Use the template workbook, fill each sheet outside the platform, then upload it here. The importer updates the student profile, application profile, competitions, activities, tasks, milestones, notes, and optional bindings.",
+            "使用模板工作簿，在系统外填好各个 sheet 后上传到这里。导入会更新学生基础资料、申请档案、竞赛、活动、任务、截止日期、顾问备注，以及可选的绑定关系。"
+          )}
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a
+            href="/api/admin/student-import/template"
+            className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+          >
+            {t("Download template", "下载模板")}
+          </a>
+          <a
+            href="/api/admin/student-import/guide"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+          >
+            {t("Open filling guide", "打开填写说明")}
+          </a>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {[
+            t("Required sheet names: student_account, application_profile, competitions, activities, tasks, milestones, notes, bindings.", "固定 sheet 名称：student_account、application_profile、competitions、activities、tasks、milestones、notes、bindings。"),
+            t("The importer is merge-first. Student profile and application profile are updated; tasks, milestones, notes, and bindings are added or matched without hard deleting existing data.", "导入默认偏向合并。学生资料和申请档案会更新；任务、截止日期、备注、绑定会按匹配规则补充，不会先把旧数据整批删除。"),
+          ].map((item) => (
+            <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm leading-7 text-secondary">
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <form
+        className="rounded-3xl bg-white p-5"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (!file) {
+            setError(t("Please choose an .xlsx workbook first.", "请先选择一个 .xlsx 工作簿。"));
+            setMessage("");
+            return;
+          }
+
+          setPending(true);
+          setError("");
+          setMessage("");
+          setDetails(null);
+
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const payload = await jsonFetch<{
+              studentName: string;
+              createdUser: boolean;
+              createdStudent: boolean;
+              tasksImported: number;
+              milestonesImported: number;
+              notesImported: number;
+              parentBindings: number;
+              consultantBindings: number;
+              warnings: string[];
+            }>("/api/admin/student-import", {
+              method: "POST",
+              body: formData,
+            });
+            setMessage(payload.message);
+            setDetails(payload.data ?? null);
+            setFile(null);
+            router.refresh();
+          } catch (submissionError) {
+            setError(
+              submissionError instanceof Error
+                ? submissionError.message
+                : t("Import failed.", "导入失败。")
+            );
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <p className="text-sm font-semibold text-secondary">
+              {t("Student workbook (.xlsx)", "学生资料工作簿（.xlsx）")}
+            </p>
+            <input
+              type="file"
+              accept=".xlsx"
+              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            />
+            <p className="mt-2 text-xs text-outline">
+              {file
+                ? t(`Selected: ${file.name}`, `已选择：${file.name}`)
+                : t("Use the provided template workbook to reduce import errors.", "建议使用系统提供的模板工作簿，能明显减少导入错误。")}
+            </p>
+          </div>
+
+          <button
+            disabled={pending}
+            className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
+          >
+            {pending ? t("Importing...", "导入中...") : t("Import student workbook", "导入学生工作簿")}
+          </button>
+        </div>
+
+        {message ? <p className="mt-4 text-sm font-semibold text-primary">{message}</p> : null}
+        {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
+
+        {details ? (
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl bg-surface-container-low p-4 text-sm text-secondary">
+              <p className="font-semibold text-foreground">
+                {t("Imported student", "已导入学生")} · {details.studentName ?? "-"}
+              </p>
+              <p className="mt-2">{t(`New account created: ${details.createdUser ? "Yes" : "No"}`, `新建账号：${details.createdUser ? "是" : "否"}`)}</p>
+              <p>{t(`New student record created: ${details.createdStudent ? "Yes" : "No"}`, `新建学生记录：${details.createdStudent ? "是" : "否"}`)}</p>
+              <p>{t(`Tasks imported: ${details.tasksImported ?? 0}`, `导入任务：${details.tasksImported ?? 0}`)}</p>
+              <p>{t(`Milestones imported: ${details.milestonesImported ?? 0}`, `导入截止日期：${details.milestonesImported ?? 0}`)}</p>
+              <p>{t(`Notes imported: ${details.notesImported ?? 0}`, `导入备注：${details.notesImported ?? 0}`)}</p>
+              <p>{t(`Parent bindings added: ${details.parentBindings ?? 0}`, `新增家长绑定：${details.parentBindings ?? 0}`)}</p>
+              <p>{t(`Consultant bindings added: ${details.consultantBindings ?? 0}`, `新增顾问绑定：${details.consultantBindings ?? 0}`)}</p>
+            </div>
+
+            <div className="rounded-2xl bg-surface-container-low p-4 text-sm text-secondary">
+              <p className="font-semibold text-foreground">{t("Warnings", "提示与警告")}</p>
+              {details.warnings?.length ? (
+                <ul className="mt-2 space-y-2">
+                  {details.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2">{t("No warnings. The workbook matched cleanly.", "没有警告，这次导入匹配很顺利。")}</p>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </form>
+    </div>
+  );
+}
+
 export function LogoutButton() {
   const t = useText();
   const router = useRouter();
@@ -1901,6 +2075,375 @@ export function ConsultantStudentApplicationProfileEditor({
       successMessage={{ en: "Student application information updated.", zh: "学生申请信息已更新。" }}
       buttonLabel={{ en: "Save Application Intake", zh: "保存申请档案" }}
     />
+  );
+}
+
+export function StudentDocumentHubEditor({
+  studentId,
+  transcriptSourceMarkdown,
+  transcriptStructuredMarkdown,
+}: {
+  studentId: string;
+  transcriptSourceMarkdown: string;
+  transcriptStructuredMarkdown: string;
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [sourceMarkdown, setSourceMarkdown] = useState(transcriptSourceMarkdown);
+  const [structuredMarkdown, setStructuredMarkdown] = useState(transcriptStructuredMarkdown);
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+  const [aiPending, setAiPending] = useState(false);
+
+  async function persist(nextSource: string, nextStructured: string, successText: string) {
+    await jsonFetch("/api/student/document-hub", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentId,
+        transcriptSourceMarkdown: nextSource,
+        transcriptStructuredMarkdown: nextStructured,
+      }),
+    });
+    setMessage(successText);
+    router.refresh();
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl bg-white p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
+          {t("Transcript source", "成绩单原文")}
+        </p>
+        <h3 className="mt-2 text-lg font-semibold text-foreground">
+          {t("Paste your markdown transcript here", "把你的 Markdown 成绩单贴在这里")}
+        </h3>
+        <p className="mt-2 text-sm leading-7 text-secondary">
+          {t(
+            "You do not need real file upload yet. Paste the transcript or score report markdown here first, then ask AI to structure it.",
+            "现在还不用真的上传文件。先把成绩单或分数报告的 Markdown 原文贴在这里，再让 AI 帮你整理成更清晰的版本。"
+          )}
+        </p>
+        <textarea
+          value={sourceMarkdown}
+          onChange={(event) => setSourceMarkdown(event.target.value)}
+          className="mt-4 min-h-64 w-full rounded-3xl bg-surface-container-low px-4 py-4 font-mono text-sm"
+          placeholder={t("## Semester 1\n- AP Calculus AB: A\n- AP Physics 1: A-\n", "## 高一上\n- AP Calculus AB: A\n- AP Physics 1: A-\n")}
+        />
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={async () => {
+              setPending(true);
+              setMessage("");
+              try {
+                await persist(
+                  sourceMarkdown,
+                  structuredMarkdown,
+                  t("Transcript source saved.", "成绩单原文已保存。")
+                );
+              } catch (submissionError) {
+                setMessage(
+                  submissionError instanceof Error
+                    ? submissionError.message
+                    : t("Save failed.", "保存失败。")
+                );
+              } finally {
+                setPending(false);
+              }
+            }}
+            className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
+          >
+            {pending ? t("Saving...", "保存中...") : t("Save transcript source", "保存成绩单原文")}
+          </button>
+          <button
+            type="button"
+            disabled={aiPending || !sourceMarkdown.trim()}
+            onClick={async () => {
+              setAiPending(true);
+              setMessage("");
+              try {
+                const payload = await jsonFetch<{
+                  summary: string;
+                  parsedMarkdown: string;
+                }>("/api/ai/workflows", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    kind: "student_transcript_parse",
+                    studentId,
+                    page: "/student/documents",
+                    text: sourceMarkdown,
+                  }),
+                });
+
+                const nextStructured = payload.data?.parsedMarkdown ?? "";
+                setStructuredMarkdown(nextStructured);
+                await persist(
+                  sourceMarkdown,
+                  nextStructured,
+                  t("AI transcript summary generated and saved.", "AI 整理后的成绩单已生成并保存。")
+                );
+              } catch (submissionError) {
+                setMessage(
+                  submissionError instanceof Error
+                    ? submissionError.message
+                    : t("AI parsing failed.", "AI 识别失败。")
+                );
+              } finally {
+                setAiPending(false);
+              }
+            }}
+            className="rounded-full border border-outline-variant px-5 py-3 text-sm font-bold text-primary disabled:opacity-70"
+          >
+            {aiPending ? t("AI is parsing...", "AI 识别中...") : t("Let AI structure the transcript", "让 AI 整理成绩单")}
+          </button>
+        </div>
+        {message ? <p className="mt-3 text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+
+      <MarkdownDocumentPanel
+        eyebrow={t("Structured transcript", "整理后的成绩单")}
+        title={t("AI-readable transcript view", "AI 可读的成绩单视图")}
+        markdown={structuredMarkdown}
+        emptyText={t("Once AI finishes, the structured transcript will appear here.", "AI 整理完成后，这里会显示更清晰的成绩单版本。")}
+      />
+    </div>
+  );
+}
+
+export function ConsultantPlanningBookEditor({
+  studentId,
+  planningBookMarkdown,
+}: {
+  studentId: string;
+  planningBookMarkdown: string;
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [markdown, setMarkdown] = useState(planningBookMarkdown);
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setPending(true);
+        setMessage("");
+        try {
+          await jsonFetch(`/api/consultant/students/${studentId}/document-hub`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              planningBookMarkdown: markdown,
+            }),
+          });
+          setMessage(t("Planning book updated.", "规划书已更新。"));
+          router.refresh();
+        } catch (submissionError) {
+          setMessage(
+            submissionError instanceof Error
+              ? submissionError.message
+              : t("Save failed.", "保存失败。")
+          );
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <p className="text-sm leading-7 text-secondary">
+        {t(
+          "Use markdown. Long planning books are fine here, and they will be shown to the student as read-only content.",
+          "这里支持 Markdown。四五千字的长规划书也可以直接放，学生端会同步成只读内容。"
+        )}
+      </p>
+      <textarea
+        value={markdown}
+        onChange={(event) => setMarkdown(event.target.value)}
+        className="min-h-[420px] w-full rounded-3xl bg-surface-container-low px-4 py-4 font-mono text-sm"
+        placeholder={t("## Student Planning Book\n\n### Positioning\n...\n", "## 学生规划书\n\n### 定位\n...\n")}
+      />
+      <div className="flex items-center gap-3">
+        <button
+          disabled={pending}
+          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
+        >
+          {pending ? t("Saving...", "保存中...") : t("Save planning book", "保存规划书")}
+        </button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+export function MarkdownDocumentPanel({
+  eyebrow,
+  title,
+  markdown,
+  emptyText,
+}: {
+  eyebrow: string;
+  title: string;
+  markdown: string;
+  emptyText: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{eyebrow}</p>
+      <h3 className="mt-2 text-lg font-semibold text-foreground">{title}</h3>
+      <div className="mt-4 rounded-[28px] border border-black/5 bg-[#f8f4ee] px-6 py-6">
+        {markdown.trim() ? (
+          <div className="space-y-4 text-[15px] leading-8 text-[#3f3a34]">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <h1 className="font-serif text-3xl font-bold text-foreground">{children}</h1>,
+                h2: ({ children }) => <h2 className="pt-2 font-serif text-2xl font-bold text-foreground">{children}</h2>,
+                h3: ({ children }) => <h3 className="pt-1 text-lg font-semibold text-foreground">{children}</h3>,
+                p: ({ children }) => <p className="text-[15px] leading-8 text-[#3f3a34]">{children}</p>,
+                ul: ({ children }) => <ul className="space-y-3 pl-5">{children}</ul>,
+                ol: ({ children }) => <ol className="space-y-3 pl-5">{children}</ol>,
+                li: ({ children }) => <li className="marker:text-primary">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                em: ({ children }) => <em className="italic text-[#5a534d]">{children}</em>,
+                blockquote: ({ children }) => (
+                  <blockquote className="rounded-2xl border-l-4 border-primary/35 bg-white/70 px-4 py-3 text-[#5a534d]">
+                    {children}
+                  </blockquote>
+                ),
+                code: ({ children }) => (
+                  <code className="rounded-lg bg-white px-2 py-1 font-mono text-[0.92em] text-foreground">{children}</code>
+                ),
+                pre: ({ children }) => (
+                  <pre className="overflow-x-auto rounded-2xl bg-[#efe8de] p-4 text-sm text-foreground">{children}</pre>
+                ),
+                hr: () => <hr className="border-black/8" />,
+                table: ({ children }) => (
+                  <div className="overflow-x-auto rounded-2xl border border-black/5 bg-white">
+                    <table className="min-w-full text-left text-sm">{children}</table>
+                  </div>
+                ),
+                th: ({ children }) => <th className="bg-[#f3ede5] px-4 py-3 font-semibold text-foreground">{children}</th>,
+                td: ({ children }) => <td className="border-t border-black/5 px-4 py-3 text-[#4d4740]">{children}</td>,
+              }}
+            >
+              {markdown}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <p className="text-sm text-secondary">{emptyText}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function StudentDocumentsWorkspace({
+  studentId,
+  profile,
+}: {
+  studentId: string;
+  profile: StudentApplicationProfile;
+}) {
+  const t = useText();
+  const [expandedSection, setExpandedSection] = useState<"profile" | "transcript" | "planning" | null>(null);
+
+  const sections = [
+    {
+      key: "profile" as const,
+      eyebrow: t("Structured profile", "结构化档案"),
+      title: t("Application profile", "申请档案"),
+      description: t(
+        "Identity, school, curriculum, GPA, competitions, and activities.",
+        "身份、学校、课程体系、GPA、竞赛和活动。"
+      ),
+      status: `${profile.competitions.filter((item) => item.name.trim()).length}/10 · ${profile.activities.filter((item) => item.name.trim()).length}/20`,
+      content: <StudentApplicationProfileEditor profile={profile} />,
+    },
+    {
+      key: "transcript" as const,
+      eyebrow: t("Markdown + AI", "Markdown 录入 + AI 整理"),
+      title: t("Transcript intake", "成绩单整理"),
+      description: t(
+        "Paste transcript markdown, save it, and let AI turn it into a clearer transcript view.",
+        "贴成绩单 Markdown 原文，保存后让 AI 整理成更清晰的成绩单视图。"
+      ),
+      status: profile.transcriptSourceMarkdown.trim() ? t("Added", "已录入") : t("Empty", "未录入"),
+      content: (
+        <StudentDocumentHubEditor
+          studentId={studentId}
+          transcriptSourceMarkdown={profile.transcriptSourceMarkdown}
+          transcriptStructuredMarkdown={profile.transcriptStructuredMarkdown}
+        />
+      ),
+    },
+    {
+      key: "planning" as const,
+      eyebrow: t("Consultant synced", "顾问同步内容"),
+      title: t("Planning book", "规划书"),
+      description: t(
+        "A long-form planning memo from the consultant, shown to the student in read-only form.",
+        "顾问写入的长规划书，学生端只读查看。"
+      ),
+      status: profile.planningBookMarkdown.trim() ? t("Synced", "已同步") : t("Empty", "未同步"),
+      content: (
+        <MarkdownDocumentPanel
+          eyebrow={t("Read-only", "只读查看")}
+          title={t("Your consultant planning book", "你的顾问规划书")}
+          markdown={profile.planningBookMarkdown}
+          emptyText={t("Your consultant has not synced a planning book yet.", "顾问还没有同步规划书。")}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {sections.map((section) => {
+        const expanded = expandedSection === section.key;
+
+        return (
+          <div
+            key={section.key}
+            className={cn(
+              "overflow-hidden rounded-[28px] border border-black/5 bg-white transition-all duration-200",
+              expanded ? "shadow-terra" : "shadow-sm"
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setExpandedSection(expanded ? null : section.key)}
+              className="flex w-full items-start justify-between gap-4 px-5 py-5 text-left"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{section.eyebrow}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
+                  <span className="inline-flex rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-bold text-primary">
+                    {section.status}
+                  </span>
+                </div>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-secondary">{section.description}</p>
+              </div>
+              <span
+                className={cn(
+                  "mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-outline-variant text-lg font-bold text-primary transition-transform",
+                  expanded ? "rotate-180" : ""
+                )}
+                aria-hidden="true"
+              >
+                ˅
+              </span>
+            </button>
+
+            {expanded ? <div className="border-t border-black/5 bg-[#fcfaf6] px-5 py-5">{section.content}</div> : null}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

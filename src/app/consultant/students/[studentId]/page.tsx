@@ -6,6 +6,7 @@ import {
   ConsultantMeetingSummaryPanel,
   ConsultantMilestoneComposer,
   ConsultantNoteComposer,
+  ConsultantPlanningBookEditor,
   ConsultantStudentApplicationProfileEditor,
   ConsultantStudentPicker,
   ConsultantStudentProfileEditor,
@@ -255,6 +256,20 @@ export default async function ConsultantStudentWorkspacePage({
                     </p>
                   </div>
                 </div>
+              </SectionCard>
+            </div>
+          ) : null}
+
+          {applicationProfile ? (
+            <div className="grid gap-8">
+              <SectionCard
+                title={pickText(locale, "Planning Book", "规划书")}
+                eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}
+              >
+                <ConsultantPlanningBookEditor
+                  studentId={student.id}
+                  planningBookMarkdown={applicationProfile.planningBookMarkdown}
+                />
               </SectionCard>
             </div>
           ) : null}
