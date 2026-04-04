@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createTask } from "@/lib/data";
+import { createTask, getCurrentStudentData } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 import type { TimelineLane } from "@/lib/types";
@@ -63,6 +63,32 @@ export async function POST(request: Request) {
         message: "Invalid timeline task payload.",
       },
       { status: 400 }
+    );
+  }
+
+  const currentStudent = await getCurrentStudentData(session);
+
+  if (!currentStudent) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Student profile not found.",
+      },
+      { status: 404 }
+    );
+  }
+
+  if (parsed.data.studentId !== currentStudent.id) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Forbidden.",
+      },
+      { status: 403 }
     );
   }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { updateStudentApplicationProfile } from "@/lib/data";
+import { getCurrentStudentData, updateStudentApplicationProfile } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
@@ -39,7 +39,7 @@ const schema = z.object({
       level: z.string(),
       result: z.string(),
     })
-  ).length(10),
+  ).max(10).default([]),
   activities: z.array(
     z.object({
       name: z.string(),
@@ -48,7 +48,7 @@ const schema = z.object({
       timeCommitment: z.string(),
       impact: z.string(),
     })
-  ).length(20),
+  ).max(20).default([]),
 });
 
 export async function PATCH(request: Request) {
@@ -84,6 +84,32 @@ export async function PATCH(request: Request) {
 
   try {
     const { studentId, ...profileInput } = parsed.data;
+    const currentStudent = await getCurrentStudentData(session);
+
+    if (!currentStudent) {
+      return NextResponse.json(
+        {
+          success: false,
+          trace_id: trace.traceId,
+          decision_id: trace.decisionId,
+          message: "Student profile not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    if (currentStudent.id !== studentId) {
+      return NextResponse.json(
+        {
+          success: false,
+          trace_id: trace.traceId,
+          decision_id: trace.decisionId,
+          message: "Forbidden.",
+        },
+        { status: 403 }
+      );
+    }
+
     const profile = await updateStudentApplicationProfile(studentId, profileInput);
 
     finishTrace(trace, {

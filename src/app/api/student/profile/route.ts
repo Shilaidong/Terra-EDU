@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { avatarPresetValues } from "@/lib/avatar-presets";
-import { updateStudentProfile } from "@/lib/data";
+import { getCurrentStudentData, updateStudentProfile } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession, setSession } from "@/lib/session";
 
@@ -48,6 +48,32 @@ export async function PATCH(request: Request) {
         message: "Invalid profile payload.",
       },
       { status: 400 }
+    );
+  }
+
+  const currentStudent = await getCurrentStudentData(session);
+
+  if (!currentStudent) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Student profile not found.",
+      },
+      { status: 404 }
+    );
+  }
+
+  if (parsed.data.studentId !== currentStudent.id) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Forbidden.",
+      },
+      { status: 403 }
     );
   }
 

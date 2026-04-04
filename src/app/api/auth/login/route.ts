@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authenticateUser } from "@/lib/auth";
 import { getCurrentStudentData } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
+import { consumeRateLimit, getRequestIdentity } from "@/lib/rate-limit";
 import { getDefaultRoute } from "@/lib/routes";
 import { setSession } from "@/lib/session";
 
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
   const trace = createTraceContext();
   const body = await request.json();
   const parsed = schema.safeParse(body);
+  const requestIdentity = getRequestIdentity(request);
 
   if (!parsed.success) {
     finishTrace(trace, {
@@ -44,6 +46,43 @@ export async function POST(request: Request) {
   }
 
   const { email, password, role } = parsed.data;
+  const rateLimit = consumeRateLimit({
+    scope: "auth:login",
+    key: `${requestIdentity}:${email.toLowerCase()}:${role}`,
+    limit: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    finishTrace(trace, {
+      actorId: "anonymous",
+      actorRole: role,
+      page: "/login",
+      action: "login_rate_limited",
+      targetType: "session",
+      targetId: email,
+      status: "error",
+      errorCode: "RATE_LIMITED",
+      inputSummary: `Login throttled for ${email}`,
+      outputSummary: `Retry after ${rateLimit.retryAfterSeconds} seconds`,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Too many login attempts. Please wait a bit and try again.",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      }
+    );
+  }
+
   const authResult = await authenticateUser({ email, password, role });
 
   if (!("session" in authResult)) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { updateStudentProfile } from "@/lib/data";
+import { getLinkedStudentIdsForConsultant, updateStudentProfile } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
@@ -50,6 +50,20 @@ export async function PATCH(
   }
 
   const studentId = (await context.params).studentId;
+  const linkedStudentIds = await getLinkedStudentIdsForConsultant(session.userId);
+
+  if (!linkedStudentIds.includes(studentId)) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Forbidden.",
+      },
+      { status: 403 }
+    );
+  }
+
   const student = await updateStudentProfile(studentId, parsed.data);
 
   if (!student) {

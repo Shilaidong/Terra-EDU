@@ -4,6 +4,7 @@ import { z } from "zod";
 import { avatarPresetValues, getDefaultStudentAvatar } from "@/lib/avatar-presets";
 import { getUserRecordByEmail } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
+import { consumeRateLimit, getRequestIdentity } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/server/supabase-admin";
 import { getStore } from "@/lib/store";
 import type { StudentApplicationProfile, StudentRecord, User } from "@/lib/types";
@@ -21,8 +22,22 @@ export async function POST(request: Request) {
   const trace = createTraceContext();
   const body = await request.json();
   const parsed = schema.safeParse(body);
+  const requestIdentity = getRequestIdentity(request);
 
   if (!parsed.success) {
+    finishTrace(trace, {
+      actorId: "anonymous",
+      actorRole: "student",
+      page: "/register",
+      action: "public_registration_failed",
+      targetType: "registration",
+      targetId: "invalid_payload",
+      status: "error",
+      errorCode: "INVALID_PAYLOAD",
+      inputSummary: "Malformed public registration payload",
+      outputSummary: "Rejected before account creation",
+    });
+
     return NextResponse.json(
       {
         success: false,
@@ -35,8 +50,57 @@ export async function POST(request: Request) {
   }
 
   const { role, name, email, password, grade, school } = parsed.data;
+  const rateLimit = consumeRateLimit({
+    scope: "auth:register",
+    key: `${requestIdentity}:${email.toLowerCase()}:${role}`,
+    limit: 4,
+    windowMs: 60 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    finishTrace(trace, {
+      actorId: "anonymous",
+      actorRole: role,
+      page: "/register",
+      action: "public_registration_rate_limited",
+      targetType: "registration",
+      targetId: email,
+      status: "error",
+      errorCode: "RATE_LIMITED",
+      inputSummary: `Registration throttled for ${email}`,
+      outputSummary: `Retry after ${rateLimit.retryAfterSeconds} seconds`,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "Too many registration attempts. Please wait a bit and try again.",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      }
+    );
+  }
 
   if (role === "student" && (!grade?.trim() || !school?.trim())) {
+    finishTrace(trace, {
+      actorId: "anonymous",
+      actorRole: role,
+      page: "/register",
+      action: "public_registration_failed",
+      targetType: "registration",
+      targetId: email,
+      status: "error",
+      errorCode: "MISSING_STUDENT_FIELDS",
+      inputSummary: `Registration missing school data for ${email}`,
+      outputSummary: "Student registration requires grade and school",
+    });
+
     return NextResponse.json(
       {
         success: false,
@@ -50,6 +114,19 @@ export async function POST(request: Request) {
 
   const existing = await getUserRecordByEmail(email);
   if (existing) {
+    finishTrace(trace, {
+      actorId: "anonymous",
+      actorRole: role,
+      page: "/register",
+      action: "public_registration_failed",
+      targetType: "registration",
+      targetId: email,
+      status: "error",
+      errorCode: "EMAIL_EXISTS",
+      inputSummary: `Duplicate registration for ${email}`,
+      outputSummary: "Email already registered",
+    });
+
     return NextResponse.json(
       {
         success: false,
@@ -300,6 +377,19 @@ export async function POST(request: Request) {
           : "Registration complete. An administrator can now bind this account to a student.",
     });
   } catch (error) {
+    finishTrace(trace, {
+      actorId: "anonymous",
+      actorRole: role,
+      page: "/register",
+      action: "public_registration_failed",
+      targetType: "registration",
+      targetId: email,
+      status: "error",
+      errorCode: "REGISTRATION_FAILED",
+      inputSummary: `Registration attempt for ${email}`,
+      outputSummary: error instanceof Error ? error.message : "Unknown registration failure",
+    });
+
     return NextResponse.json(
       {
         success: false,

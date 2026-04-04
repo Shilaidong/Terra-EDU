@@ -1,11 +1,22 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
+declare global {
+  var __terraSupabaseServerWarned: boolean | undefined;
+}
+
 export async function getServerSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
+    if (!globalThis.__terraSupabaseServerWarned) {
+      globalThis.__terraSupabaseServerWarned = true;
+      console.warn(
+        "[terra] Supabase server client unavailable. Auth/session refresh will stay in local fallback mode."
+      );
+    }
+
     return null;
   }
 

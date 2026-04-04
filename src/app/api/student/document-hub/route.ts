@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getStudentApplicationProfileData, updateStudentApplicationProfile } from "@/lib/data";
+import { getCurrentStudentData, getStudentApplicationProfileData, updateStudentApplicationProfile } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
@@ -43,6 +43,32 @@ export async function PATCH(request: Request) {
 
   try {
     const { studentId, transcriptSourceMarkdown, transcriptStructuredMarkdown } = parsed.data;
+    const currentStudent = await getCurrentStudentData(session);
+
+    if (!currentStudent) {
+      return NextResponse.json(
+        {
+          success: false,
+          trace_id: trace.traceId,
+          decision_id: trace.decisionId,
+          message: "Student profile not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    if (currentStudent.id !== studentId) {
+      return NextResponse.json(
+        {
+          success: false,
+          trace_id: trace.traceId,
+          decision_id: trace.decisionId,
+          message: "Forbidden.",
+        },
+        { status: 403 }
+      );
+    }
+
     const existing = await getStudentApplicationProfileData(studentId);
 
     if (!existing) {

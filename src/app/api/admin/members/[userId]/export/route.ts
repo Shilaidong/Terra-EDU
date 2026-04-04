@@ -12,6 +12,19 @@ export async function GET(
   const session = await getSession();
 
   if (!session || session.role !== "admin") {
+    finishTrace(trace, {
+      actorId: session?.userId ?? "anonymous",
+      actorRole: session?.role ?? "admin",
+      page: "/admin/dashboard",
+      action: "admin_member_export_failed",
+      targetType: "user_export",
+      targetId: "unauthorized",
+      status: "error",
+      errorCode: "UNAUTHORIZED",
+      inputSummary: "Attempted admin member export without admin session",
+      outputSummary: "Unauthorized export request rejected",
+    });
+
     return NextResponse.json(
       {
         success: false,
@@ -27,6 +40,19 @@ export async function GET(
   const payload = await getAdminMemberExportData(userId);
 
   if (!payload) {
+    finishTrace(trace, {
+      actorId: session.userId,
+      actorRole: session.role,
+      page: "/admin/dashboard",
+      action: "admin_member_export_failed",
+      targetType: "user_export",
+      targetId: userId,
+      status: "error",
+      errorCode: "MEMBER_NOT_FOUND",
+      inputSummary: `Export member ${userId}`,
+      outputSummary: "Requested member not found",
+    });
+
     return NextResponse.json(
       {
         success: false,
