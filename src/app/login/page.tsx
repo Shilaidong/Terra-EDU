@@ -29,7 +29,7 @@ export default async function LoginPage() {
       <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-terra md:grid-cols-2">
         <section className="hidden flex-col justify-between bg-primary p-12 text-white md:flex">
           <div>
-            <h1 className="font-serif text-4xl font-bold">Terra Edu</h1>
+            <h1 className="font-serif text-4xl font-bold">{pickText(locale, "Lodestar Pathways", "引路人生涯")}</h1>
             <p className="mt-4 max-w-sm text-lg leading-8 text-white/80">
               {pickText(locale, "Your organic path to global education excellence.", "通往全球教育卓越的自然成长路径。")}
             </p>
@@ -43,7 +43,7 @@ export default async function LoginPage() {
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
               <h2 className="font-serif text-3xl font-bold text-foreground">{pickText(locale, "Welcome Back", "欢迎回来")}</h2>
-              <p className="mt-2 text-secondary">{pickText(locale, "Sign in with the launch demo accounts or wire Supabase credentials later.", "你可以先使用演示账号登录，后续再接入 Supabase 正式凭据。")}</p>
+              <p className="mt-2 text-secondary">{pickText(locale, "Sign in with the launch demo accounts or connect your formal credentials later.", "你可以先使用演示账号登录，后续再接入正式账号。")}</p>
             </div>
             <LocaleSwitcher />
           </div>
@@ -81,7 +81,7 @@ export default async function LoginPage() {
             <div className="rounded-3xl bg-surface-container-high p-5">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Debug ready", "便于调试")}</p>
               <p className="mt-2 text-sm text-secondary">
-                {pickText(locale, "Auth routes emit structured responses and can later switch to Supabase without changing page layout.", "认证接口会返回结构化响应，后续接入 Supabase 也不需要重做页面布局。")}
+                {pickText(locale, "Structured login flows, role routing, and clear save feedback are already built in.", "平台已经具备结构化登录流程、角色跳转和清晰的保存反馈。")}
               </p>
             </div>
           </div>

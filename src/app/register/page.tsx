@@ -26,7 +26,7 @@ export default async function RegisterPage() {
       <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-terra md:grid-cols-2">
         <section className="hidden flex-col justify-between bg-primary p-12 text-white md:flex">
           <div>
-            <h1 className="font-serif text-4xl font-bold">Terra Edu</h1>
+            <h1 className="font-serif text-4xl font-bold">{pickText(locale, "Lodestar Pathways", "引路人生涯")}</h1>
             <p className="mt-4 max-w-sm text-lg leading-8 text-white/80">
               {pickText(
                 locale,

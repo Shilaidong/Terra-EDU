@@ -17,8 +17,8 @@ const nunito = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Terra Edu",
-  description: "International education planning platform for students, parents, and consultants.",
+  title: "引路人生涯探索系统 | Lodestar Career Exploration System",
+  description: "Career exploration system for students, parents, and consultants.",
 };
 
 export default async function RootLayout({

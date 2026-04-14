@@ -25,7 +25,7 @@ export default async function AdminLoginPage() {
       <div className="relative z-10 grid w-full max-w-4xl overflow-hidden rounded-[2rem] bg-white shadow-terra md:grid-cols-2">
         <section className="hidden flex-col justify-between bg-primary p-12 text-white md:flex">
           <div>
-            <h1 className="font-serif text-4xl font-bold">Terra Admin</h1>
+            <h1 className="font-serif text-4xl font-bold">{pickText(locale, "Lodestar Admin", "引路人生涯管理后台")}</h1>
             <p className="mt-4 max-w-sm text-lg leading-8 text-white/80">
               {pickText(locale, "Protected admin access for registration review, member export, and binding controls.", "受保护的管理员入口，用于注册审核、成员导出和绑定管理。")}
             </p>

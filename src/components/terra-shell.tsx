@@ -58,7 +58,7 @@ export async function RoleShell({
       <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-black/5 bg-[#faf6f0]/90 px-6 backdrop-blur">
         <div className="flex items-center gap-8">
           <Link href="/" className="font-serif text-2xl font-bold text-primary">
-            Terra Edu
+            {pickText(locale, "Lodestar Pathways", "引路人生涯")}
           </Link>
           <nav className="hidden gap-4 md:flex">
             {navItems.slice(0, 4).map((item) => (
