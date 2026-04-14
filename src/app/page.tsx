@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Bot, Compass, Quote, Shield, Sparkles, Users } from "lucide-react";
 
 import { LocaleSwitcher } from "@/components/locale-provider";
-import { pickText } from "@/lib/locale";
+import { pickText, type Locale } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 
 const timelineRows = [
@@ -189,7 +189,7 @@ const processFlowCards = [
   },
 ];
 
-function Brand({ locale, compact = false }: { locale: string; compact?: boolean }) {
+function Brand({ locale, compact = false }: { locale: Locale; compact?: boolean }) {
   return (
     <div className="leading-none">
       <div className={compact ? "font-serif text-2xl font-bold text-primary" : "font-serif text-3xl font-bold text-primary"}>
