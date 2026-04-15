@@ -1,4 +1,8 @@
-# Terra Edu
+# 引路人生涯探索系统 / Lodestar Career Exploration System
+
+系统级产品说明、维护入口、调试思路与升级建议，请先看：
+
+- [`docs/product-system-handbook.md`](/Users/shi/projects/edu-platform/terra-edu/docs/product-system-handbook.md)
 
 Terra Edu is a launch-ready Next.js web app built from the Stitch UI designs in [`/Users/shi/projects/edu-platform/UIDESIGN`](/Users/shi/projects/edu-platform/UIDESIGN). It ships a warm Terra visual system, student/parent/consultant role portals, traceable API routes, and mock-first data storage that can later move to Supabase.
 
@@ -19,12 +23,12 @@ Terra Edu is a launch-ready Next.js web app built from the Stitch UI designs in 
 - Consultant: `consultant@terra.edu` / `terra123`
 - Admin: `admin@terra.edu` / `terra123`
 
-## Public registration and admin binding
+## Access plans and admin binding
 
-- Public signup is available at [`/register`](/Users/shi/projects/edu-platform/terra-edu/src/app/register/page.tsx)
-- Students can register directly and get their own student record immediately
-- Parent and consultant accounts can register directly, but they must be bound to a student by an admin before student data appears
+- The current external entry uses a plan/access explanation flow instead of open self-service registration
+- Student, parent, and consultant demo accounts can still be used for product preview
 - Admin bindings are managed from [`/admin/dashboard`](/Users/shi/projects/edu-platform/terra-edu/src/app/admin/dashboard/page.tsx)
+- Student cold-start data can be imported through the admin dashboard and related templates in `docs/`
 
 If your current Supabase project was created before admin support was added, run:
 
