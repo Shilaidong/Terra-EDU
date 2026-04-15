@@ -19,7 +19,7 @@ export default async function ConsultantContentPage() {
       subtitle={pickText(locale, "Maintain courses, chapters, competitions, schools, and majors using manual entry plus spreadsheet import.", "通过手动录入和表格导入来维护课程、章节、竞赛、学校和专业内容。")}
       activeHref="/consultant/content"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<Database className="h-4 w-4" />} title={pickText(locale, "Library size", "内容库规模")} value={`${items.length}`} />
           <LogoutButton />
         </div>

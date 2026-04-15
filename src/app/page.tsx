@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { Bot, Compass, Quote, Shield, Sparkles, Users } from "lucide-react";
 
+import { AccessPlansDialog } from "@/components/access-plans-dialog";
 import { LocaleSwitcher } from "@/components/locale-provider";
+import { getDemoAccounts } from "@/lib/data";
 import { pickText, type Locale } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 
@@ -221,6 +223,7 @@ function TestimonialAvatar({
 
 export default async function HomePage() {
   const locale = await getLocale();
+  const accounts = getDemoAccounts().filter((account) => account.role === "student" || account.role === "parent" || account.role === "consultant");
   const monthLabels = locale === "zh" ? ["8月", "9月", "10月", "11月", "12月", "1月", "2月", "3月", "4月", "5月", "6月", "7月"] : ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
 
   return (
@@ -230,6 +233,12 @@ export default async function HomePage() {
           <Brand locale={locale} compact />
           <div className="flex items-center space-x-6">
             <LocaleSwitcher />
+            <AccessPlansDialog
+              locale={locale}
+              accounts={accounts}
+              triggerLabel={pickText(locale, "Register", "注册")}
+              triggerClassName="rounded-full border border-outline-variant bg-surface-container-low px-5 py-2.5 font-bold text-primary transition hover:bg-surface-container"
+            />
             <Link href="/login" className="terra-on-primary rounded-full bg-primary px-6 py-2.5 font-bold text-on-primary shadow-terra hover:text-on-primary">
               {pickText(locale, "Sign In", "登录")}
             </Link>

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
+import { AccessPlansDialog } from "@/components/access-plans-dialog";
 import { LocaleSwitcher } from "@/components/locale-provider";
 import { LoginForm } from "@/components/client-tools";
 import { getDemoAccounts } from "@/lib/data";
@@ -17,7 +18,7 @@ export default async function LoginPage() {
     redirect(getDefaultRoute(session.role));
   }
 
-  const accounts = getDemoAccounts().filter((account) => account.role !== "admin");
+  const accounts = getDemoAccounts().filter((account) => account.role === "student" || account.role === "parent" || account.role === "consultant");
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">
@@ -48,7 +49,38 @@ export default async function LoginPage() {
             <LocaleSwitcher />
           </div>
 
-          <LoginForm allowedRoles={["student", "parent", "consultant"]} />
+          <LoginForm
+            allowedRoles={["student", "parent", "consultant"]}
+            secondaryAction={
+              <AccessPlansDialog
+                locale={locale}
+                accounts={accounts}
+                triggerLabel={pickText(locale, "Register", "注册")}
+                triggerClassName="inline-flex w-full items-center justify-center rounded-2xl border border-outline-variant bg-white px-5 py-3 text-lg font-bold text-primary transition hover:bg-surface-container-low"
+              />
+            }
+          />
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-4 text-sm text-secondary">
+              <p className="font-semibold text-foreground">{pickText(locale, "Already have an account?", "已有账号？")}</p>
+              <p className="mt-1">{pickText(locale, "Use the login form above to enter the platform directly.", "直接使用上方登录表单进入平台。")}</p>
+            </div>
+            <div className="rounded-2xl border border-outline-variant bg-white px-4 py-4">
+              <p className="text-sm font-semibold text-foreground">{pickText(locale, "Need to register?", "需要注册？")}</p>
+              <p className="mt-1 text-sm text-secondary">
+                {pickText(locale, "Open the access plan and contact Teacher Shi before activation.", "先查看开通方案，再联系史老师完成开通。")}
+              </p>
+              <div className="mt-3">
+                <AccessPlansDialog
+                  locale={locale}
+                  accounts={accounts}
+                  triggerLabel={pickText(locale, "Register", "注册")}
+                  triggerClassName="inline-flex w-full items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-sm font-bold text-primary transition hover:bg-surface-container"
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="mt-8 rounded-3xl bg-surface-container-low p-5">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Demo accounts", "演示账号")}</p>
@@ -56,16 +88,33 @@ export default async function LoginPage() {
               {accounts.map((account) => (
                 <div key={account.role} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
                   <p className="font-semibold capitalize text-foreground">
-                    {account.role === "admin"
-                      ? pickText(locale, "admin", "管理员")
-                      : account.role === "student"
+                    {account.role === "student"
                       ? pickText(locale, "student", "学生")
                       : account.role === "parent"
                         ? pickText(locale, "parent", "家长")
-                        : pickText(locale, "consultant", "顾问")}
+                      : pickText(locale, "consultant", "顾问")}
                   </p>
                   <p>{account.email}</p>
                   <p>{account.password}</p>
+                  <p className="mt-2 text-xs leading-6 text-secondary">
+                    {account.role === "student"
+                      ? pickText(
+                          locale,
+                          "See the timeline, documents, AI guidance, and the full student-facing workflow in one account.",
+                          "可直接体验时间线、材料中心、AI 助手和完整学生端工作流。"
+                        )
+                      : account.role === "parent"
+                        ? pickText(
+                            locale,
+                            "See parent-facing progress, shared deadlines, and how the family stays synced without repeated checking.",
+                            "可直接体验家长端如何查看进度、共享截止事项，以及家校之间如何保持同步。"
+                          )
+                      : pickText(
+                          locale,
+                          "See student workspace management, planning book editing, AI reports, and content operations.",
+                          "可直接体验学生工作台、规划书编辑、AI 周报和内容管理等顾问能力。"
+                        )}
+                  </p>
                 </div>
               ))}
             </div>
@@ -73,23 +122,32 @@ export default async function LoginPage() {
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             <div className="rounded-3xl bg-surface-container-high p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "First login", "首次登录")}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Student demo", "学生示例")}</p>
               <p className="mt-2 text-sm text-secondary">
-                {pickText(locale, "Grade, target countries, dream schools, and intended major are editable after login.", "登录后可以修改年级、目标国家、梦校和意向专业。")}
+                {pickText(locale, "Best for seeing planning, check-ins, documents, and AI guidance as a student would actually use them.", "适合查看规划、打卡、材料中心和 AI 助手在学生端的真实使用方式。")}
               </p>
             </div>
             <div className="rounded-3xl bg-surface-container-high p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Debug ready", "便于调试")}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Parent demo", "家长示例")}</p>
               <p className="mt-2 text-sm text-secondary">
-                {pickText(locale, "Structured login flows, role routing, and clear save feedback are already built in.", "平台已经具备结构化登录流程、角色跳转和清晰的保存反馈。")}
+                {pickText(locale, "Best for seeing how parents check progress, milestones, and consultant updates without interrupting the student rhythm.", "适合查看家长如何在不打断学生节奏的情况下，理解进展、里程碑和顾问反馈。")}
+              </p>
+            </div>
+            <div className="rounded-3xl bg-surface-container-high p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Consultant demo", "顾问示例")}</p>
+              <p className="mt-2 text-sm text-secondary">
+                {pickText(locale, "Best for seeing student management, planning book maintenance, content operations, and consultant-side AI workflows.", "适合查看学生管理、规划书维护、内容库操作和顾问侧 AI 工作流。")}
               </p>
             </div>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-4 text-sm text-secondary">
-            <Link href="/register" className="hover:text-primary">
-              {pickText(locale, "Create account", "注册账号")}
-            </Link>
+            <AccessPlansDialog
+              locale={locale}
+              accounts={accounts}
+              triggerLabel={pickText(locale, "Create account", "注册账号")}
+              triggerClassName="hover:text-primary"
+            />
             <Link href="/privacy" className="hover:text-primary">
               {pickText(locale, "Privacy Policy", "隐私政策")}
             </Link>

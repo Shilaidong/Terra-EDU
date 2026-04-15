@@ -50,8 +50,10 @@ async function jsonFetch<T>(input: RequestInfo, init?: RequestInit) {
 
 export function LoginForm({
   allowedRoles = ["student", "parent", "consultant", "admin"],
+  secondaryAction,
 }: {
   allowedRoles?: UserRole[];
+  secondaryAction?: React.ReactNode;
 }) {
   const t = useText();
   const initialRole = allowedRoles[0] ?? "student";
@@ -150,6 +152,7 @@ export function LoginForm({
       >
         {pending ? t("Signing in...", "登录中...") : t("Sign In", "登录")}
       </button>
+      {secondaryAction ? <div>{secondaryAction}</div> : null}
       {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
     </form>
   );

@@ -43,7 +43,7 @@ export default async function ConsultantStudentsPage() {
       subtitle={pickText(locale, "Monitor student progress, add tasks, review phase transitions, and keep a traceable record of cohort operations.", "查看学生进度、安排任务、跟进阶段变化，并保留可追踪的顾问操作记录。")}
       activeHref="/consultant/students"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<BriefcaseBusiness className="h-4 w-4" />} title={pickText(locale, "Cohort size", "学生总数")} value={`${overview.students.length}`} />
           <LogoutButton />
         </div>
@@ -57,8 +57,8 @@ export default async function ConsultantStudentsPage() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <SectionCard title={pickText(locale, "Student table", "学生列表")} eyebrow={pickText(locale, "Cohort", "学生群组")}>
-          <div className="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto rounded-3xl border border-black/5 bg-white shadow-sm">
+            <table className="min-w-[760px] w-full text-left text-sm">
               <thead className="bg-surface-container-low text-secondary">
                 <tr>
                   <th className="px-4 py-3">{pickText(locale, "Student", "学生")}</th>

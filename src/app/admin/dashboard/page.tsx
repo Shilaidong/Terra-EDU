@@ -56,7 +56,7 @@ export default async function AdminDashboardPage() {
       )}
       activeHref="/admin/dashboard"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<ShieldCheck className="h-4 w-4" />} title={pickText(locale, "Admin scope", "管理范围")} value={pickText(locale, "Registrations + bindings", "注册 + 绑定")} />
           <LogoutButton />
         </div>

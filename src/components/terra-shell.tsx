@@ -32,7 +32,7 @@ function NavIcon({ href }: { href: string }) {
 }
 
 export function PageContainer({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-7xl px-6 pb-14 pt-24">{children}</div>;
+  return <div className="mx-auto max-w-7xl px-4 pb-24 pt-32 sm:px-6 md:pb-14 md:pt-24">{children}</div>;
 }
 
 export async function RoleShell({
@@ -55,39 +55,62 @@ export async function RoleShell({
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-black/5 bg-[#faf6f0]/90 px-6 backdrop-blur">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-serif text-2xl font-bold text-primary">
-            {pickText(locale, "Lodestar Pathways", "引路人生涯")}
-          </Link>
-          <nav className="hidden gap-4 md:flex">
-            {navItems.slice(0, 4).map((item) => (
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-[#faf6f0]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 md:h-16 md:px-6 md:py-0">
+          <div className="flex min-w-0 items-center gap-3 md:gap-8">
+            <Link href="/" className="truncate font-serif text-xl font-bold text-primary sm:text-2xl">
+              {pickText(locale, "Lodestar Pathways", "引路人生涯")}
+            </Link>
+            <nav className="hidden gap-4 md:flex">
+              {navItems.slice(0, 4).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "rounded-full px-3 py-2 text-sm font-semibold transition-colors",
+                    item.href === activeHref
+                      ? "bg-primary/10 text-primary"
+                      : "text-secondary hover:bg-black/5 hover:text-primary"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden items-center gap-2 rounded-full bg-surface-container-low px-4 py-2 text-sm text-secondary md:flex">
+              <Bell className="h-4 w-4 text-primary" />
+              {pickText(locale, "Full trace logging enabled", "全链路日志已开启")}
+            </div>
+            <LocaleSwitcher className="inline-flex md:hidden" />
+            <LocaleSwitcher className="hidden md:inline-flex" />
+            <img
+              alt={session.name}
+              src={session.avatar ?? getAvatarForRole(session.role)}
+              className="h-9 w-9 rounded-full border border-outline-variant object-cover sm:h-10 sm:w-10"
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-black/5 px-3 py-2 md:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-full px-3 py-2 text-sm font-semibold transition-colors",
+                  "inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all",
                   item.href === activeHref
-                    ? "bg-primary/10 text-primary"
-                    : "text-secondary hover:bg-black/5 hover:text-primary"
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-surface-container-low text-secondary"
                 )}
               >
+                <NavIcon href={item.href} />
                 {item.label}
               </Link>
             ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-full bg-surface-container-low px-4 py-2 text-sm text-secondary md:flex">
-            <Bell className="h-4 w-4 text-primary" />
-            {pickText(locale, "Full trace logging enabled", "全链路日志已开启")}
           </div>
-          <LocaleSwitcher className="hidden md:inline-flex" />
-          <img
-            alt={session.name}
-            src={session.avatar ?? getAvatarForRole(session.role)}
-            className="h-10 w-10 rounded-full border border-outline-variant object-cover"
-          />
         </div>
       </header>
 
@@ -159,10 +182,10 @@ export async function RoleShell({
         <PageContainer>
           <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="font-serif text-4xl font-bold text-foreground">{title}</h1>
-              <p className="mt-2 max-w-3xl text-secondary">{subtitle}</p>
+              <h1 className="font-serif text-3xl font-bold text-foreground sm:text-4xl">{title}</h1>
+              <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">{subtitle}</p>
             </div>
-            {hero}
+            {hero ? <div className="w-full md:w-auto">{hero}</div> : null}
           </div>
           {children}
         </PageContainer>
@@ -181,12 +204,12 @@ export function HeroBadge({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-primary/10 bg-white/90 px-5 py-4 shadow-terra">
-      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
+    <div className="rounded-2xl border border-primary/10 bg-white/90 px-4 py-4 shadow-terra sm:px-5">
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-primary sm:text-xs sm:tracking-[0.2em]">
         {icon}
         {title}
       </div>
-      <div className="font-serif text-3xl font-bold text-primary">{value}</div>
+      <div className="font-serif text-2xl font-bold text-primary sm:text-3xl">{value}</div>
     </div>
   );
 }
@@ -205,13 +228,13 @@ export function SectionCard({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-3xl bg-surface-container-lowest p-6 shadow-terra", className)}>
-      <div className="mb-5 flex items-center justify-between gap-4">
+    <section className={cn("rounded-3xl bg-surface-container-lowest p-5 shadow-terra sm:p-6", className)}>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div>
           {eyebrow ? (
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{eyebrow}</p>
           ) : null}
-          <h2 className="font-serif text-2xl font-bold text-foreground">{title}</h2>
+          <h2 className="font-serif text-xl font-bold text-foreground sm:text-2xl">{title}</h2>
         </div>
         {action}
       </div>
@@ -239,11 +262,11 @@ export function StatCard({
         : "bg-secondary-container text-secondary";
 
   return (
-    <div className="rounded-3xl border border-black/5 bg-surface-container-lowest p-6 shadow-terra">
+    <div className="rounded-3xl border border-black/5 bg-surface-container-lowest p-5 shadow-terra sm:p-6">
       <div className={cn("inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]", styles)}>
         {label}
       </div>
-      <div className="mt-4 font-serif text-4xl font-bold text-foreground">{value}</div>
+      <div className="mt-4 font-serif text-3xl font-bold text-foreground sm:text-4xl">{value}</div>
       <p className="mt-3 text-sm text-secondary">{hint}</p>
     </div>
   );
