@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AccessPlansDialog } from "@/components/access-plans-dialog";
 import { LocaleSwitcher } from "@/components/locale-provider";
 import { LoginForm } from "@/components/client-tools";
-import { getDemoAccounts } from "@/lib/data";
+import { getAccessPlanDemoAccounts } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { getDefaultRoute } from "@/lib/routes";
@@ -18,7 +18,7 @@ export default async function LoginPage() {
     redirect(getDefaultRoute(session.role));
   }
 
-  const accounts = getDemoAccounts().filter((account) => account.role === "student" || account.role === "parent" || account.role === "consultant");
+  const accounts = getAccessPlanDemoAccounts();
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">

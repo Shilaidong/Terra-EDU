@@ -741,6 +741,21 @@ export function getDemoAccounts() {
   }));
 }
 
+export function getAccessPlanDemoAccounts() {
+  return getDemoAccounts().filter(
+    (
+      account
+    ): account is {
+      role: "student" | "parent" | "consultant";
+      email: string;
+      password: string;
+    } =>
+      account.role === "student" ||
+      account.role === "parent" ||
+      account.role === "consultant"
+  );
+}
+
 export async function getStudentCompletionData(studentId: string) {
   const tasks = await getStudentTasksData(studentId);
   return calculateTaskCompletion(tasks);

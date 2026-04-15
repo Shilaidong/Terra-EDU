@@ -4,7 +4,7 @@ import { Bot, Compass, Quote, Shield, Sparkles, Users } from "lucide-react";
 
 import { AccessPlansDialog } from "@/components/access-plans-dialog";
 import { LocaleSwitcher } from "@/components/locale-provider";
-import { getDemoAccounts } from "@/lib/data";
+import { getAccessPlanDemoAccounts } from "@/lib/data";
 import { pickText, type Locale } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 
@@ -223,7 +223,7 @@ function TestimonialAvatar({
 
 export default async function HomePage() {
   const locale = await getLocale();
-  const accounts = getDemoAccounts().filter((account) => account.role === "student" || account.role === "parent" || account.role === "consultant");
+  const accounts = getAccessPlanDemoAccounts();
   const monthLabels = locale === "zh" ? ["8月", "9月", "10月", "11月", "12月", "1月", "2月", "3月", "4月", "5月", "6月", "7月"] : ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
 
   return (

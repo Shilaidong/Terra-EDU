@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { LocaleSwitcher } from "@/components/locale-provider";
-import { getDemoAccounts } from "@/lib/data";
+import { getAccessPlanDemoAccounts } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { getDefaultRoute } from "@/lib/routes";
@@ -16,7 +16,7 @@ export default async function RegisterPage() {
     redirect(getDefaultRoute(session.role));
   }
 
-  const accounts = getDemoAccounts().filter((account) => account.role === "student" || account.role === "consultant");
+  const accounts = getAccessPlanDemoAccounts().filter((account) => account.role !== "parent");
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">
@@ -71,7 +71,7 @@ export default async function RegisterPage() {
             </div>
             <div className="rounded-3xl bg-surface-container-low p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Consultant access", "顾问端方案")}</p>
-              <p className="mt-3 font-serif text-4xl font-bold text-foreground">?9999</p>
+              <p className="mt-3 font-serif text-4xl font-bold text-foreground">?999</p>
               <p className="mt-3 text-sm leading-7 text-secondary">
                 {pickText(
                   locale,
