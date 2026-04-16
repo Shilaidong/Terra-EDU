@@ -42,7 +42,7 @@ export default async function ConsultantMessagesPage() {
       )}
       activeHref="/consultant/messages"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<BriefcaseBusiness className="h-4 w-4" />} title={pickText(locale, "Students", "学生数")} value={`${overview.students.length}`} />
           <LogoutButton />
         </div>

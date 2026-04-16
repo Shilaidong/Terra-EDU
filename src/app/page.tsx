@@ -229,40 +229,40 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-background text-on-background">
       <header className="sticky top-0 z-50 w-full border-b border-black/5 bg-[#faf6f0]/90 shadow-[0_4px_20px_rgba(46,50,48,0.06)] backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <Brand locale={locale} compact />
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
             <LocaleSwitcher />
             <AccessPlansDialog
               locale={locale}
               accounts={accounts}
               triggerLabel={pickText(locale, "Register", "注册")}
-              triggerClassName="rounded-full border border-outline-variant bg-surface-container-low px-5 py-2.5 font-bold text-primary transition hover:bg-surface-container"
+              triggerClassName="rounded-full border border-outline-variant bg-surface-container-low px-3.5 py-2 text-sm font-bold text-primary transition hover:bg-surface-container sm:px-5 sm:py-2.5 sm:text-base"
             />
-            <Link href="/login" className="terra-on-primary rounded-full bg-primary px-6 py-2.5 font-bold text-on-primary shadow-terra hover:text-on-primary">
+            <Link href="/login" className="terra-on-primary rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-terra hover:text-on-primary sm:px-6 sm:py-2.5 sm:text-base">
               {pickText(locale, "Sign In", "登录")}
             </Link>
           </div>
         </nav>
       </header>
 
-      <section className="relative overflow-hidden px-8 pb-32 pt-20">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 lg:grid-cols-2">
+      <section className="relative overflow-hidden px-4 pb-20 pt-14 sm:px-6 sm:pb-24 sm:pt-16 lg:px-8 lg:pb-32 lg:pt-20">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 sm:gap-12 lg:gap-16 lg:grid-cols-2">
           <div className="z-10">
-            <div className="mb-6 flex flex-wrap gap-2">
-              <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+            <div className="mb-5 flex flex-wrap gap-2">
+              <span className="rounded-full bg-surface-container px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-primary sm:text-xs sm:tracking-wider">
                 {pickText(locale, "Student, parent, and consultant collaboration", "学生、家长、顾问三端协作")}
               </span>
-              <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              <span className="rounded-full bg-surface-container px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-primary sm:text-xs sm:tracking-wider">
                 {pickText(locale, "A single long-range planning view", "一张长期规划总览")}
               </span>
             </div>
 
-            <h1 className="mb-6 font-serif text-5xl font-extrabold leading-[1.1] text-on-background md:text-6xl">
+            <h1 className="mb-5 font-serif text-[2.4rem] font-extrabold leading-[1.08] text-on-background sm:text-[3rem] md:text-6xl">
               {pickText(locale, "Your organic path to global education excellence.", "让成长自然发生，走向全球教育的卓越之路。")}
             </h1>
 
-            <p className="mb-10 max-w-xl text-xl leading-relaxed text-on-surface-variant">
+            <p className="mb-8 max-w-xl text-base leading-7 text-on-surface-variant sm:text-lg sm:leading-8 lg:mb-10 lg:text-xl">
               {pickText(
                 locale,
                 "A premium coordination layer for students, parents, and consultants. Keep long-range planning, weekly execution, and key decisions aligned in one calm place.",
@@ -270,38 +270,38 @@ export default async function HomePage() {
               )}
             </p>
 
-            <div className="mb-12 flex flex-col gap-4 sm:flex-row">
-              <Link href="/login" className="terra-on-primary rounded-lg bg-primary px-8 py-4 text-lg font-bold text-on-primary shadow-lg transition-all hover:text-on-primary hover:shadow-xl">
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <Link href="/login" className="terra-on-primary rounded-lg bg-primary px-6 py-3.5 text-base font-bold text-on-primary shadow-lg transition-all hover:text-on-primary hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg">
                 {pickText(locale, "Start Your Journey", "开始使用")}
               </Link>
-              <a href="#preview" className="rounded-lg border border-outline-variant bg-surface-container-low px-8 py-4 text-lg font-bold text-primary transition-all hover:bg-surface-container">
+              <a href="#preview" className="rounded-lg border border-outline-variant bg-surface-container-low px-6 py-3.5 text-base font-bold text-primary transition-all hover:bg-surface-container sm:px-8 sm:py-4 sm:text-lg">
                 {pickText(locale, "See the platform", "查看平台")}
               </a>
             </div>
 
             <div className="flex items-center gap-3">
               <Sparkles className="h-5 w-5 text-tertiary" />
-              <span className="font-medium italic text-on-surface-variant">
+              <span className="text-sm font-medium italic text-on-surface-variant sm:text-base">
                 {pickText(locale, "AI guidance grounded in real records", "AI 建议建立在真实资料与真实进度之上")}
               </span>
             </div>
           </div>
 
           <div className="relative">
-            <div className="overflow-hidden rounded-[2rem] shadow-2xl lg:rotate-2">
+            <div className="overflow-hidden rounded-[1.5rem] shadow-2xl sm:rounded-[2rem] lg:rotate-2">
               <img
                 alt={pickText(locale, "Student and parent collaborating", "学生与家长共同查看规划")}
                 src="/api/assets/home-hero"
                 className="aspect-square h-full w-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-6 -left-6 max-w-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 shadow-xl">
+            <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-xl sm:-bottom-6 sm:-left-6 sm:right-auto sm:max-w-xs sm:p-6">
               <div className="mb-3 flex gap-2">
                 <span className="h-3 w-3 rounded-full bg-primary/20" />
                 <span className="h-3 w-3 rounded-full bg-primary/40" />
                 <span className="h-3 w-3 rounded-full bg-primary" />
               </div>
-              <p className="text-sm font-semibold italic text-primary">
+              <p className="text-xs font-semibold italic text-primary sm:text-sm">
                 {pickText(locale, '"The transition from chaos to a single source of truth was immediate."', "“从混乱到共享同一份真实进度，几乎是立刻发生的变化。”")}
               </p>
             </div>
@@ -310,13 +310,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="preview" className="bg-surface-container-low px-8 py-24">
+      <section id="preview" className="bg-surface-container-low px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 font-serif text-4xl font-bold">
+          <div className="mb-10 text-center sm:mb-12 lg:mb-16">
+            <h2 className="mb-3 font-serif text-3xl font-bold sm:mb-4 sm:text-[2.2rem] lg:text-4xl">
               {pickText(locale, "A real planning interface, not a brochure.", "看到的不是概念，而是真实的规划界面。")}
             </h2>
-            <p className="mx-auto max-w-3xl text-lg text-on-surface-variant">
+            <p className="mx-auto max-w-3xl text-sm leading-7 text-on-surface-variant sm:text-base sm:leading-8 lg:text-lg">
               {pickText(
                 locale,
                 "The homepage now surfaces the same kind of timeline, progress view, and family-facing clarity that users will experience after login.",
@@ -325,39 +325,39 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-            <div className="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-8 shadow-[0_4px_20px_rgba(46,50,48,0.06)] md:col-span-12 lg:col-span-8">
-              <div className="mb-8 flex items-center justify-between">
-                <h3 className="font-body text-xl font-bold">{pickText(locale, "Yearly Journey Roadmap", "年度规划路线图")}</h3>
-                <div className="flex items-center gap-4 text-xs font-bold text-on-surface-variant">
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:gap-6 md:grid-cols-12">
+            <div className="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(46,50,48,0.06)] sm:p-6 lg:p-8 md:col-span-12 lg:col-span-8">
+              <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="font-body text-lg font-bold sm:text-xl">{pickText(locale, "Yearly Journey Roadmap", "年度规划路线图")}</h3>
+                <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold text-on-surface-variant sm:gap-4 sm:text-xs">
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" />{pickText(locale, "Current", "当前")}</span>
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-tertiary" />{pickText(locale, "Upcoming", "即将到来")}</span>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="grid grid-cols-12 gap-2 border-b border-outline-variant/10 pb-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
+                <div className="grid grid-cols-12 gap-1 border-b border-outline-variant/10 pb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/60 sm:gap-2 sm:text-[10px] sm:tracking-widest">
                   {monthLabels.map((label) => (
                     <div key={label}>{label}</div>
                   ))}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {timelineRows.map((row) => (
                     <div key={row.title.en} className="relative">
-                      <div className="mb-1 text-xs font-bold opacity-60">{pickText(locale, row.title.en, row.title.zh)}</div>
-                      <div className="relative h-8 overflow-hidden rounded-full bg-surface-container">
+                      <div className="mb-1 text-[11px] font-bold opacity-60 sm:text-xs">{pickText(locale, row.title.en, row.title.zh)}</div>
+                      <div className="relative h-7 overflow-hidden rounded-full bg-surface-container sm:h-8">
                         {row.segments.map((segment) => (
                           <div
                             key={segment.label.en}
-                            className={`absolute flex h-full items-center rounded-full px-4 text-[10px] font-bold ${segment.tone}`}
+                            className={`absolute flex h-full items-center rounded-full px-2.5 text-[9px] font-bold sm:px-4 sm:text-[10px] ${segment.tone}`}
                             style={{ left: segment.start, width: segment.width }}
                           >
                             {pickText(locale, segment.label.en, segment.label.zh)}
                           </div>
                         ))}
                         {row.markers.map((marker) => (
-                          <div key={marker} className="absolute top-2 h-4 w-1 rounded-full bg-error" style={{ left: marker }} />
+                          <div key={marker} className="absolute top-1.5 h-4 w-1 rounded-full bg-error sm:top-2" style={{ left: marker }} />
                         ))}
                       </div>
                     </div>
@@ -366,36 +366,36 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="flex flex-col justify-between rounded-xl bg-primary p-8 text-white shadow-xl md:col-span-6 lg:col-span-4">
+            <div className="flex flex-col justify-between rounded-xl bg-primary p-5 text-white shadow-xl sm:p-6 lg:p-8 md:col-span-6 lg:col-span-4">
               <div>
-                <h3 className="mb-6 font-body text-xl font-bold text-white">{pickText(locale, "Weekly Execution", "每周执行")}</h3>
-                <ul className="space-y-4">
+                <h3 className="mb-4 font-body text-lg font-bold text-white sm:mb-6 sm:text-xl">{pickText(locale, "Weekly Execution", "每周执行")}</h3>
+                <ul className="space-y-3 sm:space-y-4">
                   {executionItems.map((item) => (
-                    <li key={item.title.en} className={`flex items-center gap-3 rounded-lg p-3 ${item.state === "done" ? "bg-white/10" : item.state === "todo" ? "bg-white/10" : "bg-white/10 opacity-60"}`}>
-                      <span className="text-sm text-white">
+                    <li key={item.title.en} className={`flex items-center gap-3 rounded-lg p-2.5 sm:p-3 ${item.state === "done" ? "bg-white/10" : item.state === "todo" ? "bg-white/10" : "bg-white/10 opacity-60"}`}>
+                      <span className="text-xs text-white sm:text-sm">
                         {item.state === "done" ? "✓" : item.state === "todo" ? "○" : "◌"}
                       </span>
-                      <span className="text-sm font-medium text-white">{pickText(locale, item.title.en, item.title.zh)}</span>
+                      <span className="text-xs font-medium text-white sm:text-sm">{pickText(locale, item.title.en, item.title.zh)}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="mt-8 border-t border-white/20 pt-6">
+              <div className="mt-6 border-t border-white/20 pt-5 sm:mt-8 sm:pt-6">
                 <p className="mb-2 text-xs uppercase tracking-widest text-white/70">{pickText(locale, "Next Milestone", "下一个里程碑")}</p>
-                <p className="text-lg font-bold text-white">{pickText(locale, "Early Action Submission", "早申递交")}</p>
-                <p className="text-sm text-white/90">{pickText(locale, "14 Days Remaining", "剩余 14 天")}</p>
+                <p className="text-base font-bold text-white sm:text-lg">{pickText(locale, "Early Action Submission", "早申递交")}</p>
+                <p className="text-xs text-white/90 sm:text-sm">{pickText(locale, "14 Days Remaining", "剩余 14 天")}</p>
               </div>
             </div>
 
             <div className="md:col-span-12">
               <div className="flex flex-col gap-6 lg:flex-row">
-                <div className="flex flex-1 items-start gap-4 rounded-xl border border-tertiary/20 bg-tertiary p-6 text-white">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/15">
+                <div className="flex flex-1 items-start gap-3 rounded-xl border border-tertiary/20 bg-tertiary p-4 text-white sm:gap-4 sm:p-6">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 sm:h-12 sm:w-12">
                     <Bot className="h-5 w-5 text-on-tertiary" />
                   </div>
                   <div>
-                    <p className="mb-1 text-sm font-bold text-white">{pickText(locale, "AI Companion Suggestion", "AI 陪伴式建议")}</p>
-                    <p className="text-sm leading-relaxed text-white/88">
+                    <p className="mb-1 text-xs font-bold text-white sm:text-sm">{pickText(locale, "AI Companion Suggestion", "AI 陪伴式建议")}</p>
+                    <p className="text-xs leading-6 text-white/88 sm:text-sm sm:leading-relaxed">
                       {pickText(
                         locale,
                         'Based on your interest in Bio-Engineering, the regional competition in April aligns perfectly with your "Academic Rigor" narrative. Would you like to schedule prep sessions?',
@@ -410,21 +410,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="roles" className="px-8 py-24">
+      <section id="roles" className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-16 text-center font-serif text-4xl font-bold">
+          <h2 className="mb-10 text-center font-serif text-3xl font-bold sm:mb-12 sm:text-[2.2rem] lg:mb-16 lg:text-4xl">
             {pickText(locale, "One plan, three roles, a single shared reality.", "一份规划，三种角色，共享同一份真实进度。")}
           </h2>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 md:grid-cols-3">
             {roleCards.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title.en} className="group rounded-xl border border-outline-variant/10 bg-surface-container-low p-8 transition-all hover:shadow-lg">
-                  <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-colors ${item.tone}`}>
-                    <Icon className="h-7 w-7" />
+                <div key={item.title.en} className="group rounded-xl border border-outline-variant/10 bg-surface-container-low p-5 transition-all hover:shadow-lg sm:p-6 lg:p-8">
+                  <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-colors sm:mb-6 sm:h-14 sm:w-14 ${item.tone}`}>
+                    <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
                   </div>
-                  <h3 className="mb-4 font-serif text-2xl font-bold">{pickText(locale, item.title.en, item.title.zh)}</h3>
-                  <p className="leading-relaxed text-on-surface-variant">{pickText(locale, item.body.en, item.body.zh)}</p>
+                  <h3 className="mb-3 font-serif text-xl font-bold sm:mb-4 sm:text-2xl">{pickText(locale, item.title.en, item.title.zh)}</h3>
+                  <p className="text-sm leading-7 text-on-surface-variant sm:text-base sm:leading-relaxed">{pickText(locale, item.body.en, item.body.zh)}</p>
                 </div>
               );
             })}
@@ -432,17 +432,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-outline-variant/10 bg-background px-8 py-24">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-20 lg:grid-cols-2">
+      <section className="border-y border-outline-variant/10 bg-background px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 sm:gap-14 lg:gap-20 lg:grid-cols-2">
           <div>
-            <h2 className="mb-12 font-serif text-4xl font-bold">{pickText(locale, "How the experience unfolds", "平台体验如何展开")}</h2>
-            <div className="space-y-12">
+            <h2 className="mb-8 font-serif text-3xl font-bold sm:mb-10 sm:text-[2.2rem] lg:mb-12 lg:text-4xl">{pickText(locale, "How the experience unfolds", "平台体验如何展开")}</h2>
+            <div className="space-y-7 sm:space-y-9 lg:space-y-12">
               {processSteps.map((item) => (
-                <div key={item.step} className="flex gap-6">
-                  <span className="font-headline text-4xl font-black text-primary/20">{item.step}</span>
+                <div key={item.step} className="flex gap-4 sm:gap-5 lg:gap-6">
+                  <span className="font-headline text-3xl font-black text-primary/20 sm:text-4xl">{item.step}</span>
                   <div>
-                    <h4 className="mb-2 text-xl font-bold">{pickText(locale, item.title.en, item.title.zh)}</h4>
-                    <p className="text-on-surface-variant">{pickText(locale, item.body.en, item.body.zh)}</p>
+                    <h4 className="mb-2 text-lg font-bold sm:text-xl">{pickText(locale, item.title.en, item.title.zh)}</h4>
+                    <p className="text-sm leading-7 text-on-surface-variant sm:text-base sm:leading-relaxed">{pickText(locale, item.body.en, item.body.zh)}</p>
                   </div>
                 </div>
               ))}
@@ -450,13 +450,13 @@ export default async function HomePage() {
           </div>
 
           <div className="relative">
-            <div className="overflow-hidden rounded-[2rem] border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-2xl">
-              <div className="mb-5 flex items-center justify-between rounded-2xl border border-black/5 bg-surface-container-low px-4 py-3">
+            <div className="overflow-hidden rounded-[1.5rem] border border-outline-variant/20 bg-surface-container-lowest p-4 shadow-2xl sm:rounded-[2rem] sm:p-5 lg:p-6">
+              <div className="mb-4 flex items-center justify-between rounded-2xl border border-black/5 bg-surface-container-low px-4 py-3 sm:mb-5">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-primary">
                     {pickText(locale, "Live workflow preview", "实时流程预览")}
                   </p>
-                  <p className="mt-1 text-sm text-on-surface-variant">
+                  <p className="mt-1 text-xs leading-6 text-on-surface-variant sm:text-sm">
                     {pickText(locale, "How records become a shared plan", "资料如何变成所有人共享的行动规划")}
                   </p>
                 </div>
@@ -467,16 +467,16 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {processFlowCards.map((card, index) => (
                   <div key={card.title.en}>
-                    <div className={`rounded-[1.6rem] border border-black/5 p-5 shadow-[0_16px_40px_rgba(46,50,48,0.06)] ${card.tone}`}>
-                      <div className="mb-3 flex items-start justify-between gap-4">
+                    <div className={`rounded-[1.35rem] border border-black/5 p-4 shadow-[0_16px_40px_rgba(46,50,48,0.06)] sm:rounded-[1.6rem] sm:p-5 ${card.tone}`}>
+                      <div className="mb-3 flex items-start justify-between gap-3 sm:gap-4">
                         <div>
                           <p className={`text-[11px] font-bold uppercase tracking-[0.22em] ${card.tone.includes("text-white") ? "text-white/70" : "text-secondary"}`}>
                             {pickText(locale, "Module", "模块")}
                           </p>
-                          <h3 className="mt-1 font-serif text-2xl font-bold">
+                          <h3 className="mt-1 font-serif text-xl font-bold sm:text-2xl">
                             {pickText(locale, card.title.en, card.title.zh)}
                           </h3>
                         </div>
@@ -485,7 +485,7 @@ export default async function HomePage() {
                         </span>
                       </div>
 
-                      <p className={`max-w-lg text-sm leading-6 ${card.tone.includes("text-white") ? "text-white/90" : "text-on-surface-variant"}`}>
+                      <p className={`max-w-lg text-xs leading-6 sm:text-sm ${card.tone.includes("text-white") ? "text-white/90" : "text-on-surface-variant"}`}>
                         {pickText(locale, card.body.en, card.body.zh)}
                       </p>
 
@@ -493,7 +493,7 @@ export default async function HomePage() {
                         {(locale === "zh" ? card.chips.zh : card.chips.en).map((chip) => (
                           <span
                             key={chip}
-                            className={`rounded-full px-3 py-1 text-xs font-semibold ${card.tone.includes("text-white") ? "bg-white/15 text-white" : "bg-surface-container-low text-primary"}`}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold sm:px-3 sm:text-xs ${card.tone.includes("text-white") ? "bg-white/15 text-white" : "bg-surface-container-low text-primary"}`}
                           >
                             {chip}
                           </span>
@@ -503,7 +503,7 @@ export default async function HomePage() {
 
                     {index < processFlowCards.length - 1 ? (
                       <div className="flex justify-center py-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low text-primary">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low text-primary sm:h-8 sm:w-8">
                           ↓
                         </div>
                       </div>
@@ -517,14 +517,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-surface-container-lowest px-8 py-24">
+      <section className="bg-surface-container-lowest px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-20 text-center font-serif text-4xl font-bold">{pickText(locale, "Voices from the platform", "来自平台里的真实感受")}</h2>
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+          <h2 className="mb-10 text-center font-serif text-3xl font-bold sm:mb-14 sm:text-[2.2rem] lg:mb-20 lg:text-4xl">{pickText(locale, "Voices from the platform", "来自平台里的真实感受")}</h2>
+          <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:gap-12 md:grid-cols-3">
             {testimonials.map((item, index) => (
               <div key={item.role.en} className="relative">
-                <Quote className={`absolute -left-4 -top-8 h-14 w-14 ${item.accent} opacity-20`} />
-                <p className="relative z-10 mb-6 text-lg italic leading-relaxed text-on-surface-variant">
+                <Quote className={`absolute -left-3 -top-7 h-12 w-12 ${item.accent} opacity-20 sm:-left-4 sm:-top-8 sm:h-14 sm:w-14`} />
+                <p className="relative z-10 mb-5 text-base italic leading-7 text-on-surface-variant sm:mb-6 sm:text-lg sm:leading-relaxed">
                   “{pickText(locale, item.quote.en, item.quote.zh)}”
                 </p>
                 <div className="flex items-center gap-4">
@@ -540,18 +540,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="px-8 py-24">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-primary p-12 text-center text-white shadow-2xl">
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[1.6rem] bg-primary p-6 text-center text-white shadow-2xl sm:rounded-[2rem] sm:p-9 lg:p-12">
           <div className="relative z-10">
-            <h2 className="mb-6 font-serif text-4xl font-bold text-white md:text-5xl">
+            <h2 className="mb-4 font-serif text-3xl font-bold text-white sm:mb-5 sm:text-4xl md:text-5xl">
               {pickText(locale, "Ready to align your family’s future?", "准备好让整个家庭围绕同一条未来路径协同前进了吗？")}
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-xl text-white/90">
+            <p className="mx-auto mb-8 max-w-2xl text-base leading-7 text-white/90 sm:mb-10 sm:text-lg sm:leading-8 lg:text-xl">
               {pickText(locale, "Join the premium community of students and mentors who prioritize clarity over chaos.", "加入一群更看重清晰、节奏与长期推进感的学生、家长和顾问。")}
             </p>
             <Link
               href="/login"
-              className="inline-flex rounded-xl bg-surface-container-lowest px-10 py-5 text-xl font-bold transition-transform hover:scale-105"
+              className="inline-flex rounded-xl bg-surface-container-lowest px-7 py-3.5 text-base font-bold transition-transform hover:scale-105 sm:px-8 sm:py-4 sm:text-lg lg:px-10 lg:py-5 lg:text-xl"
               style={{ color: "#2e3230" }}
             >
               {pickText(locale, "Get Started Today", "立即开始")}
@@ -562,14 +562,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className="w-full border-t border-stone-200 bg-[#faf6f0] px-12 py-8 text-xs leading-relaxed dark:bg-stone-950">
+      <footer className="w-full border-t border-stone-200 bg-[#faf6f0] px-4 py-6 text-xs leading-relaxed dark:bg-stone-950 sm:px-6 sm:py-7 lg:px-12 lg:py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
           <div>
             <span className="text-stone-500 dark:text-stone-400">
               {pickText(locale, "© 2026 Lodestar Career Exploration System. All rights reserved.", "© 2026 引路人生涯探索系统。保留所有权利。")}
             </span>
           </div>
-          <div className="flex space-x-8">
+          <div className="flex flex-wrap justify-center gap-5 sm:space-x-8 sm:gap-0">
             <Link href="/privacy" className="text-stone-500 transition-all hover:text-primary hover:underline dark:text-stone-400">
               {pickText(locale, "Privacy", "隐私政策")}
             </Link>

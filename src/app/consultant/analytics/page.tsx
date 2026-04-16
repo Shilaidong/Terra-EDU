@@ -30,7 +30,7 @@ export default async function ConsultantAnalyticsPage() {
       subtitle={pickText(locale, "Track cohort health, task completion, milestone accuracy, and export-ready reporting with structured logs.", "查看学生群组健康度、任务完成率、截止日期达成情况，并导出带结构化日志的报表。")}
       activeHref="/consultant/analytics"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<ChartSpline className="h-4 w-4" />} title={pickText(locale, "Snapshot date", "统计日期")} value={analytics.date} />
           <LogoutButton />
         </div>

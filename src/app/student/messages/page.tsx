@@ -29,7 +29,7 @@ export default async function StudentMessagesPage() {
       )}
       activeHref="/student/messages"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<MessageSquareText className="h-4 w-4" />} title={pickText(locale, "Profile signals", "档案信号")} value={`${competitionCount} / ${activityCount}`} />
           <LogoutButton />
         </div>

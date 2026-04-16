@@ -24,7 +24,7 @@ export default async function ParentDashboardPage() {
         hero={<LogoutButton />}
       >
         <SectionCard title={pickText(locale, "Binding pending", "等待绑定")} eyebrow={pickText(locale, "Admin action needed", "需要管理员操作")}>
-          <p className="text-sm leading-7 text-secondary">
+          <p className="text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
             {pickText(locale, "Once the admin links this parent account to a student, progress, deadlines, and AI summaries will appear here.", "管理员把这个家长账号绑定到学生后，这里就会出现进度、截止日期和 AI 摘要。")}
           </p>
         </SectionCard>
@@ -48,20 +48,20 @@ export default async function ParentDashboardPage() {
       subtitle={pickText(locale, `Here is a calm read-only view of ${student.name}'s planning momentum, deadlines, and advisor guidance.`, `这里是 ${student.name} 的只读视图，你可以看到规划节奏、截止日期和顾问建议。`)}
       activeHref="/parent/dashboard"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <HeroBadge icon={<HeartHandshake className="h-4 w-4" />} title={pickText(locale, "Current focus", "当前重点")} value={student.phase} />
           <HeroBadge icon={<Target className="h-4 w-4" />} title={pickText(locale, "Goal school", "梦校")} value={student.dreamSchools[0]} />
           <LogoutButton />
         </div>
       }
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">
         <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${student.completion}%`} hint={pickText(locale, "Calculated from completed tasks without editing privileges.", "根据已完成任务实时计算，家长端为只读展示。")} />
         <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${student.checkInStreak} days`, `${student.checkInStreak} 天`)} hint={pickText(locale, "Calculated from consecutive saved check-in dates.", "根据连续打卡日期实时计算。")} tone="tertiary" />
         <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${student.masteryAverage}/5`} hint={pickText(locale, "Calculated from saved mastery scores in student check-ins.", "根据学生打卡中的掌握度分数实时计算。")} tone="secondary" />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <SectionCard
           title={pickText(locale, "Journey Snapshot", "申请旅程总览")}
           eyebrow={pickText(locale, "Year view", "年视图")}
@@ -71,27 +71,27 @@ export default async function ParentDashboardPage() {
         </SectionCard>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-7 lg:grid-cols-[1.2fr_0.8fr] lg:gap-8">
         <SectionCard title={pickText(locale, "Current Open Tasks", "当前未完成任务")} eyebrow={pickText(locale, "Read-only visibility", "只读查看")}>
           <TaskList tasks={openTasks} />
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Application Progress", "申请进度")} eyebrow={pickText(locale, "Family snapshot", "家长概览")} className="bg-primary-container/70">
-          <div className="space-y-5">
-            <div className="rounded-3xl bg-white/70 p-6">
+          <div className="space-y-4 sm:space-y-5">
+            <div className="rounded-3xl bg-white/70 p-4 sm:p-5 lg:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Phase", "阶段")}</p>
-              <p className="mt-2 font-serif text-3xl font-bold text-primary">{student.phase}</p>
+              <p className="mt-2 font-serif text-[1.9rem] font-bold text-primary sm:text-[2.2rem] lg:text-3xl">{student.phase}</p>
             </div>
-            <div className="rounded-3xl bg-white/70 p-6">
+            <div className="rounded-3xl bg-white/70 p-4 sm:p-5 lg:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Target major", "目标专业")}</p>
-              <p className="mt-2 text-lg font-bold text-foreground">{student.intendedMajor}</p>
+              <p className="mt-2 text-base font-bold text-foreground sm:text-lg">{student.intendedMajor}</p>
             </div>
             <InfoPill icon={<ShieldCheck className="h-4 w-4" />} label={pickText(locale, "Read-only parent view with live student progress", "家长端只读展示，学生进度实时同步")} />
           </div>
         </SectionCard>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-7 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
         <SectionCard title={pickText(locale, "Recent Milestones", "近期截止日期")} eyebrow={pickText(locale, "Timeline", "时间线")}>
           <TimelineRail milestones={milestones} />
         </SectionCard>
@@ -99,17 +99,17 @@ export default async function ParentDashboardPage() {
         <SectionCard title={pickText(locale, "Advisor Momentum Notes", "顾问跟进备注")} eyebrow={pickText(locale, "Consultant sync", "顾问同步")} >
           <div className="space-y-4">
             {notes.map((note) => (
-              <div key={note.id} className="rounded-2xl bg-surface-container-low p-5">
+              <div key={note.id} className="rounded-2xl bg-surface-container-low p-4 sm:p-5">
                 <p className="font-bold text-foreground">{note.title}</p>
-                <p className="mt-2 text-sm leading-7 text-secondary">{note.summary}</p>
+                <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{note.summary}</p>
               </div>
             ))}
           </div>
         </SectionCard>
       </div>
 
-      <div className="mt-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+      <div className="mt-6 sm:mt-8">
+        <div className="grid gap-6 sm:gap-7 lg:grid-cols-[1fr_1fr] lg:gap-8">
           <SectionCard title={pickText(locale, "Parent View Guidance", "家长查看建议")} eyebrow={pickText(locale, "What to watch", "查看重点")}>
             <SummaryCard
               title={pickText(locale, "Focus on rhythm, not constant intervention", "关注节奏，而不是频繁干预")}

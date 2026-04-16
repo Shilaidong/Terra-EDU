@@ -50,19 +50,19 @@ export default async function StudentDashboardPage() {
       subtitle={pickText(locale, `Your journey toward ${student.dreamSchools[0]} is ${metrics.completion}% complete. Stay rooted, keep growing.`, `你前往 ${student.dreamSchools[0]} 的申请旅程已完成 ${metrics.completion}%。继续稳步向前。`)}
       activeHref="/student/dashboard"
       hero={
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <HeroBadge icon={<Target className="h-4 w-4" />} title={pickText(locale, "Goal school", "梦校")} value={student.dreamSchools[0]} />
           <LogoutButton />
         </div>
       }
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
         <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Calculated from completed tasks against the full task list.", "根据全部任务中的已完成数量实时计算。")} />
         <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Calculated from consecutive check-in dates.", "根据连续打卡日期实时计算。")} tone="tertiary" />
         <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Calculated from saved mastery scores in check-ins.", "根据已保存的打卡掌握度分数实时计算。")} tone="secondary" />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <SectionCard
           title={pickText(locale, "Journey Snapshot", "申请旅程总览")}
           eyebrow={pickText(locale, "Year view", "年视图")}
@@ -72,27 +72,27 @@ export default async function StudentDashboardPage() {
         </SectionCard>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <SectionCard title={pickText(locale, "Today's Tasks", "当前任务")} eyebrow={pickText(locale, "Student workflow", "学生流程")}>
           <TaskList tasks={tasks} />
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Application Progress", "申请进度")} eyebrow={pickText(locale, "Snapshot", "概览")} className="bg-primary-container/70">
-          <div className="space-y-5">
-            <div className="rounded-3xl bg-white/70 p-6">
+          <div className="space-y-4 sm:space-y-5">
+            <div className="rounded-[1.4rem] bg-white/70 p-4 sm:rounded-3xl sm:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Phase", "阶段")}</p>
-              <p className="mt-2 font-serif text-3xl font-bold text-primary">{student.phase}</p>
+              <p className="mt-2 font-serif text-2xl font-bold text-primary sm:text-3xl">{student.phase}</p>
             </div>
-            <div className="rounded-3xl bg-white/70 p-6">
+            <div className="rounded-[1.4rem] bg-white/70 p-4 sm:rounded-3xl sm:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Target major", "目标专业")}</p>
-              <p className="mt-2 text-lg font-bold text-foreground">{student.intendedMajor}</p>
+              <p className="mt-2 text-base font-bold text-foreground sm:text-lg">{student.intendedMajor}</p>
             </div>
             <InfoPill icon={<Sparkles className="h-4 w-4" />} label={pickText(locale, "AI assistant and logs are live", "AI 助手和日志系统已上线")} />
           </div>
         </SectionCard>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <SectionCard title={pickText(locale, "Recent Milestones", "近期截止日期")} eyebrow={pickText(locale, "Timeline", "时间线")}>
           <TimelineRail milestones={milestones} />
         </SectionCard>
@@ -115,35 +115,35 @@ export default async function StudentDashboardPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1fr_1fr]">
         <SectionCard title={pickText(locale, "Advisor Momentum Notes", "顾问跟进备注")} eyebrow={pickText(locale, "Human support", "人工支持")}>
           <div className="space-y-4">
             {notes.map((note) => (
-              <div key={note.id} className="rounded-2xl bg-surface-container-low p-5">
-                <p className="font-bold text-foreground">{note.title}</p>
-                <p className="mt-2 text-sm leading-7 text-secondary">{note.summary}</p>
+              <div key={note.id} className="rounded-2xl bg-surface-container-low p-4 sm:p-5">
+                <p className="text-sm font-bold text-foreground">{note.title}</p>
+                <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{note.summary}</p>
               </div>
             ))}
           </div>
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Completed Highlights", "最近完成内容")} eyebrow={pickText(locale, "Momentum you already created", "你已经完成的推进")}>
-          <div className="rounded-3xl bg-primary/6 p-5">
-            <p className="text-lg font-bold text-foreground">{praiseLine.title}</p>
-            <p className="mt-2 text-sm leading-7 text-secondary">{praiseLine.body}</p>
+          <div className="rounded-[1.4rem] bg-primary/6 p-4 sm:rounded-3xl sm:p-5">
+            <p className="text-base font-bold text-foreground sm:text-lg">{praiseLine.title}</p>
+            <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{praiseLine.body}</p>
           </div>
-          <div className="mt-5 space-y-3">
+          <div className="mt-4 space-y-3 sm:mt-5">
             {completionHighlights.length > 0 ? (
               completionHighlights.map((item) => (
-                <div key={`${item.type}-${item.title}-${item.date}`} className="rounded-2xl bg-surface-container-low p-4">
+                <div key={`${item.type}-${item.title}-${item.date}`} className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
                       {item.type}
                     </span>
                     <span className="text-xs font-semibold uppercase tracking-[0.16em] text-outline">{item.date}</span>
                   </div>
-                  <p className="mt-3 font-semibold text-foreground">{item.title}</p>
-                  <p className="mt-2 text-sm leading-7 text-secondary">{item.note}</p>
+                  <p className="mt-3 text-sm font-semibold text-foreground">{item.title}</p>
+                  <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{item.note}</p>
                 </div>
               ))
             ) : (
@@ -159,7 +159,7 @@ export default async function StudentDashboardPage() {
         </SectionCard>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <SectionCard title={pickText(locale, "Recent audit trail", "最近审计记录")} eyebrow={pickText(locale, "Debug readiness", "便于调试")}>
           <AuditFeed logs={logs} />
         </SectionCard>

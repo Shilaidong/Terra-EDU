@@ -22,7 +22,7 @@ export default async function StudentSettingsPage() {
       subtitle={pickText(locale, "Manage academic identity, goals, and the light AI twin summary while preserving the original Terra visual direction.", "管理个人学术资料、目标和轻量 AI 档案摘要，同时保留 Terra 的原始设计风格。")}
       activeHref="/student/settings"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<Settings2 className="h-4 w-4" />} title={pickText(locale, "Profile strength", "资料完整度")} value="84%" />
           <LogoutButton />
         </div>

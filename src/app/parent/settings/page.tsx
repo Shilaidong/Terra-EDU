@@ -23,19 +23,19 @@ export default async function ParentSettingsPage() {
       activeHref="/parent/settings"
       subtitle={pickText(locale, "Update the parent display name and avatar while keeping the family dashboard read-only.", "你可以修改家长名称和头像，同时保持家长仪表盘为只读模式。")}
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <HeroBadge icon={<Settings2 className="h-4 w-4" />} title={pickText(locale, "Account type", "账号类型")} value={pickText(locale, "Parent", "家长")} />
           <LogoutButton />
         </div>
       }
     >
-      <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+      <div className="grid gap-6 sm:gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-8">
         <SectionCard title={pickText(locale, "Account Preview", "账号预览")} eyebrow={pickText(locale, "Live session", "当前会话")}>
-          <div className="rounded-3xl bg-surface-container-low p-6">
-            <img alt={user.name} src={user.avatar || session.avatar} className="h-28 w-28 rounded-full object-cover" />
-            <h2 className="mt-5 font-serif text-3xl font-bold text-foreground">{user.name}</h2>
-            <p className="mt-2 text-sm text-secondary">{user.email}</p>
-            <div className="mt-4 inline-flex rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+          <div className="rounded-3xl bg-surface-container-low p-4 sm:p-5 lg:p-6">
+            <img alt={user.name} src={user.avatar || session.avatar} className="h-24 w-24 rounded-full object-cover sm:h-28 sm:w-28" />
+            <h2 className="mt-4 font-serif text-[1.9rem] font-bold text-foreground sm:mt-5 sm:text-3xl">{user.name}</h2>
+            <p className="mt-2 text-xs text-secondary sm:text-sm">{user.email}</p>
+            <div className="mt-4 inline-flex rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold text-primary sm:text-sm">
               {pickText(locale, "Parent account", "家长账号")}
             </div>
           </div>
@@ -46,7 +46,7 @@ export default async function ParentSettingsPage() {
         </SectionCard>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <SectionCard title={pickText(locale, "Parent Access", "家长权限说明")} eyebrow={pickText(locale, "Read-only guidance", "只读说明")}>
           <SummaryCard
             title={pickText(locale, "Clear family visibility, without extra admin work", "清晰查看孩子进展，而不增加额外管理负担")}

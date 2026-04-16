@@ -43,7 +43,7 @@ export default async function StudentExplorePage() {
       )}
       activeHref="/student/explore"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <HeroBadge
             icon={<Compass className="h-4 w-4" />}
             title={pickText(locale, "Focus", "当前关注")}
@@ -53,7 +53,7 @@ export default async function StudentExplorePage() {
         </div>
       }
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
         <StatCard
           label={pickText(locale, "Schools", "学校")}
           value={`${schools.length}`}
@@ -73,12 +73,12 @@ export default async function StudentExplorePage() {
         />
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 xl:grid-cols-[1.1fr_0.9fr]">
         <SectionCard
           title={pickText(locale, "Recommended for You", "优先看这些")}
           eyebrow={pickText(locale, "Student view", "学生视图")}
         >
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
             <ExploreFocusCard
               icon={<GraduationCap className="h-4 w-4" />}
               title={pickText(locale, "Major directions", "专业方向")}
@@ -115,24 +115,24 @@ export default async function StudentExplorePage() {
         />
       </div>
 
-      <div className="mt-8 space-y-8">
+      <div className="mt-6 space-y-6 sm:mt-8 sm:space-y-8">
         <SectionCard
           title={pickText(locale, "School shortlist", "学校清单")}
           eyebrow={pickText(locale, "By difficulty", "按申请难度")}
         >
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 xl:grid-cols-3">
             {schoolGroups.map((group) => (
-              <div key={group.difficulty} className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm">
+              <div key={group.difficulty} className="rounded-[1.35rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">
+                    <h3 className="text-base font-semibold text-foreground sm:text-lg">
                       {difficultyLabel(group.difficulty, locale)}
                     </h3>
-                    <p className="text-sm text-secondary">
+                    <p className="text-xs text-secondary sm:text-sm">
                       {pickText(locale, `${group.items.length} schools`, `${group.items.length} 所学校`)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-secondary">
+                  <span className="rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-secondary sm:px-3 sm:text-xs sm:tracking-[0.18em]">
                     {difficultyLabel(group.difficulty, locale)}
                   </span>
                 </div>
@@ -150,7 +150,7 @@ export default async function StudentExplorePage() {
           title={pickText(locale, "Major directions", "专业方向")}
           eyebrow={pickText(locale, "Simplified for students", "学生更易理解的二级列表")}
         >
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 xl:grid-cols-3">
             <ExploreBucket
               title={pickText(locale, "Closest to your focus", "最贴近你的方向")}
               subtitle={student.intendedMajor}
@@ -194,7 +194,7 @@ export default async function StudentExplorePage() {
           title={pickText(locale, "Curriculum tracks", "课程体系")}
           eyebrow={pickText(locale, "AP · A-Level · IBDP", "AP · A-Level · IBDP")}
         >
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 xl:grid-cols-3">
             {curriculumGroups.map((group) => (
               <ExploreBucket
                 key={group.key}
@@ -243,15 +243,15 @@ function ExploreFocusCard({
   items: string[];
 }) {
   return (
-    <div className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm">
+    <div className="rounded-[1.35rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
       <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-primary">
         {icon}
         {title}
       </div>
-      <p className="mb-4 text-sm text-secondary">{subtitle}</p>
+      <p className="mb-4 text-xs leading-6 text-secondary sm:text-sm">{subtitle}</p>
       <div className="space-y-2">
         {items.map((item) => (
-          <div key={item} className="rounded-2xl bg-surface-container-low px-3 py-2 text-sm font-medium text-foreground">
+          <div key={item} className="rounded-[1rem] bg-surface-container-low px-3 py-2 text-sm font-medium text-foreground sm:rounded-2xl">
             {item}
           </div>
         ))}
@@ -270,17 +270,17 @@ function ExploreBucket({
   items: { title: string; subtitle: string; meta: string[] }[];
 }) {
   return (
-    <div className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm">
+    <div className="rounded-[1.35rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-        <p className="text-sm text-secondary">{subtitle}</p>
+        <h3 className="text-base font-semibold text-foreground sm:text-lg">{title}</h3>
+        <p className="text-xs leading-6 text-secondary sm:text-sm">{subtitle}</p>
       </div>
       <div className="space-y-3">
         {items.length ? (
           items.map((item) => (
-            <div key={`${item.title}-${item.subtitle}`} className="rounded-2xl bg-surface-container-low p-4">
-              <p className="font-semibold text-foreground">{item.title}</p>
-              <p className="mt-1 text-sm text-secondary">{item.subtitle}</p>
+            <div key={`${item.title}-${item.subtitle}`} className="rounded-[1rem] bg-surface-container-low p-3 sm:rounded-2xl sm:p-4">
+              <p className="text-sm font-semibold text-foreground">{item.title}</p>
+              <p className="mt-1 text-xs leading-6 text-secondary sm:text-sm">{item.subtitle}</p>
               {item.meta.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {item.meta.map((meta) => (
@@ -296,7 +296,7 @@ function ExploreBucket({
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-outline-variant px-4 py-6 text-sm text-secondary">
+          <div className="rounded-[1rem] border border-dashed border-outline-variant px-4 py-5 text-sm text-secondary sm:rounded-2xl sm:py-6">
             暂时没有可展示的内容。
           </div>
         )}
@@ -316,14 +316,14 @@ function StudentSchoolCard({
   const acceptanceRate = formatAcceptanceRate(item.schoolDetails?.acceptanceRate);
 
   return (
-    <div className="rounded-2xl bg-surface-container-low p-4">
+    <div className="rounded-[1rem] bg-surface-container-low p-3 sm:rounded-2xl sm:p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-semibold text-foreground">{item.title}</p>
-          <p className="mt-1 text-sm text-secondary">{item.subtitle}</p>
+          <p className="text-sm font-semibold text-foreground">{item.title}</p>
+          <p className="mt-1 text-xs leading-6 text-secondary sm:text-sm">{item.subtitle}</p>
         </div>
         {ranking?.number ? (
-          <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+          <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary sm:px-3 sm:text-xs">
             #{ranking.number}
           </div>
         ) : null}

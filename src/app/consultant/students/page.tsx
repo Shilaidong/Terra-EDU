@@ -57,7 +57,67 @@ export default async function ConsultantStudentsPage() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <SectionCard title={pickText(locale, "Student table", "学生列表")} eyebrow={pickText(locale, "Cohort", "学生群组")}>
-          <div className="overflow-x-auto rounded-3xl border border-black/5 bg-white shadow-sm">
+          <div className="space-y-3 md:hidden">
+            {overview.students.map((student) => (
+              <div key={student.id} className="rounded-[24px] border border-black/5 bg-white p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <img alt={student.name} src={student.avatar} className="h-12 w-12 rounded-full object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">{student.name}</p>
+                    <p className="mt-1 text-xs text-secondary">
+                      {student.grade} · {student.school}
+                    </p>
+                    <Link href={`/consultant/students/${student.id}`} className="mt-2 inline-block text-xs font-bold text-primary">
+                      {pickText(locale, "Open workspace", "打开工作台")}
+                    </Link>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-surface-container-low p-3">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary/70">{pickText(locale, "Goal", "目标")}</p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">
+                      {student.dreamSchools[0] ?? pickText(locale, "No goal school yet", "尚未设置梦校")}
+                    </p>
+                    <p className="mt-1 text-xs text-secondary">{student.intendedMajor}</p>
+                  </div>
+                  <div className="rounded-2xl bg-surface-container-low p-3">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary/70">{pickText(locale, "Study rhythm", "学习节奏")}</p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">
+                      {pickText(locale, `${student.checkInStreak} day streak`, `连续 ${student.checkInStreak} 天`)}
+                    </p>
+                    <p className="mt-1 text-xs text-secondary">
+                      {pickText(locale, `Mastery ${student.masteryAverage}/5`, `掌握度 ${student.masteryAverage}/5`)}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <div
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${
+                      student.riskLevel === "high"
+                        ? "bg-error/10 text-error"
+                        : student.riskLevel === "medium"
+                          ? "bg-tertiary/15 text-tertiary"
+                          : "bg-primary/10 text-primary"
+                    }`}
+                  >
+                    {student.riskLevel === "high"
+                      ? pickText(locale, "high", "高")
+                      : student.riskLevel === "medium"
+                        ? pickText(locale, "medium", "中")
+                        : pickText(locale, "low", "低")}
+                  </div>
+                  <span className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-semibold text-secondary">
+                    {pickText(locale, `${student.completion}% complete`, `完成率 ${student.completion}%`)}
+                  </span>
+                  <span className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-semibold text-secondary">
+                    {student.nextDeadlineLabel}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-3xl border border-black/5 bg-white shadow-sm md:block">
             <table className="min-w-[760px] w-full text-left text-sm">
               <thead className="bg-surface-container-low text-secondary">
                 <tr>

@@ -32,7 +32,7 @@ function NavIcon({ href }: { href: string }) {
 }
 
 export function PageContainer({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-7xl px-4 pb-24 pt-32 sm:px-6 md:pb-14 md:pt-24">{children}</div>;
+  return <div className="mx-auto max-w-7xl px-3 pb-20 pt-36 sm:px-5 sm:pt-32 md:px-6 md:pb-14 md:pt-24">{children}</div>;
 }
 
 export async function RoleShell({
@@ -56,9 +56,9 @@ export async function RoleShell({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-[#faf6f0]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 md:h-16 md:px-6 md:py-0">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-5 md:h-16 md:px-6 md:py-0">
           <div className="flex min-w-0 items-center gap-3 md:gap-8">
-            <Link href="/" className="truncate font-serif text-xl font-bold text-primary sm:text-2xl">
+            <Link href="/" className="truncate font-serif text-lg font-bold text-primary sm:text-2xl">
               {pickText(locale, "Lodestar Pathways", "引路人生涯")}
             </Link>
             <nav className="hidden gap-4 md:flex">
@@ -102,7 +102,7 @@ export async function RoleShell({
                 className={cn(
                   "inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition-all",
                   item.href === activeHref
-                    ? "bg-primary text-white shadow-sm"
+                    ? "border-2 border-primary/45 bg-primary/10 text-primary shadow-sm"
                     : "bg-surface-container-low text-secondary"
                 )}
               >
@@ -180,10 +180,10 @@ export async function RoleShell({
 
       <main className="lg:ml-64">
         <PageContainer>
-          <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="mb-8 flex flex-col gap-4 pt-1 md:mb-10 md:flex-row md:items-end md:justify-between md:gap-5 md:pt-0">
             <div>
-              <h1 className="font-serif text-3xl font-bold text-foreground sm:text-4xl">{title}</h1>
-              <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">{subtitle}</p>
+              <h1 className="font-serif text-[1.9rem] font-bold leading-tight text-foreground sm:text-4xl">{title}</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-secondary sm:text-base">{subtitle}</p>
             </div>
             {hero ? <div className="w-full md:w-auto">{hero}</div> : null}
           </div>
@@ -262,12 +262,12 @@ export function StatCard({
         : "bg-secondary-container text-secondary";
 
   return (
-    <div className="rounded-3xl border border-black/5 bg-surface-container-lowest p-5 shadow-terra sm:p-6">
-      <div className={cn("inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]", styles)}>
+    <div className="rounded-[1.35rem] border border-black/5 bg-surface-container-lowest p-4 shadow-terra sm:rounded-3xl sm:p-6">
+      <div className={cn("inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em] sm:px-3 sm:text-xs sm:tracking-[0.2em]", styles)}>
         {label}
       </div>
-      <div className="mt-4 font-serif text-3xl font-bold text-foreground sm:text-4xl">{value}</div>
-      <p className="mt-3 text-sm text-secondary">{hint}</p>
+      <div className="mt-3 font-serif text-[1.7rem] font-bold leading-none text-foreground sm:mt-4 sm:text-4xl">{value}</div>
+      <p className="mt-2 text-xs leading-6 text-secondary sm:mt-3 sm:text-sm">{hint}</p>
     </div>
   );
 }
@@ -304,29 +304,29 @@ export async function TaskList({
       {tasks.map((task) => (
         <div
           key={task.id}
-          className="rounded-2xl border border-black/5 bg-surface-container-low px-5 py-4 transition-colors hover:border-primary/30"
+          className="rounded-[1.2rem] border border-black/5 bg-surface-container-low px-4 py-3 transition-colors hover:border-primary/30 sm:rounded-2xl sm:px-5 sm:py-4"
         >
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-bold text-foreground">{task.title}</h3>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                <h3 className="text-base font-bold text-foreground sm:text-lg">{task.title}</h3>
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary sm:px-3 sm:text-xs">
                   {task.timelineLane ? getLaneLabel(task.timelineLane, locale) : task.category}
                 </span>
-                <span className="rounded-full bg-tertiary/10 px-3 py-1 text-xs font-bold text-tertiary">
+                <span className="rounded-full bg-tertiary/10 px-2.5 py-1 text-[11px] font-bold text-tertiary sm:px-3 sm:text-xs">
                   {task.priority}
                 </span>
               </div>
-              <p className="mt-2 text-sm text-secondary">{task.description}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-outline">
+              <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm">{task.description}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-outline sm:text-xs sm:tracking-[0.2em]">
                 {task.startDate && task.endDate ? (
                   <span>{formatTaskRange(task.startDate, task.endDate)}</span>
                 ) : null}
                 <span>{task.dueLabel}</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-secondary shadow-sm">
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
+              <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-secondary shadow-sm sm:px-3 sm:text-xs sm:tracking-[0.2em]">
                 {translateTaskStatus(task.status, locale)}
               </span>
               {action?.(task.id)}
@@ -399,10 +399,10 @@ export async function TaskGanttChart({
   const minWidth = 240 + timeline.columns.length * timeline.columnWidth;
 
   return (
-    <div className="overflow-x-auto rounded-[1.5rem] border border-outline-variant/30 bg-surface-container-lowest shadow-[0_4px_20px_rgba(46,50,48,0.06)]">
+    <div className="overflow-x-auto rounded-[1.25rem] border border-outline-variant/30 bg-surface-container-lowest shadow-[0_4px_20px_rgba(46,50,48,0.06)] sm:rounded-[1.5rem]">
       <div className="min-w-full" style={{ width: `${minWidth}px` }}>
-        <div className="grid grid-cols-[240px_minmax(0,1fr)] border-b border-outline-variant/30">
-          <div className="flex items-center gap-2 bg-surface-container-low px-6 py-5 text-sm font-bold text-primary">
+        <div className="grid grid-cols-[180px_minmax(0,1fr)] border-b border-outline-variant/30 md:grid-cols-[240px_minmax(0,1fr)]">
+          <div className="flex items-center gap-2 bg-surface-container-low px-3 py-3 text-xs font-bold text-primary sm:px-4 sm:py-4 sm:text-sm md:px-6 md:py-5">
             <CalendarBadge />
             {pickText(locale, timeline.label, translateTimelineLabel(timeline.label))}
           </div>
@@ -415,12 +415,12 @@ export async function TaskGanttChart({
             {timeline.columns.map((column) => (
               <div
                 key={column.key}
-                className="border-l border-outline-variant/20 px-3 py-4 text-center"
+                className="border-l border-outline-variant/20 px-2 py-3 text-center sm:px-3 sm:py-4"
               >
-                <div className="text-xs font-bold uppercase tracking-[0.18em] text-outline">
+                <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-outline sm:text-xs sm:tracking-[0.18em]">
                   {column.label}
                 </div>
-                <div className="mt-1 text-[11px] font-semibold text-secondary">{column.sublabel}</div>
+                <div className="mt-1 text-[10px] font-semibold text-secondary sm:text-[11px]">{column.sublabel}</div>
               </div>
             ))}
           </div>
@@ -431,13 +431,13 @@ export async function TaskGanttChart({
             const laneTasks = tasks.filter((task) => task.timelineLane === lane.lane);
 
             return (
-              <div key={lane.lane} className="grid grid-cols-[240px_minmax(0,1fr)]">
-                <div className="flex flex-col justify-center bg-white px-6 py-6">
-                  <p className="font-bold text-primary">{pickText(locale, lane.label.en, lane.label.zh)}</p>
-                  <p className="mt-1 text-xs text-secondary">{pickText(locale, lane.subtitle.en, lane.subtitle.zh)}</p>
+              <div key={lane.lane} className="grid grid-cols-[180px_minmax(0,1fr)] md:grid-cols-[240px_minmax(0,1fr)]">
+                <div className="flex flex-col justify-center bg-white px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6">
+                  <p className="text-sm font-bold text-primary">{pickText(locale, lane.label.en, lane.label.zh)}</p>
+                  <p className="mt-1 text-[11px] text-secondary sm:text-xs">{pickText(locale, lane.subtitle.en, lane.subtitle.zh)}</p>
                 </div>
 
-                <div className="relative overflow-hidden bg-white px-0 py-3">
+                <div className="relative overflow-hidden bg-white px-0 py-2.5 sm:py-3">
                   <div
                     className="absolute inset-0 grid"
                     style={{
@@ -453,7 +453,7 @@ export async function TaskGanttChart({
                   </div>
 
                   {laneTasks.length > 0 ? (
-                    <div className="relative z-10 space-y-3 px-4">
+                    <div className="relative z-10 space-y-2.5 px-3 sm:space-y-3 sm:px-4">
                       {laneTasks
                         .sort(
                           (left, right) =>
@@ -476,17 +476,17 @@ export async function TaskGanttChart({
                             >
                               <div
                                 className={cn(
-                                  "relative h-9 rounded-full px-4 shadow-sm transition-colors hover:opacity-90",
+                                  "relative h-8 rounded-full px-3 shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4",
                                   lane.barClassName
                                 )}
                                 style={{ gridColumn: `${placement.start + 1} / ${placement.end + 2}` }}
                               >
                                 <div className="flex h-full items-center">
-                                  <span className="truncate text-xs font-bold">{task.title}</span>
+                                  <span className="truncate text-[11px] font-bold sm:text-xs">{task.title}</span>
                                 </div>
                                 <div
                                   className={cn(
-                                    "absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 rounded-[3px] shadow-sm",
+                                    "absolute -right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 rounded-[3px] shadow-sm sm:-right-2 sm:h-4 sm:w-4",
                                     lane.markerClassName
                                   )}
                                 />
@@ -505,7 +505,7 @@ export async function TaskGanttChart({
                       {timeline.columns.map((column) => (
                         <div key={column.key} className="h-10" />
                       ))}
-                      <p className="col-span-full px-2 text-sm text-secondary">
+                      <p className="col-span-full px-2 text-xs text-secondary sm:text-sm">
                         {pickText(locale, "No items scheduled in this lane yet.", "这一栏目前还没有安排内容。")}
                       </p>
                     </div>
@@ -515,13 +515,13 @@ export async function TaskGanttChart({
             );
           })}
 
-          <div className="grid grid-cols-[240px_minmax(0,1fr)]">
-            <div className="flex flex-col justify-center bg-white px-6 py-6">
-              <p className="font-bold text-primary">{pickText(locale, "Deadline", "截止日期")}</p>
-              <p className="mt-1 text-xs text-secondary">{pickText(locale, "Milestones and hard submission dates", "里程碑与硬性截止时间")}</p>
+          <div className="grid grid-cols-[180px_minmax(0,1fr)] md:grid-cols-[240px_minmax(0,1fr)]">
+            <div className="flex flex-col justify-center bg-white px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6">
+              <p className="text-sm font-bold text-primary">{pickText(locale, "Deadline", "截止日期")}</p>
+              <p className="mt-1 text-[11px] text-secondary sm:text-xs">{pickText(locale, "Milestones and hard submission dates", "里程碑与硬性截止时间")}</p>
             </div>
 
-            <div className="relative overflow-hidden bg-white px-0 py-3">
+            <div className="relative overflow-hidden bg-white px-0 py-2.5 sm:py-3">
               <div
                 className="absolute inset-0 grid"
                 style={{
@@ -537,7 +537,7 @@ export async function TaskGanttChart({
               </div>
 
               {milestones.length > 0 ? (
-                <div className="relative z-10 space-y-3 px-4">
+                <div className="relative z-10 space-y-2.5 px-3 sm:space-y-3 sm:px-4">
                   {milestones
                     .slice()
                     .sort(
@@ -560,13 +560,13 @@ export async function TaskGanttChart({
                           }}
                         >
                           <div
-                            className="relative h-9 rounded-full border border-outline/20 bg-surface-container-highest px-4 text-on-surface-variant shadow-sm transition-colors hover:opacity-90"
+                            className="relative h-8 rounded-full border border-outline/20 bg-surface-container-highest px-3 text-on-surface-variant shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4"
                             style={{ gridColumn: `${placement + 1} / ${placement + 2}` }}
                           >
                             <div className="flex h-full items-center">
-                              <span className="truncate text-xs font-bold">{milestone.title}</span>
+                              <span className="truncate text-[11px] font-bold sm:text-xs">{milestone.title}</span>
                             </div>
-                            <div className="absolute -left-1 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-error shadow-sm" />
+                            <div className="absolute -left-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-error shadow-sm sm:h-3 sm:w-3" />
                           </div>
                         </div>
                       );
@@ -582,7 +582,7 @@ export async function TaskGanttChart({
                   {timeline.columns.map((column) => (
                     <div key={column.key} className="h-10" />
                   ))}
-                  <p className="col-span-full px-2 text-sm text-secondary">
+                  <p className="col-span-full px-2 text-xs text-secondary sm:text-sm">
                     {pickText(locale, "No deadlines scheduled in this calendar window yet.", "当前时间窗口内还没有截止日期。")}
                   </p>
                 </div>
@@ -619,13 +619,13 @@ export async function TimelineRail({
         .map((milestone) => (
         <div key={milestone.id} className="relative rounded-2xl border border-black/5 bg-surface-container-low px-5 py-4">
           <div className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-primary" />
-          <div className="ml-2 flex items-start justify-between gap-4">
+          <div className="ml-2 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h3 className="font-bold text-foreground">{milestone.title}</h3>
               <p className="mt-1 text-sm text-secondary">{pickText(locale, "deadline", "截止日期")}</p>
               {action ? action(milestone.id) : null}
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <div className="font-serif text-xl font-bold text-primary">{milestone.dateLabel}</div>
               <div className="text-xs font-bold uppercase tracking-[0.2em] text-outline">
                 {milestone.status}
@@ -644,7 +644,7 @@ export async function AuditFeed({ logs }: { logs: AuditLog[] }) {
     <div className="space-y-4">
       {logs.map((log) => (
         <div key={log.id} className="rounded-2xl border border-black/5 bg-surface-container-low p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div>
               <p className="font-bold text-foreground">{log.action}</p>
               <p className="mt-1 text-sm text-secondary">
@@ -689,13 +689,13 @@ export async function PlaceholderCard({
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href={role === "consultant" ? "/consultant/content" : `/${role}/dashboard`}
-              className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+              className="rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
             >
               {pickText(locale, "Return to active workflow", "返回当前可用流程")}
             </Link>
             <Link
               href={role === "consultant" ? "/consultant/analytics" : role === "admin" ? "/admin/dashboard" : `/${role}/settings`}
-              className="rounded-full border border-outline-variant px-5 py-3 text-sm font-bold text-primary"
+              className="rounded-full border border-outline-variant px-4 py-2.5 text-sm font-bold text-primary sm:px-5 sm:py-3"
             >
               {pickText(locale, "Review current setup", "查看当前配置")}
             </Link>
@@ -744,7 +744,7 @@ function getAvatarForRole(role: UserRole) {
 
 export function InfoPill({ icon, label }: { icon?: React.ReactNode; label: string }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-secondary-container px-4 py-2 text-sm font-semibold text-secondary">
+    <div className="inline-flex items-center gap-2 rounded-full bg-secondary-container px-3 py-1.5 text-xs font-semibold text-secondary sm:px-4 sm:py-2 sm:text-sm">
       {icon}
       {label}
     </div>

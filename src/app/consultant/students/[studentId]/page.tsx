@@ -81,24 +81,24 @@ export default async function ConsultantStudentWorkspacePage({
       subtitle={pickText(locale, "Consultant workspace for planning, deadlines, check-ins, and advisor notes.", "顾问工作台：集中处理学生规划、截止日期、打卡和顾问备注。")}
       activeHref="/consultant/students"
       hero={
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/consultant/students"
-            className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-white px-4 py-3 text-sm font-bold text-primary shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-white px-3 py-2.5 text-xs font-bold text-primary shadow-sm sm:px-4 sm:py-3 sm:text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             {pickText(locale, "Back to Students", "返回学生列表")}
           </Link>
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/5 bg-surface-container-low px-4 py-3 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/5 bg-surface-container-low px-3 py-3 shadow-sm sm:px-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">{pickText(locale, "Dream School", "梦校")}</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{student.dreamSchools[0] ?? pickText(locale, "TBD", "待定")}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-outline sm:text-[11px]">{pickText(locale, "Dream School", "梦校")}</p>
+              <p className="mt-1 text-xs font-semibold text-foreground sm:text-sm">{student.dreamSchools[0] ?? pickText(locale, "TBD", "待定")}</p>
             </div>
             <div className="hidden h-10 w-px bg-black/10 md:block" />
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-outline">{pickText(locale, "Risk", "风险")}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-outline sm:text-[11px]">{pickText(locale, "Risk", "风险")}</p>
               <p
-                className={`mt-1 text-sm font-semibold ${
+                className={`mt-1 text-xs font-semibold sm:text-sm ${
                   currentStudentSignal.riskLevel === "high"
                     ? "text-error"
                     : currentStudentSignal.riskLevel === "medium"
@@ -118,15 +118,15 @@ export default async function ConsultantStudentWorkspacePage({
         </div>
       }
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
         <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Live task completion using the same student-side calculation.", "和学生端使用同一套实时任务完成率计算。")} />
         <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Current consecutive study rhythm.", "当前连续学习节奏。")} tone="tertiary" />
         <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Average mastery across saved check-ins.", "根据已保存打卡记录计算平均掌握度。")} tone="secondary" />
       </div>
 
-      <div className="mt-8 space-y-8">
+      <div className="mt-6 space-y-6 sm:mt-8 sm:space-y-8">
         <SectionCard title={pickText(locale, "Workspace Navigation", "工作台导航")} eyebrow={pickText(locale, "Faster switching", "更快切换")}>
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
             <ConsultantStudentPicker
               currentStudentId={student.id}
               students={overview.students.map((item) => ({
@@ -154,7 +154,7 @@ export default async function ConsultantStudentWorkspacePage({
                 <a
                   key={item.href}
                   href={item.href}
-                  className="flex items-center justify-between rounded-2xl bg-surface-container-low px-4 py-4 text-sm font-semibold text-primary"
+                  className="flex items-center justify-between rounded-2xl bg-surface-container-low px-4 py-3 text-xs font-semibold text-primary sm:py-4 sm:text-sm"
                 >
                   {item.label}
                   <ArrowRight className="h-4 w-4" />
@@ -173,14 +173,14 @@ export default async function ConsultantStudentWorkspacePage({
             <TaskGanttChart tasks={ganttTasks} milestones={ganttMilestones} view="year" rangeStart={ganttRange.start} />
           </SectionCard>
 
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="profile">
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8" id="profile">
             <SectionCard title={pickText(locale, "Student Profile", "学生资料")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
-              <div className="mb-6 rounded-3xl bg-surface-container-low p-6">
-                <div className="flex items-center gap-4">
-                  <img alt={student.name} src={student.avatar} className="h-16 w-16 rounded-full object-cover" />
+              <div className="mb-5 rounded-3xl bg-surface-container-low p-4 sm:mb-6 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <img alt={student.name} src={student.avatar} className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16" />
                   <div>
-                    <p className="font-serif text-3xl font-bold text-foreground">{student.name}</p>
-                    <p className="mt-1 text-sm text-secondary">
+                    <p className="font-serif text-2xl font-bold text-foreground sm:text-3xl">{student.name}</p>
+                    <p className="mt-1 text-xs text-secondary sm:text-sm">
                       {student.grade} · {student.school}
                     </p>
                   </div>
@@ -203,21 +203,21 @@ export default async function ConsultantStudentWorkspacePage({
                 body={pickText(locale, `${student.phase} phase, ${student.intendedMajor} track, ${metrics.completion}% completion, ${metrics.checkInStreak} day streak, and ${metrics.masteryAverage}/5 mastery average.`, `当前阶段为 ${student.phase}，目标专业是 ${student.intendedMajor}，完成率 ${metrics.completion}% ，连续打卡 ${metrics.checkInStreak} 天，平均掌握度 ${metrics.masteryAverage}/5。`)}
                 footer={pickText(locale, "This card gives the consultant a fast read before making edits.", "这张卡片用于帮助顾问在修改前快速把握学生现状。")}
               />
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-surface-container-low p-4">
+              <div className="mt-4 grid gap-3 sm:mt-5 sm:gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Countries", "目标国家")}</p>
-                  <p className="mt-2 text-sm text-secondary">{student.targetCountries.join(", ")}</p>
+                  <p className="mt-2 text-xs text-secondary sm:text-sm">{student.targetCountries.join(", ")}</p>
                 </div>
-                <div className="rounded-2xl bg-surface-container-low p-4">
+                <div className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Goal Schools", "梦校")}</p>
-                  <p className="mt-2 text-sm text-secondary">{student.dreamSchools.join(", ")}</p>
+                  <p className="mt-2 text-xs text-secondary sm:text-sm">{student.dreamSchools.join(", ")}</p>
                 </div>
               </div>
             </SectionCard>
           </div>
 
           {applicationProfile ? (
-            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="application-intake">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8" id="application-intake">
               <SectionCard title={pickText(locale, "Application Intake", "申请档案")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
                 <ConsultantStudentApplicationProfileEditor
                   studentId={student.id}
@@ -226,18 +226,18 @@ export default async function ConsultantStudentWorkspacePage({
               </SectionCard>
 
               <SectionCard title={pickText(locale, "Application Snapshot", "申请档案摘要")} eyebrow={pickText(locale, "Advisor quick read", "顾问速览")}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-surface-container-low p-4">
+                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                  <div className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Citizenship", "国籍")}</p>
-                    <p className="mt-2 text-sm text-secondary">{applicationProfile.citizenship || pickText(locale, "Missing", "待填写")}</p>
+                    <p className="mt-2 text-xs text-secondary sm:text-sm">{applicationProfile.citizenship || pickText(locale, "Missing", "待填写")}</p>
                   </div>
-                  <div className="rounded-2xl bg-surface-container-low p-4">
+                  <div className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Curriculum", "课程体系")}</p>
-                    <p className="mt-2 text-sm text-secondary">{applicationProfile.curriculumSystem || pickText(locale, "Missing", "待填写")}</p>
+                    <p className="mt-2 text-xs text-secondary sm:text-sm">{applicationProfile.curriculumSystem || pickText(locale, "Missing", "待填写")}</p>
                   </div>
-                  <div className="rounded-2xl bg-surface-container-low p-4">
+                  <div className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Competitions", "竞赛数量")}</p>
-                    <p className="mt-2 text-sm text-secondary">
+                    <p className="mt-2 text-xs text-secondary sm:text-sm">
                       {pickText(
                         locale,
                         `${applicationProfile.competitions.filter((item) => item.name.trim()).length} filled`,
@@ -245,9 +245,9 @@ export default async function ConsultantStudentWorkspacePage({
                       )}
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-surface-container-low p-4">
+                  <div className="rounded-2xl bg-surface-container-low p-3 sm:p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Activities", "活动数量")}</p>
-                    <p className="mt-2 text-sm text-secondary">
+                    <p className="mt-2 text-xs text-secondary sm:text-sm">
                       {pickText(
                         locale,
                         `${applicationProfile.activities.filter((item) => item.name.trim()).length} filled`,
@@ -274,7 +274,7 @@ export default async function ConsultantStudentWorkspacePage({
             </div>
           ) : null}
 
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]" id="planning">
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8" id="planning">
             <SectionCard title={pickText(locale, "Current Tasks", "当前任务")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
               <TaskList
                 tasks={tasks}
@@ -305,7 +305,7 @@ export default async function ConsultantStudentWorkspacePage({
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8">
             <SectionCard title={pickText(locale, "Deadline Rail", "截止日期轨道")} eyebrow={pickText(locale, "Consultant editable", "顾问可编辑")}>
               <TimelineRail
                 milestones={milestones}
@@ -338,14 +338,14 @@ export default async function ConsultantStudentWorkspacePage({
                       <div key={record.id} className="rounded-2xl bg-surface-container-low p-5">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
-                            <p className="font-bold text-foreground">
+                            <p className="text-sm font-bold text-foreground">
                               {record.curriculum} · {record.chapter}
                             </p>
-                            <p className="mt-1 text-sm text-secondary">{record.notes}</p>
+                            <p className="mt-1 text-xs text-secondary sm:text-sm">{record.notes}</p>
                           </div>
                           <div className="text-right">
-                            <div className="font-serif text-2xl font-bold text-primary">{record.mastery}/5</div>
-                            <div className="text-xs uppercase tracking-[0.2em] text-outline">{record.date}</div>
+                            <div className="font-serif text-xl font-bold text-primary sm:text-2xl">{record.mastery}/5</div>
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-outline sm:text-xs">{record.date}</div>
                           </div>
                         </div>
                         <CheckInEditorControls
@@ -367,7 +367,7 @@ export default async function ConsultantStudentWorkspacePage({
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]" id="notes">
+          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8" id="notes">
             <SectionCard title={pickText(locale, "Advisor Notes", "顾问备注")} eyebrow={pickText(locale, "Internal tracking", "内部记录")}>
               <div className="space-y-4">
                 {notes.length === 0 ? (
@@ -376,10 +376,10 @@ export default async function ConsultantStudentWorkspacePage({
                   </div>
                 ) : (
                   notes.map((note) => (
-                    <div key={note.id} className="rounded-2xl bg-surface-container-low p-5">
-                      <p className="font-bold text-foreground">{note.title}</p>
-                      <p className="mt-2 text-sm leading-7 text-secondary">{note.summary}</p>
-                      <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">{note.createdAt.slice(0, 10)}</p>
+                    <div key={note.id} className="rounded-2xl bg-surface-container-low p-4 sm:p-5">
+                      <p className="text-sm font-bold text-foreground">{note.title}</p>
+                      <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{note.summary}</p>
+                      <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-outline sm:text-xs">{note.createdAt.slice(0, 10)}</p>
                     </div>
                   ))
                 )}
@@ -400,7 +400,7 @@ export default async function ConsultantStudentWorkspacePage({
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:gap-8">
             <SectionCard title={pickText(locale, "AI Weekly Report", "AI 学生周报")} eyebrow={pickText(locale, "Consultant summary", "顾问摘要")}>
               <ConsultantWeeklyReportPanel studentId={student.id} studentName={student.name} />
             </SectionCard>
@@ -410,7 +410,7 @@ export default async function ConsultantStudentWorkspacePage({
             </SectionCard>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:gap-8">
             <SectionCard title={pickText(locale, "Parent View Preview", "家长视角预览")} eyebrow={pickText(locale, "Family-facing readout", "家长可见内容")}>
               <SummaryCard
                 title={pickText(locale, `${student.name} is currently in ${student.phase}`, `${student.name} 当前处于 ${student.phase}`)}

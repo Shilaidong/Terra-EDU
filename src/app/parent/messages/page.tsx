@@ -23,7 +23,7 @@ export default async function ParentMessagesPage() {
         hero={<LogoutButton />}
       >
         <SectionCard title={pickText(locale, "Binding pending", "等待绑定")} eyebrow={pickText(locale, "Admin action needed", "需要管理员操作")}>
-          <p className="text-sm leading-7 text-secondary">
+          <p className="text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
             {pickText(locale, "Ask the admin to connect this parent account to a student. After that, this page will answer using tasks, deadlines, and application profile data.", "请让管理员先把这个家长账号绑定到学生。绑定后，这里就会用任务、截止日期和申请档案来回答问题。")}
           </p>
         </SectionCard>
@@ -44,13 +44,13 @@ export default async function ParentMessagesPage() {
       )}
       activeHref="/parent/messages"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <HeroBadge icon={<MessageSquareHeart className="h-4 w-4" />} title={pickText(locale, "Student", "当前学生")} value={student.name} />
           <LogoutButton />
         </div>
       }
     >
-      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid gap-6 sm:gap-7 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
         <AiChatWidget
           studentId={student.id}
           page="/parent/messages"
@@ -64,12 +64,12 @@ export default async function ParentMessagesPage() {
           buttonLabel={pickText(locale, "Ask as a parent", "以家长身份提问")}
         />
 
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           <SectionCard
             title={pickText(locale, "What this assistant sees", "这个助手会参考什么")}
             eyebrow={pickText(locale, "Family context", "家长上下文")}
           >
-            <div className="space-y-3 text-sm leading-7 text-secondary">
+            <div className="space-y-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
               <p>{pickText(locale, "Open tasks, milestones, and recent check-ins", "未完成任务、截止日期和最近打卡")}</p>
               <p>{pickText(locale, "Advisor notes and live progress signals", "顾问备注和实时进度信号")}</p>
               <p>
@@ -92,9 +92,9 @@ export default async function ParentMessagesPage() {
                 pickText(locale, "Based on the current profile, where does my child still need support?", "结合现在的背景资料，孩子还缺哪方面支持？"),
                 pickText(locale, "How should I help without adding too much pressure?", "我应该怎样支持孩子，而不过度施压？"),
               ].map((item) => (
-                <div key={item} className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-foreground">
-                  {item}
-                </div>
+                  <div key={item} className="rounded-2xl bg-white px-4 py-3 text-xs font-medium text-foreground sm:text-sm">
+                    {item}
+                  </div>
               ))}
             </div>
           </SectionCard>

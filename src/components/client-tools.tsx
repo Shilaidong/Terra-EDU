@@ -111,7 +111,7 @@ export function LoginForm({
         }
       }}
     >
-      <div className={`grid gap-3 ${allowedRoles.length === 1 ? "grid-cols-1" : allowedRoles.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"}`}>
+      <div className={`grid gap-3 ${allowedRoles.length === 1 ? "grid-cols-1" : allowedRoles.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}>
         {allowedRoles.map((item) => (
           <button
             key={item}
@@ -211,7 +211,7 @@ export function RegistrationForm() {
         }
       }}
     >
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {(["student", "parent", "consultant"] as const).map((item) => (
           <button
             key={item}
@@ -339,7 +339,7 @@ export function AdminBindingManager({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <div className="rounded-3xl bg-white p-5">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Bind parent", "绑定家长")}</p>
           <div className="mt-4 space-y-4">
@@ -369,7 +369,7 @@ export function AdminBindingManager({
               type="button"
               disabled={!selectedParentId || !selectedParentStudentId || pending !== ""}
               onClick={() => void submitBinding("parent")}
-              className="rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary"
+              className="w-full rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary sm:w-auto"
             >
               {pending === "parent" ? t("Saving...", "保存中...") : t("Bind parent to student", "把家长绑定到学生")}
             </button>
@@ -405,7 +405,7 @@ export function AdminBindingManager({
               type="button"
               disabled={!selectedConsultantId || !selectedConsultantStudentId || pending !== ""}
               onClick={() => void submitBinding("consultant")}
-              className="rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary"
+              className="w-full rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary sm:w-auto"
             >
               {pending === "consultant" ? t("Saving...", "保存中...") : t("Bind consultant to student", "把顾问绑定到学生")}
             </button>
@@ -416,7 +416,7 @@ export function AdminBindingManager({
       {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <div className="rounded-3xl bg-white p-5">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Current parent bindings", "当前家长绑定")}</p>
           <div className="mt-4 space-y-3">
@@ -502,10 +502,10 @@ export function AdminMemberManager({
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <a
                 href={`/api/admin/members/${member.id}/export`}
-                className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+                className="w-full rounded-full border border-outline-variant px-4 py-2 text-center text-sm font-bold text-primary sm:w-auto"
               >
                 {t("Export member data", "导出成员数据")}
               </a>
@@ -517,7 +517,7 @@ export function AdminMemberManager({
                   setError("");
                   setMessage("");
                 }}
-                className="rounded-full bg-error px-4 py-2 text-sm font-bold text-white"
+                className="w-full rounded-full bg-error px-4 py-2 text-sm font-bold text-white sm:w-auto"
               >
                 {t("Delete member", "删除成员")}
               </button>
@@ -541,7 +541,7 @@ export function AdminMemberManager({
                 className="mt-3 w-full rounded-2xl bg-white px-4 py-3"
                 placeholder={member.email}
               />
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   disabled={pendingDeleteUserId === member.id}
@@ -569,7 +569,7 @@ export function AdminMemberManager({
                       setPendingDeleteUserId("");
                     }
                   }}
-                  className="rounded-full bg-error px-4 py-2 text-sm font-bold text-white"
+                  className="w-full rounded-full bg-error px-4 py-2 text-sm font-bold text-white sm:w-auto"
                 >
                   {pendingDeleteUserId === member.id ? t("Deleting...", "删除中...") : t("Confirm delete", "确认删除")}
                 </button>
@@ -579,7 +579,7 @@ export function AdminMemberManager({
                     setConfirmingUserId("");
                     setConfirmationText("");
                   }}
-                  className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+                  className="w-full rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary sm:w-auto"
                 >
                   {t("Cancel", "取消")}
                 </button>
@@ -706,7 +706,7 @@ export function AdminStudentImportManager() {
           }
         }}
       >
-        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-sm font-semibold text-secondary">
               {t("Student workbook (.xlsx)", "学生资料工作簿（.xlsx）")}
@@ -915,7 +915,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
 
   if (!isMounted) {
     return (
-      <div className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm">
+      <div className="rounded-[1.4rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
         <div className="grid gap-3">
           <div className="h-12 rounded-2xl bg-surface-container-low" />
           <div className="h-24 rounded-2xl bg-surface-container-low" />
@@ -935,7 +935,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
 
   return (
     <form
-      className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm"
+      className="rounded-[1.4rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5"
       onSubmit={async (event) => {
         event.preventDefault();
 
@@ -980,13 +980,13 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           placeholder={t("Timeline task title", "时间线任务标题")}
         />
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          className="min-h-24 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           placeholder={t("Describe the outcome for this task", "描述这个任务的目标与结果")}
         />
       </div>
@@ -997,7 +997,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           <select
             value={timelineLane}
             onChange={(event) => setTimelineLane(event.target.value as TimelineLane)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             {timelineLaneOptions.map((item) => (
               <option key={item.value} value={item.value}>
@@ -1011,7 +1011,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Task["priority"])}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="Low">{t("Low", "低")}</option>
             <option value="Medium">{t("Medium", "中")}</option>
@@ -1027,7 +1027,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
             type="date"
             value={startDate}
             onChange={(event) => setStartDate(event.target.value)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
@@ -1036,7 +1036,7 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
             type="date"
             value={endDate}
             onChange={(event) => setEndDate(event.target.value)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
       </div>
@@ -1048,10 +1048,10 @@ export function StudentTimelineTaskComposer({ studentId }: { studentId: string }
         })()}
       </p>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button
           disabled={pending}
-          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
+          className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm"
         >
           {pending ? t("Adding...", "添加中...") : t("Add Timeline Task", "添加时间线任务")}
         </button>
@@ -1119,7 +1119,7 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
 
   return (
     <form
-      className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm"
+      className="rounded-[1.4rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5"
       onSubmit={async (event) => {
         event.preventDefault();
         setPending(true);
@@ -1152,7 +1152,7 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           placeholder={t("Milestone title", "截止日期标题")}
         />
       </div>
@@ -1163,7 +1163,7 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
             type="date"
             value={eventDate}
             onChange={(event) => setEventDate(event.target.value)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
@@ -1171,7 +1171,7 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="upcoming">{t("upcoming", "待开始")}</option>
             <option value="done">{t("done", "已完成")}</option>
@@ -1184,10 +1184,10 @@ export function StudentMilestoneComposer({ studentId }: { studentId: string }) {
           "里程碑这里只记录截止日期，维护会更简单。"
         )}
       </p>
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button
           disabled={pending}
-          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
+          className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm"
         >
           {pending ? t("Adding...", "添加中...") : t("Add Milestone", "添加截止日期")}
         </button>
@@ -1216,7 +1216,7 @@ export function MilestoneEditorControls({
   if (isEditing) {
     return (
       <form
-        className="mt-4 rounded-2xl bg-white px-4 py-4 shadow-sm"
+        className="mt-4 rounded-2xl bg-white px-3 py-3 shadow-sm sm:px-4 sm:py-4"
         onSubmit={async (event) => {
           event.preventDefault();
           setPending(true);
@@ -1241,19 +1241,19 @@ export function MilestoneEditorControls({
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
             placeholder={t("Deadline title", "截止日期标题")}
           />
           <input
             type="date"
             value={eventDate}
             onChange={(event) => setEventDate(event.target.value)}
-            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
-            className="rounded-2xl bg-surface-container-low px-4 py-3"
+            className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="upcoming">{t("upcoming", "待开始")}</option>
             <option value="done">{t("done", "已完成")}</option>
@@ -1262,7 +1262,7 @@ export function MilestoneEditorControls({
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
             disabled={pending}
-            className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
+            className="rounded-full bg-primary px-3 py-2 text-xs font-bold text-white disabled:opacity-70 sm:px-4 sm:text-sm"
           >
             {pending ? t("Saving...", "保存中...") : t("Save", "保存")}
           </button>
@@ -1275,7 +1275,7 @@ export function MilestoneEditorControls({
               setStatus(milestone.status);
               setMessage("");
             }}
-            className="rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary"
+            className="rounded-full border border-outline-variant px-3 py-2 text-xs font-bold text-primary sm:px-4 sm:text-sm"
           >
             {t("Cancel", "取消")}
           </button>
@@ -1337,7 +1337,7 @@ export function MilestoneDeleteButton({
             setPending(false);
           }
         }}
-        className="rounded-full border border-error/20 px-3 py-2 text-sm font-semibold text-error disabled:opacity-70"
+        className="rounded-full border border-error/20 px-3 py-2 text-xs font-semibold text-error disabled:opacity-70 sm:text-sm"
       >
         {pending ? t("Deleting...", "删除中...") : t("Delete", "删除")}
       </button>
@@ -1399,7 +1399,7 @@ export function CheckInComposer({ studentId }: { studentId: string }) {
         onChange={(event) => setNotes(event.target.value)}
         className="min-h-28 rounded-2xl bg-surface-container-low px-4 py-3"
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
           {t("Save Check-in", "保存打卡")}
         </button>
@@ -1650,7 +1650,7 @@ export function StudentProfileEditor({
     >
       <div>
         <p className="text-sm font-semibold text-secondary">{t("Avatar", "头像")}</p>
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {avatarPresets.map((preset) => (
             <button
               key={preset.value}
@@ -1673,7 +1673,7 @@ export function StudentProfileEditor({
       <input
         value={name}
         onChange={(event) => setName(event.target.value)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Your full name", "你的姓名")}
       />
       <input
@@ -1718,7 +1718,7 @@ export function StudentProfileEditor({
         className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
         placeholder={t("Intended major", "意向专业")}
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
           {t("Save Profile", "保存资料")}
         </button>
@@ -1880,7 +1880,21 @@ function ApplicationProfileEditorForm({
             )}
           </p>
         </div>
-        <div className="overflow-x-auto rounded-3xl border border-black/5">
+        <div className="space-y-3 md:hidden">
+          {competitions.map((entry, index) => (
+            <CompetitionEntryCard
+              key={`competition-mobile-${index}`}
+              index={index}
+              entry={entry}
+              onChange={(nextEntry) =>
+                setCompetitions((current) =>
+                  current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
+                )
+              }
+            />
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto rounded-3xl border border-black/5 md:block">
           <table className="min-w-[980px] w-full text-left text-sm">
             <thead className="bg-surface-container-low text-secondary">
               <tr>
@@ -1908,7 +1922,7 @@ function ApplicationProfileEditorForm({
             </tbody>
           </table>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-3">
           {[
             t("Competition name: official or commonly used name.", "竞赛名称：填正式名称或大家常用名称。"),
             t("Level: school, regional, national, or international.", "级别：比如校级、地区级、国家级、国际级。"),
@@ -1936,7 +1950,21 @@ function ApplicationProfileEditorForm({
             )}
           </p>
         </div>
-        <div className="overflow-x-auto rounded-3xl border border-black/5">
+        <div className="space-y-3 md:hidden">
+          {activities.map((entry, index) => (
+            <ActivityEntryCard
+              key={`activity-mobile-${index}`}
+              index={index}
+              entry={entry}
+              onChange={(nextEntry) =>
+                setActivities((current) =>
+                  current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
+                )
+              }
+            />
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto rounded-3xl border border-black/5 md:block">
           <table className="min-w-[1080px] w-full text-left text-sm">
             <thead className="bg-surface-container-low text-secondary">
               <tr>
@@ -1964,7 +1992,7 @@ function ApplicationProfileEditorForm({
             </tbody>
           </table>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-3">
           {[
             t("Role / title: founder, captain, member, researcher, volunteer.", "角色 / 职务：比如创始人、队长、成员、研究助理、志愿者。"),
             t("Grades: list when you participated, such as 9-11.", "参与年级：写你参加的年级，比如 9-11。"),
@@ -1977,7 +2005,7 @@ function ApplicationProfileEditorForm({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
           {t(buttonLabel.en, buttonLabel.zh)}
         </button>
@@ -2018,6 +2046,31 @@ function CompetitionEntryRow({
   );
 }
 
+function CompetitionEntryCard({
+  index,
+  entry,
+  onChange,
+}: {
+  index: number;
+  entry: StudentCompetitionEntry;
+  onChange: (entry: StudentCompetitionEntry) => void;
+}) {
+  return (
+    <div className="rounded-3xl border border-black/5 bg-surface-container-low p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">#{index + 1}</p>
+      <div className="mt-3 space-y-3">
+        <input value={entry.name} onChange={(event) => onChange({ ...entry, name: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Competition name / 竞赛名称" />
+        <input value={entry.field} onChange={(event) => onChange({ ...entry, field: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Field / 学科方向" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input value={entry.year} onChange={(event) => onChange({ ...entry, year: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Year / 年份" />
+          <input value={entry.level} onChange={(event) => onChange({ ...entry, level: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Level / 级别" />
+        </div>
+        <input value={entry.result} onChange={(event) => onChange({ ...entry, result: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Result / 结果奖项" />
+      </div>
+    </div>
+  );
+}
+
 function ActivityEntryRow({
   index,
   entry,
@@ -2046,6 +2099,31 @@ function ActivityEntryRow({
         <textarea value={entry.impact} onChange={(event) => onChange({ ...entry, impact: event.target.value })} className="min-h-20 w-full rounded-2xl bg-surface-container-low px-3 py-2" />
       </td>
     </tr>
+  );
+}
+
+function ActivityEntryCard({
+  index,
+  entry,
+  onChange,
+}: {
+  index: number;
+  entry: StudentActivityEntry;
+  onChange: (entry: StudentActivityEntry) => void;
+}) {
+  return (
+    <div className="rounded-3xl border border-black/5 bg-surface-container-low p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">#{index + 1}</p>
+      <div className="mt-3 space-y-3">
+        <input value={entry.name} onChange={(event) => onChange({ ...entry, name: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Activity name / 活动名称" />
+        <input value={entry.role} onChange={(event) => onChange({ ...entry, role: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Role / 角色职务" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input value={entry.grades} onChange={(event) => onChange({ ...entry, grades: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Grades / 年级" />
+          <input value={entry.timeCommitment} onChange={(event) => onChange({ ...entry, timeCommitment: event.target.value })} className="w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Time / 时间投入" />
+        </div>
+        <textarea value={entry.impact} onChange={(event) => onChange({ ...entry, impact: event.target.value })} className="min-h-24 w-full rounded-2xl bg-white px-3 py-2.5" placeholder="Impact / 影响简述" />
+      </div>
+    </div>
   );
 }
 
@@ -2257,7 +2335,7 @@ export function ConsultantPlanningBookEditor({
         }
       }}
     >
-      <p className="text-sm leading-7 text-secondary">
+      <p className="text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {t(
           "Use markdown. Long planning books are fine here, and they will be shown to the student as read-only content.",
           "这里支持 Markdown。四五千字的长规划书也可以直接放，学生端会同步成只读内容。"
@@ -2266,13 +2344,13 @@ export function ConsultantPlanningBookEditor({
       <textarea
         value={markdown}
         onChange={(event) => setMarkdown(event.target.value)}
-        className="min-h-[420px] w-full rounded-3xl bg-surface-container-low px-4 py-4 font-mono text-sm"
+        className="min-h-[360px] w-full rounded-[1.4rem] bg-surface-container-low px-3 py-3 font-mono text-xs sm:min-h-[420px] sm:rounded-3xl sm:px-4 sm:py-4 sm:text-sm"
         placeholder={t("## Student Planning Book\n\n### Positioning\n...\n", "## 学生规划书\n\n### 定位\n...\n")}
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button
           disabled={pending}
-          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70"
+          className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm"
         >
           {pending ? t("Saving...", "保存中...") : t("Save planning book", "保存规划书")}
         </button>
@@ -2294,19 +2372,19 @@ export function MarkdownDocumentPanel({
   emptyText: string;
 }) {
   return (
-    <div className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm">
+    <div className="rounded-[1.35rem] border border-black/5 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{eyebrow}</p>
-      <h3 className="mt-2 text-lg font-semibold text-foreground">{title}</h3>
-      <div className="mt-4 rounded-[28px] border border-black/5 bg-[#f8f4ee] px-6 py-6">
+      <h3 className="mt-2 text-base font-semibold text-foreground sm:text-lg">{title}</h3>
+      <div className="mt-4 rounded-[24px] border border-black/5 bg-[#f8f4ee] px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-6">
         {markdown.trim() ? (
-          <div className="space-y-4 text-[15px] leading-8 text-[#3f3a34]">
+          <div className="space-y-4 text-sm leading-7 text-[#3f3a34] sm:text-[15px] sm:leading-8">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({ children }) => <h1 className="font-serif text-3xl font-bold text-foreground">{children}</h1>,
-                h2: ({ children }) => <h2 className="pt-2 font-serif text-2xl font-bold text-foreground">{children}</h2>,
-                h3: ({ children }) => <h3 className="pt-1 text-lg font-semibold text-foreground">{children}</h3>,
-                p: ({ children }) => <p className="text-[15px] leading-8 text-[#3f3a34]">{children}</p>,
+                h1: ({ children }) => <h1 className="font-serif text-2xl font-bold text-foreground sm:text-3xl">{children}</h1>,
+                h2: ({ children }) => <h2 className="pt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">{children}</h2>,
+                h3: ({ children }) => <h3 className="pt-1 text-base font-semibold text-foreground sm:text-lg">{children}</h3>,
+                p: ({ children }) => <p className="text-sm leading-7 text-[#3f3a34] sm:text-[15px] sm:leading-8">{children}</p>,
                 ul: ({ children }) => <ul className="space-y-3 pl-5">{children}</ul>,
                 ol: ({ children }) => <ol className="space-y-3 pl-5">{children}</ol>,
                 li: ({ children }) => <li className="marker:text-primary">{children}</li>,
@@ -2404,7 +2482,7 @@ export function StudentDocumentsWorkspace({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {sections.map((section) => {
         const expanded = expandedSection === section.key;
 
@@ -2412,28 +2490,28 @@ export function StudentDocumentsWorkspace({
           <div
             key={section.key}
             className={cn(
-              "overflow-hidden rounded-[28px] border border-black/5 bg-white transition-all duration-200",
+              "overflow-hidden rounded-[22px] border border-black/5 bg-white transition-all duration-200 sm:rounded-[28px]",
               expanded ? "shadow-terra" : "shadow-sm"
             )}
           >
             <button
               type="button"
               onClick={() => setExpandedSection(expanded ? null : section.key)}
-              className="flex w-full items-start justify-between gap-4 px-5 py-5 text-left"
+              className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left sm:px-5 sm:py-5"
             >
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{section.eyebrow}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-3">
-                  <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
-                  <span className="inline-flex rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-bold text-primary">
+                  <h3 className="text-base font-semibold text-foreground sm:text-lg">{section.title}</h3>
+                  <span className="inline-flex rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-bold text-primary sm:px-3 sm:py-1.5 sm:text-xs">
                     {section.status}
                   </span>
                 </div>
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-secondary">{section.description}</p>
+                <p className="mt-3 max-w-3xl text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{section.description}</p>
               </div>
               <span
                 className={cn(
-                  "mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-outline-variant text-lg font-bold text-primary transition-transform",
+                  "mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline-variant text-base font-bold text-primary transition-transform sm:h-9 sm:w-9 sm:text-lg",
                   expanded ? "rotate-180" : ""
                 )}
                 aria-hidden="true"
@@ -2442,7 +2520,7 @@ export function StudentDocumentsWorkspace({
               </span>
             </button>
 
-            {expanded ? <div className="border-t border-black/5 bg-[#fcfaf6] px-5 py-5">{section.content}</div> : null}
+            {expanded ? <div className="border-t border-black/5 bg-[#fcfaf6] px-4 py-4 sm:px-5 sm:py-5">{section.content}</div> : null}
           </div>
         );
       })}
@@ -2485,7 +2563,7 @@ export function ParentProfileEditor({
     >
       <div>
         <p className="text-sm font-semibold text-secondary">{t("Avatar", "头像")}</p>
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {avatarPresets.map((preset) => (
             <button
               key={preset.value}
@@ -2512,7 +2590,7 @@ export function ParentProfileEditor({
         placeholder={t("Your display name", "你的显示名称")}
       />
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
           {t("Save Profile", "保存资料")}
         </button>
@@ -2578,14 +2656,14 @@ export function AiRecommendationPanel({
   };
 
   return (
-    <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
+    <div className="rounded-[1.4rem] border border-primary/10 bg-primary/5 p-4 sm:rounded-3xl sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Recommendation", "AI 推荐")}</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">
+          <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">
             {title ?? t("Practical launch AI", "可落地的 AI 助手")}
           </h3>
-          <p className="mt-3 text-sm leading-7 text-secondary">
+          <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
             {description ??
               t(
                 "Generates recommendation summaries, logs the prompt version, and stores traceable artifacts for later bug fixing.",
@@ -2597,7 +2675,7 @@ export function AiRecommendationPanel({
           type="button"
           disabled={pending}
           onClick={runGeneration}
-          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+          className="rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
         >
           {pending ? t("Thinking...", "生成中...") : buttonLabel ?? t("Generate", "生成")}
         </button>
@@ -2606,7 +2684,7 @@ export function AiRecommendationPanel({
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
 
       {result ? (
-        <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
+        <div className="mt-5 rounded-[1.3rem] bg-white p-4 shadow-sm sm:mt-6 sm:rounded-3xl sm:p-5">
           <AiDisclaimerBanner />
           <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <ul className="mt-4 space-y-2">
@@ -2703,12 +2781,12 @@ export function AiChatWidget({
   };
 
   return (
-    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+    <div className="rounded-[1.4rem] border border-primary/10 bg-white p-4 shadow-terra sm:rounded-3xl sm:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Assistant", "AI 助手")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">
+      <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">
         {title ?? t("Question-driven support", "随时提问的中文助手")}
       </h3>
-      <p className="mt-3 text-sm leading-7 text-secondary">
+      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {description ??
           t(
             "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and traceable.",
@@ -2740,13 +2818,13 @@ export function AiChatWidget({
         type="button"
         disabled={pending}
         onClick={runChat}
-        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+        className="mt-4 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
       >
         {pending ? t("Thinking...", "生成中...") : buttonLabel ?? t("Ask AI", "向 AI 提问")}
       </button>
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {answer ? (
-        <div className="mt-5 rounded-2xl bg-primary/5 p-4 text-sm leading-7 text-secondary">
+        <div className="mt-5 rounded-[1.15rem] bg-primary/5 p-3 text-sm leading-7 text-secondary sm:rounded-2xl sm:p-4">
           <AiDisclaimerBanner />
           <MarkdownText>{answer}</MarkdownText>
           <AiActionRow
@@ -2813,10 +2891,10 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
   };
 
   return (
-    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+    <div className="rounded-[1.4rem] border border-primary/10 bg-white p-4 shadow-terra sm:rounded-3xl sm:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Task Breakdown", "任务拆解")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Break a big task into next steps", "把大任务拆成下一步")}</h3>
-      <p className="mt-3 text-sm leading-7 text-secondary">
+      <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">{t("Break a big task into next steps", "把大任务拆成下一步")}</h3>
+      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {t(
           "Paste one big task and get a practical sequence you can turn into draft tasks.",
           "输入一个大任务，AI 会帮你拆成更容易执行的小步骤。当前只生成建议，不会直接改你的时间线。"
@@ -2831,19 +2909,19 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
         type="button"
         disabled={pending}
         onClick={runBreakdown}
-        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+        className="mt-4 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
       >
         {pending ? t("Thinking...", "生成中...") : t("Break Down", "拆解任务")}
       </button>
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {result ? (
-        <div className="mt-5 rounded-2xl bg-primary/5 p-4">
+        <div className="mt-5 rounded-[1.15rem] bg-primary/5 p-3 sm:rounded-2xl sm:p-4">
           <AiDisclaimerBanner />
           <p className="font-bold text-foreground">{result.title}</p>
           <MarkdownText className="mt-3 text-sm text-secondary">{result.summary}</MarkdownText>
           <div className="mt-4 space-y-3">
             {result.steps.map((step, index) => (
-              <div key={`${index}-${step}`} className="flex gap-3 rounded-2xl bg-white px-4 py-3">
+              <div key={`${index}-${step}`} className="flex gap-3 rounded-[1rem] bg-white px-3 py-3 sm:rounded-2xl sm:px-4">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                   {index + 1}
                 </div>
@@ -2931,10 +3009,10 @@ export function ConsultantWeeklyReportPanel({
   };
 
   return (
-    <div className="rounded-3xl border border-primary/10 bg-primary/5 p-6">
+    <div className="rounded-[1.4rem] border border-primary/10 bg-primary/5 p-4 sm:rounded-3xl sm:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Weekly Report", "学生周报")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Single-student AI report", "单个学生 AI 周报")}</h3>
-      <p className="mt-3 text-sm leading-7 text-secondary">
+      <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">{t("Single-student AI report", "单个学生 AI 周报")}</h3>
+      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {t(
           "Generate a consultant-facing summary with progress, risks, and next actions.",
           "为顾问生成正式中文周报，帮助你快速把握进展、风险和下周动作。"
@@ -2944,14 +3022,14 @@ export function ConsultantWeeklyReportPanel({
         type="button"
         disabled={pending}
         onClick={runReport}
-        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+        className="mt-4 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
       >
         {pending ? t("Thinking...", "生成中...") : t("Generate Weekly Report", "生成周报")}
       </button>
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {message ? <p className="mt-4 text-sm font-semibold text-primary">{message}</p> : null}
       {result ? (
-        <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="mt-5 rounded-[1.3rem] bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
           <AiDisclaimerBanner />
           <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
@@ -3070,10 +3148,10 @@ export function ConsultantMeetingSummaryPanel({
   };
 
   return (
-    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+    <div className="rounded-[1.4rem] border border-primary/10 bg-white p-4 shadow-terra sm:rounded-3xl sm:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Meeting Summary", "会议摘要")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Turn transcript into structured notes", "把会议转写整理成结构化纪要")}</h3>
-      <p className="mt-3 text-sm leading-7 text-secondary">
+      <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">{t("Turn transcript into structured notes", "把会议转写整理成结构化纪要")}</h3>
+      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {t(
           "Paste transcript text from a student or parent meeting and turn it into consultant-readable notes.",
           "把你和学生、家长会议的转写文本贴进来，AI 会帮你整理成可阅读、可保存的结构化摘要。"
@@ -3090,7 +3168,7 @@ export function ConsultantMeetingSummaryPanel({
           type="button"
           disabled={pending}
           onClick={runMeetingSummary}
-          className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+          className="rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
         >
           {pending ? t("Thinking...", "生成中...") : t("Generate Meeting Summary", "生成会议摘要")}
         </button>
@@ -3121,7 +3199,7 @@ export function ConsultantMeetingSummaryPanel({
               setSaving(false);
             }
           }}
-          className="rounded-full border border-outline-variant px-5 py-3 text-sm font-bold text-primary disabled:opacity-60"
+          className="rounded-full border border-outline-variant px-4 py-2.5 text-sm font-bold text-primary disabled:opacity-60 sm:px-5 sm:py-3"
         >
           {saving ? t("Saving...", "保存中...") : t("Save to Notes", "保存到备注")}
         </button>
@@ -3129,7 +3207,7 @@ export function ConsultantMeetingSummaryPanel({
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {message ? <p className="mt-4 text-sm font-semibold text-primary">{message}</p> : null}
       {result ? (
-        <div className="mt-5 rounded-2xl bg-primary/5 p-4">
+        <div className="mt-5 rounded-[1.15rem] bg-primary/5 p-3 sm:rounded-2xl sm:p-4">
           <AiDisclaimerBanner />
           <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <AiBulletSection title={t("Student feedback", "学生反馈")} items={result.studentFeedback} />
@@ -3202,10 +3280,10 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
   };
 
   return (
-    <div className="rounded-3xl border border-primary/10 bg-white p-6 shadow-terra">
+    <div className="rounded-[1.4rem] border border-primary/10 bg-white p-4 shadow-terra sm:rounded-3xl sm:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Weekly Summary", "每周进展总结")}</p>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">{t("Parent-facing AI summary", "家长端 AI 总结")}</h3>
-      <p className="mt-3 text-sm leading-7 text-secondary">
+      <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">{t("Parent-facing AI summary", "家长端 AI 总结")}</h3>
+      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {t(
           "Generate a calm weekly summary of progress, upcoming focus, and how the family can help.",
           "生成适合家长查看的每周进展总结，重点说明当前进展、下周重点以及家长可以提供的支持。"
@@ -3215,13 +3293,13 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
         type="button"
         disabled={pending}
         onClick={runParentSummary}
-        className="mt-4 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
+        className="mt-4 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
       >
         {pending ? t("Thinking...", "生成中...") : t("Generate Summary", "生成总结")}
       </button>
       {error ? <p className="mt-4 text-sm font-semibold text-error">{error}</p> : null}
       {result ? (
-        <div className="mt-5 rounded-2xl bg-primary/5 p-4">
+        <div className="mt-5 rounded-[1.15rem] bg-primary/5 p-3 sm:rounded-2xl sm:p-4">
           <AiDisclaimerBanner />
           <MarkdownText className="text-sm text-secondary">{result.summary}</MarkdownText>
           <AiBulletSection title={t("Progress", "本周进展")} items={result.progress} />
@@ -3270,18 +3348,18 @@ function AiActionRow({
   extraAction?: ReactNode;
 }) {
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3">
+    <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
       <button
         type="button"
         onClick={onCopy}
-        className="rounded-full border border-outline-variant px-4 py-2 text-xs font-bold text-primary"
+        className="rounded-full border border-outline-variant px-3 py-1.5 text-[11px] font-bold text-primary sm:px-4 sm:py-2 sm:text-xs"
       >
         {copyLabel}
       </button>
       <button
         type="button"
         onClick={onRegenerate}
-        className="rounded-full border border-outline-variant px-4 py-2 text-xs font-bold text-primary"
+        className="rounded-full border border-outline-variant px-3 py-1.5 text-[11px] font-bold text-primary sm:px-4 sm:py-2 sm:text-xs"
       >
         {regenerateLabel}
       </button>
@@ -3296,15 +3374,15 @@ function AiStudentFeedback() {
   const [value, setValue] = useState<"helpful" | "not_helpful" | null>(null);
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3">
-      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-outline">
+    <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-outline sm:text-xs sm:tracking-[0.18em]">
         {t("Quick feedback", "快速反馈")}
       </span>
       <button
         type="button"
         onClick={() => setValue("helpful")}
         className={cn(
-          "rounded-full border px-4 py-2 text-xs font-bold transition-colors",
+          "rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors sm:px-4 sm:py-2 sm:text-xs",
           value === "helpful" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant text-primary"
         )}
       >
@@ -3314,7 +3392,7 @@ function AiStudentFeedback() {
         type="button"
         onClick={() => setValue("not_helpful")}
         className={cn(
-          "rounded-full border px-4 py-2 text-xs font-bold transition-colors",
+          "rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors sm:px-4 sm:py-2 sm:text-xs",
           value === "not_helpful" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant text-primary"
         )}
       >
@@ -3334,7 +3412,7 @@ function AiBulletSection({ title, items }: { title: string; items: string[] }) {
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{title}</p>
       <ul className="mt-3 space-y-2">
         {items.map((item, index) => (
-          <li key={`${title}-${index}-${item}`} className="rounded-2xl bg-surface-container-low px-4 py-3">
+          <li key={`${title}-${index}-${item}`} className="rounded-[1rem] bg-surface-container-low px-3 py-3 sm:rounded-2xl sm:px-4">
             <MarkdownText className="text-sm text-secondary">{item}</MarkdownText>
           </li>
         ))}
@@ -3555,7 +3633,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
       <textarea
         value={description}
         onChange={(event) => setDescription(event.target.value)}
-        className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="min-h-24 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
       />
       <div className="flex flex-wrap gap-2">
         {taskTemplates.map((template) => (
@@ -3571,7 +3649,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
               setEndDate(addDays(today, template.durationDays));
               setMessage(t(`Loaded ${template.label.toLowerCase()} template.`, `已载入${translateConsultantTemplate(template.label, t)}模板。`));
             }}
-            className="rounded-full border border-outline-variant px-3 py-2 text-xs font-bold text-primary"
+            className="rounded-full border border-outline-variant px-3 py-2 text-[11px] font-bold text-primary sm:text-xs"
           >
             {translateConsultantTemplate(template.label, t)}
           </button>
@@ -3583,7 +3661,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           <select
             value={timelineLane}
             onChange={(event) => setTimelineLane(event.target.value as TimelineLane)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             {timelineLaneOptions.map((item) => (
               <option key={item.value} value={item.value}>
@@ -3597,7 +3675,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Task["priority"])}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="Low">{t("Low", "低")}</option>
             <option value="Medium">{t("Medium", "中")}</option>
@@ -3612,7 +3690,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
             type="date"
             value={startDate}
             onChange={(event) => setStartDate(event.target.value)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
@@ -3621,12 +3699,12 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
             type="date"
             value={endDate}
             onChange={(event) => setEndDate(event.target.value)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
       </div>
-      <div className="flex items-center gap-3">
-        <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <button disabled={pending} className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm">
           {pending ? t("Adding...", "添加中...") : t("Add Task", "添加任务")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
@@ -3673,7 +3751,7 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Deadline title", "截止日期标题")}
       />
       <div className="grid gap-3 md:grid-cols-2">
@@ -3683,7 +3761,7 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
             type="date"
             value={eventDate}
             onChange={(event) => setEventDate(event.target.value)}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
@@ -3691,15 +3769,15 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
-            className="mt-2 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="upcoming">{t("upcoming", "待开始")}</option>
             <option value="done">{t("done", "已完成")}</option>
           </select>
         </label>
       </div>
-      <div className="flex items-center gap-3">
-        <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <button disabled={pending} className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm">
           {pending ? t("Adding...", "添加中...") : t("Add Deadline", "添加截止日期")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
@@ -3757,14 +3835,14 @@ export function ConsultantStudentProfileEditor({
       }}
     >
       <div className="grid gap-3 md:grid-cols-2">
-        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current grade", "当前年级")} />
-        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current school", "当前学校")} />
+        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Current grade", "当前年级")} />
+        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Current school", "当前学校")} />
       </div>
       <select
         aria-label="Current phase"
         value={phase}
         onChange={(event) => setPhase(event.target.value as StudentPhaseValue)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3 text-base font-medium text-foreground"
+        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm font-medium text-foreground sm:rounded-2xl sm:px-4 sm:py-3 sm:text-base"
       >
         {studentPhaseOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -3772,11 +3850,11 @@ export function ConsultantStudentProfileEditor({
           </option>
         ))}
       </select>
-      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Target countries", "目标国家")} />
-      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Dream schools", "梦校")} />
-      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Intended major", "意向专业")} />
-      <div className="flex items-center gap-3">
-        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">{t("Save Student Profile", "保存学生资料")}</button>
+      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Target countries", "目标国家")} />
+      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Dream schools", "梦校")} />
+      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Intended major", "意向专业")} />
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <button className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white sm:px-5 sm:py-3 sm:text-sm">{t("Save Student Profile", "保存学生资料")}</button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
@@ -3819,17 +3897,17 @@ export function ConsultantNoteComposer({ studentId }: { studentId: string }) {
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Note title", "备注标题")}
       />
       <textarea
         value={summary}
         onChange={(event) => setSummary(event.target.value)}
-        className="min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="min-h-24 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Consultant note summary", "顾问备注摘要")}
       />
-      <div className="flex items-center gap-3">
-        <button disabled={pending} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-70">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <button disabled={pending} className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white disabled:opacity-70 sm:px-5 sm:py-3 sm:text-sm">
           {pending ? t("Saving...", "保存中...") : t("Add Note", "添加备注")}
         </button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
@@ -3903,7 +3981,7 @@ export function ConsultantStudentPicker({
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Search students", "搜索学生")}
       />
       <div className="grid grid-cols-2 gap-2">
@@ -3918,7 +3996,7 @@ export function ConsultantStudentPicker({
             type="button"
             onClick={() => setSortBy(option.value as typeof sortBy)}
             className={cn(
-              "rounded-2xl px-3 py-2 text-sm font-semibold",
+              "rounded-xl px-3 py-2 text-xs font-semibold sm:rounded-2xl sm:text-sm",
               sortBy === option.value
                 ? "bg-primary/10 text-primary"
                 : "bg-surface-container-low text-secondary"
@@ -3934,7 +4012,7 @@ export function ConsultantStudentPicker({
             key={student.id}
             href={`/consultant/students/${student.id}`}
             className={cn(
-              "block rounded-2xl border px-4 py-4 transition-all",
+              "block rounded-2xl border px-3 py-3 transition-all sm:px-4 sm:py-4",
               student.id === currentStudentId
                 ? "border-primary bg-primary/5 shadow-terra"
                 : "border-black/5 bg-white hover:border-primary/30"
@@ -3942,19 +4020,19 @@ export function ConsultantStudentPicker({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-bold text-foreground">{student.name}</p>
-                <p className="mt-1 text-sm text-secondary">
+                <p className="text-sm font-bold text-foreground">{student.name}</p>
+                <p className="mt-1 text-xs text-secondary sm:text-sm">
                   {student.grade} · {student.school}
                 </p>
               </div>
-              <div className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-bold text-primary">
+              <div className="rounded-full bg-surface-container-low px-3 py-1 text-[11px] font-bold text-primary sm:text-xs">
                 {student.completion}%
               </div>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em]",
+                  "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] sm:text-xs sm:tracking-[0.18em]",
                   student.riskLevel === "high"
                     ? "bg-error/10 text-error"
                     : student.riskLevel === "medium"
@@ -3968,13 +4046,13 @@ export function ConsultantStudentPicker({
                     ? t("medium risk", "中风险")
                     : t("low risk", "低风险")}
               </span>
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-outline">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-outline sm:text-xs sm:tracking-[0.2em]">
                 {student.phase}
               </span>
             </div>
             <div className="mt-3 rounded-2xl bg-surface-container-low px-3 py-3">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("Next deadline", "下一个截止日期")}</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{student.nextDeadlineTitle}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary sm:text-xs sm:tracking-[0.2em]">{t("Next deadline", "下一个截止日期")}</p>
+              <p className="mt-1 text-xs font-semibold text-foreground sm:text-sm">{student.nextDeadlineTitle}</p>
               <p className="mt-1 text-xs text-secondary">{student.nextDeadlineLabel}</p>
             </div>
           </a>
@@ -4391,7 +4469,7 @@ export function ContentItemComposer() {
       }}
     >
       <ContentItemFields draft={draft} setDraft={setDraft} />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button
           className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
           disabled={pending}
@@ -4617,7 +4695,7 @@ export function ContentCategoryTables({ items }: { items: ContentItem[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -4695,9 +4773,9 @@ export function ContentCategoryTables({ items }: { items: ContentItem[] }) {
       {sections.map((section) => (
         <div
           key={section.type}
-          className="space-y-3 rounded-3xl border border-black/5 bg-white p-5 shadow-sm"
+          className="space-y-3 rounded-3xl border border-black/5 bg-white p-4 shadow-sm sm:p-5"
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-lg font-semibold text-foreground">
                 {contentTypeLabel(section.type, t)}
@@ -4710,7 +4788,18 @@ export function ContentCategoryTables({ items }: { items: ContentItem[] }) {
               </p>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="space-y-3 md:hidden">
+            {renderManagedContentCards({
+              type: section.type,
+              items: section.items,
+              selectedIds,
+              setSelectedIds,
+              editingItemId,
+              setEditingItemId,
+              t,
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             {renderManagedContentTable({
               type: section.type,
               items: section.items,
@@ -4749,7 +4838,7 @@ export function AnalyticsExportButton() {
   const [message, setMessage] = useState("");
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
       <a
         href="/api/analytics/report"
         className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white"
@@ -4799,6 +4888,139 @@ function sortManagedContentItems(left: ContentItem, right: ContentItem, sortBy: 
   }
 
   return left.type.localeCompare(right.type) || left.title.localeCompare(right.title);
+}
+
+function renderManagedContentCards({
+  type,
+  items,
+  selectedIds,
+  setSelectedIds,
+  editingItemId,
+  setEditingItemId,
+  t,
+}: {
+  type: ContentItem["type"];
+  items: ContentItem[];
+  selectedIds: string[];
+  setSelectedIds: Dispatch<SetStateAction<string[]>>;
+  editingItemId: string | null;
+  setEditingItemId: Dispatch<SetStateAction<string | null>>;
+  t: ReturnType<typeof useText>;
+}) {
+  return items.map((item) => {
+    const details = renderManagedContentCardDetails(item, t);
+
+    return (
+      <div key={item.id} className="rounded-[24px] border border-black/5 bg-surface-container-low p-4">
+        <div className="flex items-start justify-between gap-3">
+          <label className="flex min-w-0 items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={selectedIds.includes(item.id)}
+              onChange={(event) =>
+                setSelectedIds((current) =>
+                  event.target.checked
+                    ? [...current, item.id]
+                    : current.filter((itemId) => itemId !== item.id)
+                )
+              }
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{item.title}</p>
+              <p className="mt-1 text-xs leading-6 text-secondary">{item.subtitle}</p>
+            </div>
+          </label>
+          <button
+            type="button"
+            className="shrink-0 rounded-full border border-outline-variant px-3 py-1.5 text-xs font-semibold text-secondary"
+            onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}
+          >
+            {editingItemId === item.id ? t("Editing", "编辑中") : t("Edit", "编辑")}
+          </button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-secondary">
+            {contentTypeLabel(type, t)}
+          </span>
+          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-secondary">
+            {item.difficulty}
+          </span>
+          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold capitalize text-secondary">
+            {item.source}
+          </span>
+        </div>
+
+        {details.length ? (
+          <div className="mt-4 space-y-2 rounded-2xl bg-white/80 p-3">
+            {details.map((detail) => (
+              <div key={`${item.id}-${detail.label}`} className="flex items-start justify-between gap-3">
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-secondary/70">
+                  {detail.label}
+                </span>
+                <span className="text-right text-sm text-foreground">{detail.value}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {item.tags.length ? <div className="mt-3">{renderTagChips(item.tags)}</div> : null}
+      </div>
+    );
+  });
+}
+
+function renderManagedContentCardDetails(item: ContentItem, t: ReturnType<typeof useText>) {
+  const details: { label: string; value: string }[] = [];
+
+  if (item.type === "school") {
+    if (item.country) details.push({ label: t("Country", "国家"), value: item.country });
+    if (item.schoolDetails?.ranking) details.push({ label: t("Ranking", "排名"), value: item.schoolDetails.ranking });
+    if (item.schoolDetails?.city) details.push({ label: t("City", "城市"), value: item.schoolDetails.city });
+    const tuition = formatSchoolTuition(item.schoolDetails?.tuitionUsd);
+    if (tuition) details.push({ label: t("Tuition", "学费"), value: tuition });
+    const rate = formatAcceptanceRate(item.schoolDetails?.acceptanceRate);
+    if (rate) details.push({ label: t("Acceptance", "录取率"), value: rate });
+  }
+
+  if (item.type === "major") {
+    if (item.majorDetails?.degree) details.push({ label: t("Degree", "学位"), value: item.majorDetails.degree });
+    if (item.majorDetails?.stemEligible) details.push({ label: t("Track", "方向"), value: "STEM" });
+    if (item.majorDetails?.recommendedBackground) {
+      details.push({ label: t("Background", "推荐背景"), value: item.majorDetails.recommendedBackground });
+    }
+    if (item.majorDetails?.careerPaths?.length) {
+      details.push({ label: t("Careers", "就业方向"), value: item.majorDetails.careerPaths.join(", ") });
+    }
+  }
+
+  if (item.type === "competition") {
+    if (item.competitionDetails?.organizer) details.push({ label: t("Organizer", "主办方"), value: item.competitionDetails.organizer });
+    if (item.competitionDetails?.eligibility) details.push({ label: t("Eligibility", "参赛要求"), value: item.competitionDetails.eligibility });
+    if (item.competitionDetails?.award) details.push({ label: t("Award", "奖项"), value: item.competitionDetails.award });
+    if (item.competitionDetails?.season) details.push({ label: t("Season", "赛季"), value: item.competitionDetails.season });
+  }
+
+  if (item.type === "course") {
+    if (item.courseDetails?.provider) details.push({ label: t("Provider", "提供方"), value: item.courseDetails.provider });
+    if (item.courseDetails?.format) details.push({ label: t("Format", "形式"), value: item.courseDetails.format });
+    if (item.courseDetails?.durationWeeks != null) {
+      details.push({ label: t("Duration", "周期"), value: t(`${item.courseDetails.durationWeeks} weeks`, `${item.courseDetails.durationWeeks} 周`) });
+    }
+    if (item.courseDetails?.workload) details.push({ label: t("Workload", "学习强度"), value: item.courseDetails.workload });
+  }
+
+  if (item.type === "chapter") {
+    if (item.chapterDetails?.curriculum) details.push({ label: t("Curriculum", "所属课程"), value: item.chapterDetails.curriculum });
+    if (item.chapterDetails?.sequence) details.push({ label: t("Sequence", "顺序"), value: item.chapterDetails.sequence });
+    if (item.chapterDetails?.estimatedHours != null) {
+      details.push({ label: t("Hours", "时长"), value: t(`${item.chapterDetails.estimatedHours} hours`, `${item.chapterDetails.estimatedHours} 小时`) });
+    }
+    if (item.chapterDetails?.keySkill) details.push({ label: t("Key Skill", "核心能力"), value: item.chapterDetails.keySkill });
+  }
+
+  return details;
 }
 
 function renderManagedContentTable({

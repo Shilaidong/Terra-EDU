@@ -19,13 +19,13 @@ export default async function RegisterPage() {
   const accounts = getAccessPlanDemoAccounts().filter((account) => account.role !== "parent");
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute inset-0 opacity-20">
         <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-tertiary/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-terra md:grid-cols-2">
+      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[1.6rem] bg-white shadow-terra sm:rounded-[2rem] md:grid-cols-2">
         <section className="hidden flex-col justify-between bg-primary p-12 text-white md:flex">
           <div>
             <h1 className="font-serif text-4xl font-bold">{pickText(locale, "Lodestar Pathways", "引路人生涯")}</h1>
@@ -42,11 +42,11 @@ export default async function RegisterPage() {
           </blockquote>
         </section>
 
-        <section className="bg-white p-8 sm:p-12">
-          <div className="mb-8 flex items-start justify-between gap-4">
+        <section className="bg-white p-5 sm:p-8 md:p-10 lg:p-12">
+          <div className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
             <div>
-              <h2 className="font-serif text-3xl font-bold text-foreground">{pickText(locale, "Access Plans", "开通方案")}</h2>
-              <p className="mt-2 text-secondary">
+              <h2 className="font-serif text-[1.9rem] font-bold text-foreground sm:text-3xl">{pickText(locale, "Access Plans", "开通方案")}</h2>
+              <p className="mt-2 text-sm leading-7 text-secondary sm:text-base">
                 {pickText(
                   locale,
                   "Registration is currently opened through guided consultation. Please contact Teacher Shi for the detailed plan.",
@@ -57,11 +57,11 @@ export default async function RegisterPage() {
             <LocaleSwitcher />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl bg-surface-container-low p-6">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+            <div className="rounded-3xl bg-surface-container-low p-5 sm:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Student access", "学生端方案")}</p>
-              <p className="mt-3 font-serif text-4xl font-bold text-foreground">?99</p>
-              <p className="mt-3 text-sm leading-7 text-secondary">
+              <p className="mt-3 font-serif text-[2.2rem] font-bold text-foreground sm:text-4xl">?99</p>
+              <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
                 {pickText(
                   locale,
                   "Includes student-facing planning, document workspace, AI guidance, and parent-consultant collaboration visibility.",
@@ -69,10 +69,10 @@ export default async function RegisterPage() {
                 )}
               </p>
             </div>
-            <div className="rounded-3xl bg-surface-container-low p-6">
+            <div className="rounded-3xl bg-surface-container-low p-5 sm:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Consultant access", "顾问端方案")}</p>
-              <p className="mt-3 font-serif text-4xl font-bold text-foreground">?999</p>
-              <p className="mt-3 text-sm leading-7 text-secondary">
+              <p className="mt-3 font-serif text-[2.2rem] font-bold text-foreground sm:text-4xl">?999</p>
+              <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
                 {pickText(
                   locale,
                   "Includes multi-student workspace, planning book maintenance, content operations, AI reporting, and long-range collaboration tooling.",
@@ -82,14 +82,14 @@ export default async function RegisterPage() {
             </div>
           </div>
 
-          <div className="mt-6 rounded-3xl bg-surface-container-high p-5 text-sm text-secondary">
+          <div className="mt-5 rounded-3xl bg-surface-container-high p-4 text-xs leading-6 text-secondary sm:mt-6 sm:p-5 sm:text-sm">
             <p className="font-semibold text-foreground">{pickText(locale, "Contact for full proposal", "具体方案请联系")}</p>
             <p className="mt-2">
               {pickText(locale, "Teacher Shi · WeChat: shilaidong", "史老师 · 微信号：shilaidong")}
             </p>
           </div>
 
-          <div className="mt-6 rounded-3xl bg-surface-container-low p-5">
+          <div className="mt-5 rounded-3xl bg-surface-container-low p-4 sm:mt-6 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Experience the platform first", "先体验平台")}</p>
             <div className="mt-4 grid gap-3">
               {accounts.map((account) => (
@@ -97,9 +97,9 @@ export default async function RegisterPage() {
                   <p className="font-semibold text-foreground">
                     {account.role === "student" ? pickText(locale, "Sample student account", "示例学生账号") : pickText(locale, "Sample consultant account", "示例顾问账号")}
                   </p>
-                  <p className="mt-1 text-sm text-secondary">{account.email}</p>
-                  <p className="text-sm text-secondary">{account.password}</p>
-                  <p className="mt-2 text-xs leading-6 text-secondary">
+                  <p className="mt-1 text-xs text-secondary sm:text-sm">{account.email}</p>
+                  <p className="text-xs text-secondary sm:text-sm">{account.password}</p>
+                  <p className="mt-2 text-[11px] leading-6 text-secondary sm:text-xs">
                     {account.role === "student"
                       ? pickText(
                           locale,
@@ -117,7 +117,7 @@ export default async function RegisterPage() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-4 text-sm text-secondary">
+          <div className="mt-6 flex flex-wrap gap-3 text-xs text-secondary sm:mt-8 sm:gap-4 sm:text-sm">
             <Link href="/login" className="hover:text-primary">
               {pickText(locale, "Back to login", "返回登录")}
             </Link>

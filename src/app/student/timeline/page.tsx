@@ -67,16 +67,16 @@ export default async function StudentTimelinePage({
       subtitle={pickText(locale, "A launch-ready timeline view of tasks, milestones, and status changes. First version focuses on reliable updates and logs rather than complex drag scheduling.", "这是可直接上线的任务时间线视图，展示任务、截止日期和状态变化。当前版本优先保证稳定更新和日志可追踪。")}
       activeHref="/student/timeline"
       hero={
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center rounded-full bg-surface-container p-1">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex w-full items-center overflow-x-auto rounded-full bg-surface-container p-1 sm:w-auto">
             {viewOptions.map((option) => (
               <Link
                 key={option.value}
                 href={`/student/timeline?view=${option.value}`}
                 className={
                   option.value === currentView
-                    ? "rounded-full bg-white px-5 py-2 text-sm font-bold text-primary shadow-sm"
-                    : "rounded-full px-5 py-2 text-sm font-semibold text-outline transition-colors hover:text-foreground"
+                    ? "whitespace-nowrap rounded-full bg-white px-3 py-2 text-xs font-bold text-primary shadow-sm sm:px-5 sm:text-sm"
+                    : "whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-outline transition-colors hover:text-foreground sm:px-5 sm:text-sm"
                 }
               >
                 {pickText(locale, option.label, option.value === "year" ? "年视图" : option.value === "three_years" ? "三年视图" : "月视图")}
@@ -92,13 +92,13 @@ export default async function StudentTimelinePage({
         </div>
       }
     >
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
         <StatCard label={pickText(locale, "Completion", "完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Calculated from completed tasks across the plan.", "根据当前规划内已完成任务实时计算。")} />
         <StatCard label={pickText(locale, "Active tasks", "未完成任务")} value={`${visibleTasks.filter((task) => task.status !== "done").length}`} hint={pickText(locale, "Open items inside the current calendar view.", "当前视图内仍未完成的任务数量。")} tone="tertiary" />
         <StatCard label={pickText(locale, "Upcoming milestones", "即将到来的截止日期")} value={`${upcomingMilestoneCount}`} hint={pickText(locale, "Future milestones visible in the current calendar view.", "当前视图中未来将到来的截止日期数量。")} tone="secondary" />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <SectionCard
           title={pickText(locale, "Timeline Gantt", "时间线甘特图")}
           eyebrow={pickText(locale, "Calendar-aligned roadmap", "按日历排布的路线图")}
@@ -108,10 +108,10 @@ export default async function StudentTimelinePage({
         </SectionCard>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <SectionCard title={pickText(locale, "Task Timeline", "任务时间线")} eyebrow={pickText(locale, "Add, update, and remove items against the active calendar view", "在当前日历视图下新增、更新和删除内容")}>
           <StudentTimelineTaskComposer studentId={student.id} />
-          <div className="mt-6 border-t border-black/5 pt-6">
+          <div className="mt-5 border-t border-black/5 pt-5 sm:mt-6 sm:pt-6">
           <TaskList
             tasks={visibleTasks}
             action={(taskId) => (
@@ -129,7 +129,7 @@ export default async function StudentTimelinePage({
 
         <SectionCard title={pickText(locale, "Milestone Rail", "截止日期轨道")} eyebrow={pickText(locale, `Long-range plan within ${viewOptions.find((option) => option.value === currentView)?.label ?? "Year"}`, `${currentView === "year" ? "年视图" : currentView === "three_years" ? "三年视图" : "月视图"}中的长期规划`)}>
           <StudentMilestoneComposer studentId={student.id} />
-          <div className="mt-6 border-t border-black/5 pt-6">
+          <div className="mt-5 border-t border-black/5 pt-5 sm:mt-6 sm:pt-6">
             <TimelineRail
               milestones={visibleMilestones}
               action={(milestoneId) => {
@@ -155,11 +155,11 @@ export default async function StudentTimelinePage({
         </SectionCard>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <StudentTaskBreakdownPanel studentId={student.id} />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <SectionCard title={pickText(locale, "Recent trace log", "最近追踪日志")} eyebrow={pickText(locale, "Observability", "可观测性")}>
           <AuditFeed logs={logs} />
         </SectionCard>

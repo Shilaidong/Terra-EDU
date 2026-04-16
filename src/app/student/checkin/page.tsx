@@ -25,7 +25,7 @@ export default async function StudentCheckinPage() {
       subtitle={pickText(locale, "Capture curriculum mastery, chapter notes, and learning momentum without changing the core visual style.", "记录课程掌握度、章节笔记和学习节奏，同时保持现有视觉风格。")}
       activeHref="/student/checkin"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge icon={<Activity className="h-4 w-4" />} title={pickText(locale, "Streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} />
           <LogoutButton />
         </div>

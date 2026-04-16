@@ -37,7 +37,7 @@ export default async function StudentDocumentsPage() {
       )}
       activeHref="/student/documents"
       hero={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <HeroBadge
             icon={<FileText className="h-4 w-4" />}
             title={pickText(locale, "Profile completion", "材料完整度")}

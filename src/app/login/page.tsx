@@ -21,13 +21,13 @@ export default async function LoginPage() {
   const accounts = getAccessPlanDemoAccounts();
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-12">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute inset-0 opacity-20">
         <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-tertiary/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-terra md:grid-cols-2">
+      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[1.6rem] bg-white shadow-terra sm:rounded-[2rem] md:grid-cols-2">
         <section className="hidden flex-col justify-between bg-primary p-12 text-white md:flex">
           <div>
             <h1 className="font-serif text-4xl font-bold">{pickText(locale, "Lodestar Pathways", "引路人生涯")}</h1>
@@ -40,11 +40,11 @@ export default async function LoginPage() {
           </blockquote>
         </section>
 
-        <section className="bg-white p-8 sm:p-12">
-          <div className="mb-8 flex items-start justify-between gap-4">
+        <section className="bg-white p-5 sm:p-8 md:p-10 lg:p-12">
+          <div className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
             <div>
-              <h2 className="font-serif text-3xl font-bold text-foreground">{pickText(locale, "Welcome Back", "欢迎回来")}</h2>
-              <p className="mt-2 text-secondary">{pickText(locale, "Sign in with the launch demo accounts or connect your formal credentials later.", "你可以先使用演示账号登录，后续再接入正式账号。")}</p>
+              <h2 className="font-serif text-[1.9rem] font-bold text-foreground sm:text-3xl">{pickText(locale, "Welcome Back", "欢迎回来")}</h2>
+              <p className="mt-2 text-sm leading-7 text-secondary sm:text-base">{pickText(locale, "Sign in with the launch demo accounts or connect your formal credentials later.", "你可以先使用演示账号登录，后续再接入正式账号。")}</p>
             </div>
             <LocaleSwitcher />
           </div>
@@ -62,13 +62,13 @@ export default async function LoginPage() {
           />
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-4 text-sm text-secondary">
+            <div className="rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-4 text-xs leading-6 text-secondary sm:text-sm">
               <p className="font-semibold text-foreground">{pickText(locale, "Already have an account?", "已有账号？")}</p>
               <p className="mt-1">{pickText(locale, "Use the login form above to enter the platform directly.", "直接使用上方登录表单进入平台。")}</p>
             </div>
             <div className="rounded-2xl border border-outline-variant bg-white px-4 py-4">
-              <p className="text-sm font-semibold text-foreground">{pickText(locale, "Need to register?", "需要注册？")}</p>
-              <p className="mt-1 text-sm text-secondary">
+              <p className="text-xs font-semibold text-foreground sm:text-sm">{pickText(locale, "Need to register?", "需要注册？")}</p>
+              <p className="mt-1 text-xs leading-6 text-secondary sm:text-sm">
                 {pickText(locale, "Open the access plan and contact Teacher Shi before activation.", "先查看开通方案，再联系史老师完成开通。")}
               </p>
               <div className="mt-3">
@@ -82,7 +82,7 @@ export default async function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-8 rounded-3xl bg-surface-container-low p-5">
+          <div className="mt-6 rounded-3xl bg-surface-container-low p-4 sm:mt-8 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Demo accounts", "演示账号")}</p>
             <div className="mt-4 space-y-3 text-sm text-secondary">
               {accounts.map((account) => (
@@ -96,7 +96,7 @@ export default async function LoginPage() {
                   </p>
                   <p>{account.email}</p>
                   <p>{account.password}</p>
-                  <p className="mt-2 text-xs leading-6 text-secondary">
+                  <p className="mt-2 text-[11px] leading-6 text-secondary sm:text-xs">
                     {account.role === "student"
                       ? pickText(
                           locale,
@@ -120,28 +120,28 @@ export default async function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl bg-surface-container-high p-5">
+          <div className="mt-6 grid gap-3 sm:mt-8 sm:gap-4 md:grid-cols-2">
+            <div className="rounded-3xl bg-surface-container-high p-4 sm:p-5">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Student demo", "学生示例")}</p>
-              <p className="mt-2 text-sm text-secondary">
+              <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm">
                 {pickText(locale, "Best for seeing planning, check-ins, documents, and AI guidance as a student would actually use them.", "适合查看规划、打卡、材料中心和 AI 助手在学生端的真实使用方式。")}
               </p>
             </div>
-            <div className="rounded-3xl bg-surface-container-high p-5">
+            <div className="rounded-3xl bg-surface-container-high p-4 sm:p-5">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Parent demo", "家长示例")}</p>
-              <p className="mt-2 text-sm text-secondary">
+              <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm">
                 {pickText(locale, "Best for seeing how parents check progress, milestones, and consultant updates without interrupting the student rhythm.", "适合查看家长如何在不打断学生节奏的情况下，理解进展、里程碑和顾问反馈。")}
               </p>
             </div>
-            <div className="rounded-3xl bg-surface-container-high p-5">
+            <div className="rounded-3xl bg-surface-container-high p-4 sm:p-5">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Consultant demo", "顾问示例")}</p>
-              <p className="mt-2 text-sm text-secondary">
+              <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm">
                 {pickText(locale, "Best for seeing student management, planning book maintenance, content operations, and consultant-side AI workflows.", "适合查看学生管理、规划书维护、内容库操作和顾问侧 AI 工作流。")}
               </p>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-4 text-sm text-secondary">
+          <div className="mt-6 flex flex-wrap gap-3 text-xs text-secondary sm:mt-8 sm:gap-4 sm:text-sm">
             <AccessPlansDialog
               locale={locale}
               accounts={accounts}
