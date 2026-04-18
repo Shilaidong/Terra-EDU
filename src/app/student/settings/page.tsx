@@ -2,8 +2,8 @@
 import { Settings2 } from "lucide-react";
 
 import { AiRecommendationPanel, LogoutButton, PasswordChangeForm, StudentProfileEditor } from "@/components/client-tools";
-import { AuditFeed, HeroBadge, InfoPill, RoleShell, SectionCard } from "@/components/terra-shell";
-import { getCurrentStudentData, getRecentAuditLogsData } from "@/lib/data";
+import { HeroBadge, InfoPill, RoleShell, SectionCard } from "@/components/terra-shell";
+import { getCurrentStudentData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
@@ -13,7 +13,6 @@ export default async function StudentSettingsPage() {
   const session = await requireSession("student");
   const student = await getCurrentStudentData(session);
   if (!student) return null;
-  const logs = await getRecentAuditLogsData(6);
 
   return (
     <RoleShell
@@ -82,12 +81,6 @@ export default async function StudentSettingsPage() {
             title={pickText(locale, "Change your password", "修改你的密码")}
             description={pickText(locale, "Use your current password to set a new one. This only changes how you log in and does not affect your profile, tasks, materials, or AI records.", "输入当前密码后设置新密码。这只会影响你的登录方式，不会影响个人资料、任务、材料和 AI 记录。")}
           />
-        </SectionCard>
-      </div>
-
-      <div className="mt-8">
-        <SectionCard title={pickText(locale, "Recent profile activity", "最近资料更新")} eyebrow={pickText(locale, "Audit trail", "审计记录")}>
-          <AuditFeed logs={logs} />
         </SectionCard>
       </div>
     </RoleShell>

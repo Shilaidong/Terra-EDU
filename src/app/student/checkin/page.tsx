@@ -33,8 +33,8 @@ export default async function StudentCheckinPage() {
     >
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label={pickText(locale, "Average mastery", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Calculated from all saved check-ins.", "根据全部已保存打卡实时计算。")} />
-        <StatCard label={pickText(locale, "Recent entries", "最近记录")} value={`${checkIns.length}`} hint={pickText(locale, "Saved server-side with traceable responses.", "服务端保存，并带可追踪响应。")} tone="tertiary" />
-        <StatCard label={pickText(locale, "Launch focus", "当前重点")} value={pickText(locale, "Reliable logs", "稳定日志")} hint={pickText(locale, "Each save emits actor, page, status, and latency.", "每次保存都会记录操作者、页面、状态和耗时。")} tone="secondary" />
+        <StatCard label={pickText(locale, "Recent entries", "最近记录")} value={`${checkIns.length}`} hint={pickText(locale, "Saved check-ins will keep building your learning picture.", "每一次打卡都会继续补完整体学习画像。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Launch focus", "当前重点")} value={pickText(locale, "Steady rhythm", "稳定节奏")} hint={pickText(locale, "Keep the rhythm consistent and your next recommendation will stay much clearer.", "只要持续保持稳定节奏，后面的建议也会更清晰。")} tone="secondary" />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">

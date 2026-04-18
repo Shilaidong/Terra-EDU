@@ -3219,8 +3219,8 @@ export function AiRecommendationPanel({
           <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
             {description ??
               t(
-                "Generates recommendation summaries, logs the prompt version, and stores traceable artifacts for later bug fixing.",
-                "会生成建议摘要、记录提示词版本，并保存可追踪结果，方便后续排查和修复。"
+                "Generates recommendation summaries that stay practical, concise, and easy to act on.",
+                "会生成更实用、更简洁、也更容易立刻执行的建议摘要。"
               )}
           </p>
         </div>
@@ -3264,9 +3264,6 @@ export function AiRecommendationPanel({
             copyLabel={t("Copy", "复制内容")}
           />
           <AiStudentFeedback />
-          <div className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
-            trace_id: {result.trace_id} · decision_id: {result.decision_id}
-          </div>
         </div>
       ) : null}
     </div>
@@ -3303,7 +3300,6 @@ export function AiChatWidget({
           : "这周我最应该优先做什么？")
   );
   const [answer, setAnswer] = useState("");
-  const [trace, setTrace] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
@@ -3325,7 +3321,6 @@ export function AiChatWidget({
       });
 
       setAnswer(payload.data?.summary ?? "");
-      setTrace(`${payload.trace_id} · ${payload.data?.decision_id ?? ""}`);
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : t("AI request failed.", "AI 请求失败。"));
     } finally {
@@ -3342,8 +3337,8 @@ export function AiChatWidget({
       <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
         {description ??
           t(
-            "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and traceable.",
-            "你可以自然地问优先级、规划方法、任务推进，甚至是任务太多时怎么稳住节奏。回答会尽量具体，并保留可追踪日志。"
+            "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and grounded.",
+            "你可以自然地问优先级、规划方法、任务推进，甚至是任务太多时怎么稳住节奏。回答会尽量具体，也会尽量贴近你当前的真实情况。"
           )}
       </p>
       {studentOptions && studentOptions.length > 1 ? (
@@ -3391,7 +3386,6 @@ export function AiChatWidget({
             copyLabel={t("Copy", "复制内容")}
           />
           <AiStudentFeedback />
-          <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">{trace}</p>
         </div>
       ) : null}
     </div>
@@ -3497,9 +3491,6 @@ export function StudentTaskBreakdownPanel({ studentId }: { studentId: string }) 
             copyLabel={t("Copy", "复制内容")}
           />
           <AiStudentFeedback />
-          <p className="mt-3 text-xs uppercase tracking-[0.2em] text-outline">
-            {result.trace_id} · {result.decision_id}
-          </p>
         </div>
       ) : null}
     </div>
@@ -3630,9 +3621,6 @@ export function ConsultantWeeklyReportPanel({
               </button>
             }
           />
-          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
-            {result.trace_id} · {result.decision_id}
-          </p>
         </div>
       ) : null}
     </div>
@@ -3778,9 +3766,6 @@ export function ConsultantMeetingSummaryPanel({
             regenerateLabel={t("Regenerate", "重新生成")}
             copyLabel={t("Copy", "复制内容")}
           />
-          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
-            {result.trace_id} · {result.decision_id}
-          </p>
         </div>
       ) : null}
     </div>
@@ -3868,9 +3853,6 @@ export function ParentWeeklySummaryPanel({ studentId }: { studentId: string }) {
             regenerateLabel={t("Regenerate", "重新生成")}
             copyLabel={t("Copy", "复制内容")}
           />
-          <p className="mt-4 text-xs uppercase tracking-[0.2em] text-outline">
-            {result.trace_id} · {result.decision_id}
-          </p>
         </div>
       ) : null}
     </div>
@@ -4162,7 +4144,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
               priority,
             }),
           });
-          setMessage(t("Task created and audit logged.", "任务已创建，并写入审计日志。"));
+          setMessage(t("Task created.", "任务已创建。"));
           setTitle("");
           setDescription("");
           setTimelineLane("application_progress");
@@ -5149,8 +5131,8 @@ export function ContentImportPanel() {
         }
         setMessage(
           t(
-            `Imported ${payload.data?.count ?? 0} items with audit logging.`,
-            `已导入 ${payload.data?.count ?? 0} 条内容，并写入审计日志。`
+            `Imported ${payload.data?.count ?? 0} items successfully.`,
+            `已成功导入 ${payload.data?.count ?? 0} 条内容。`
           )
         );
         router.refresh();

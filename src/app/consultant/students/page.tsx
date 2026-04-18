@@ -40,7 +40,7 @@ export default async function ConsultantStudentsPage() {
     <RoleShell
       session={session}
       title={pickText(locale, "Student Management", "学生管理")}
-      subtitle={pickText(locale, "Monitor student progress, add tasks, review phase transitions, and keep a traceable record of cohort operations.", "查看学生进度、安排任务、跟进阶段变化，并保留可追踪的顾问操作记录。")}
+      subtitle={pickText(locale, "Monitor student progress, add tasks, review phase transitions, and keep the whole cohort moving in one calm workspace.", "查看学生进度、安排任务、跟进阶段变化，让整个顾问群组在一个清晰工作台里持续推进。")}
       activeHref="/consultant/students"
       hero={
         <div className="flex flex-wrap items-center gap-3">

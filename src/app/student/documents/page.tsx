@@ -5,7 +5,7 @@ import {
   StudentDocumentsWorkspace,
 } from "@/components/client-tools";
 import { HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
-import { getCurrentStudentData, getRecentAuditLogsData, getStudentApplicationProfileData } from "@/lib/data";
+import { getCurrentStudentData, getStudentApplicationProfileData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
@@ -17,10 +17,7 @@ export default async function StudentDocumentsPage() {
   const student = await getCurrentStudentData(session);
   if (!student) return null;
 
-  const [applicationProfile, logs] = await Promise.all([
-    getStudentApplicationProfileData(student.id),
-    getRecentAuditLogsData(8),
-  ]);
+  const applicationProfile = await getStudentApplicationProfileData(student.id);
 
   if (!applicationProfile) return null;
 
@@ -132,19 +129,6 @@ export default async function StudentDocumentsPage() {
             </div>
           </SectionCard>
 
-          <SectionCard
-            title={pickText(locale, "Recent profile-related activity", "最近材料相关更新")}
-            eyebrow={pickText(locale, "Audit trail", "审计记录")}
-          >
-            <div className="space-y-3">
-              {logs.slice(0, 6).map((log) => (
-                <div key={log.id} className="rounded-2xl bg-white px-4 py-3">
-                  <p className="text-sm font-semibold text-foreground">{log.action}</p>
-                  <p className="text-xs text-secondary">{log.inputSummary}</p>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
           <SectionCard
             title={pickText(locale, "How these documents help AI", "这些文档如何帮助 AI")}
             eyebrow={pickText(locale, "AI context", "AI 上下文")}

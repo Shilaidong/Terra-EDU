@@ -1,8 +1,8 @@
 import { ChartSpline } from "lucide-react";
 
 import { AnalyticsExportButton, LogoutButton } from "@/components/client-tools";
-import { AuditFeed, HeroBadge, RoleShell, SectionCard, StatCard, SummaryCard } from "@/components/terra-shell";
-import { getConsultantOverviewData, getRecentAuditLogsData } from "@/lib/data";
+import { HeroBadge, RoleShell, SectionCard, StatCard, SummaryCard } from "@/components/terra-shell";
+import { getConsultantOverviewData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
@@ -10,7 +10,7 @@ import { requireSession } from "@/lib/server/guards";
 export default async function ConsultantAnalyticsPage() {
   const locale = await getLocale();
   const session = await requireSession("consultant");
-  const [overview, logs] = await Promise.all([getConsultantOverviewData(session), getRecentAuditLogsData(6)]);
+  const overview = await getConsultantOverviewData(session);
   const analytics = overview.analytics;
   const averageMastery =
     overview.students.length > 0
@@ -27,7 +27,7 @@ export default async function ConsultantAnalyticsPage() {
     <RoleShell
       session={session}
       title={pickText(locale, "Consultant Analytics", "顾问分析")}
-      subtitle={pickText(locale, "Track cohort health, task completion, milestone accuracy, and export-ready reporting with structured logs.", "查看学生群组健康度、任务完成率、截止日期达成情况，并导出带结构化日志的报表。")}
+      subtitle={pickText(locale, "Track cohort health, task completion, milestone accuracy, and export-ready reporting in one calm view.", "在一个清晰的视图里查看学生群组健康度、任务完成率、截止日期达成情况，并导出报表。")}
       activeHref="/consultant/analytics"
       hero={
         <div className="flex flex-wrap items-center gap-3">
@@ -43,7 +43,7 @@ export default async function ConsultantAnalyticsPage() {
         <StatCard label={pickText(locale, "At risk", "风险学生")} value={`${analytics.atRiskCount}`} hint={pickText(locale, "Students needing immediate follow-up.", "需要优先跟进的学生数量。")} />
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="mt-8">
         <SectionCard title={pickText(locale, "Reporting Center", "报表中心")} eyebrow={pickText(locale, "Export", "导出")}>
           <SummaryCard
             title={pickText(locale, "Weekly operating picture", "本周运营概览")}
@@ -53,10 +53,6 @@ export default async function ConsultantAnalyticsPage() {
           <div className="mt-5">
             <AnalyticsExportButton />
           </div>
-        </SectionCard>
-
-        <SectionCard title={pickText(locale, "Recent analytics activity", "最近分析活动")} eyebrow={pickText(locale, "Trace log", "追踪日志")}>
-          <AuditFeed logs={logs} />
         </SectionCard>
       </div>
     </RoleShell>

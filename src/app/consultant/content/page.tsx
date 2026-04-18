@@ -1,8 +1,8 @@
 import { Database } from "lucide-react";
 
 import { ContentCategoryTables, ContentImportPanel, ContentItemComposer, LogoutButton } from "@/components/client-tools";
-import { AuditFeed, HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
-import { getContentItemsData, getRecentAuditLogsData } from "@/lib/data";
+import { HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
+import { getContentItemsData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
@@ -10,7 +10,7 @@ import { requireSession } from "@/lib/server/guards";
 export default async function ConsultantContentPage() {
   const locale = await getLocale();
   const session = await requireSession("consultant");
-  const [items, logs] = await Promise.all([getContentItemsData(), getRecentAuditLogsData(8)]);
+  const items = await getContentItemsData();
 
   return (
     <RoleShell
@@ -47,12 +47,6 @@ export default async function ConsultantContentPage() {
               {pickText(locale, "Accepted common columns: `type`, `title`, `subtitle`, `country`, `tags`, `difficulty`. Manual entries and imports publish immediately. Type-specific columns are also supported, including school ranking and city, major degree and career paths, competition organizer and award, course provider and format, plus chapter sequence and key skill. For school imports, prefer the dedicated school template and write rankings like `1 UsNews` or `2 QS`.", "公共列支持：`type`、`title`、`subtitle`、`country`、`tags`、`difficulty`。手动创建和导入都会直接发布。同时支持类型专属列，例如学校的排名和城市、专业的学位和就业方向、竞赛的主办方和奖项、课程的提供方和形式，以及章节的顺序和核心能力。学校导入建议优先使用学校专用模板，排名推荐写成 `1 UsNews` 或 `2 QS` 这样的格式。")}
             </Notice>
           </div>
-        </SectionCard>
-      </div>
-
-      <div className="mt-6 sm:mt-8">
-        <SectionCard title={pickText(locale, "Recent activity & audit logs", "最近活动与审计日志")} eyebrow={pickText(locale, "Traceability", "可追踪性")}>
-          <AuditFeed logs={logs} />
         </SectionCard>
       </div>
     </RoleShell>

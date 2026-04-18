@@ -18,21 +18,21 @@ export default async function PrivacyPage() {
           <section>
             <h2 className="font-serif text-2xl font-bold">{pickText(locale, "What we collect", "我们收集的信息")}</h2>
             <p className="mt-3 leading-8 text-secondary">
-              {pickText(locale, "Terra Edu may store account details, education-planning records, tasks, milestones, content management actions, and AI-generated summaries. In the current launch build, observability data also includes `trace_id`, `decision_id`, actor, page, latency, and status.", "Terra Edu 可能会存储账号信息、升学规划记录、任务、截止日期、内容管理操作以及 AI 生成的摘要。在当前首发版本中，可观测性数据还会包括 `trace_id`、`decision_id`、操作者、页面、耗时和状态。")}
+              {pickText(locale, "Terra Edu may store account details, education-planning records, tasks, milestones, content management actions, and AI-generated summaries.", "Terra Edu 可能会存储账号信息、升学规划记录、任务、截止日期、内容管理操作以及 AI 生成的摘要。")}
             </p>
           </section>
 
           <section>
             <h2 className="font-serif text-2xl font-bold">{pickText(locale, "Why we collect it", "为什么收集这些信息")}</h2>
             <p className="mt-3 leading-8 text-secondary">
-              {pickText(locale, "We use this information to operate student, parent, and consultant workflows, improve reliability, and diagnose bugs quickly. AI outputs are stored to make future debugging and audit review easier.", "我们使用这些信息来支持学生、家长和顾问的工作流，提升系统稳定性，并更快定位问题。保存 AI 输出的目的也是为了方便后续调试和审计复查。")}
+              {pickText(locale, "We use this information to operate student, parent, and consultant workflows, improve reliability, and support better planning collaboration.", "我们使用这些信息来支持学生、家长和顾问的工作流，提升系统稳定性，并支持更好的规划协作。")}
             </p>
           </section>
 
           <section>
             <h2 className="font-serif text-2xl font-bold">{pickText(locale, "Monitoring and diagnostics", "监控与诊断")}</h2>
             <p className="mt-3 leading-8 text-secondary">
-              {pickText(locale, "If Sentry is configured, runtime errors and selected request metadata may be sent to Sentry. If Supabase is configured, audit logs and AI artifacts may also be persisted for operational review.", "如果配置了 Sentry，运行时错误和部分请求元数据可能会发送到 Sentry；如果配置了 Supabase，审计日志和 AI 结果也可能会被持久化，用于后续运营和排查。")}
+              {pickText(locale, "If monitoring tools are configured, runtime errors and selected operational metadata may be used to keep the product stable and reliable.", "如果配置了相关监控工具，运行时错误和部分运行元数据可能会被用于保持产品稳定与可靠。")}
             </p>
           </section>
 

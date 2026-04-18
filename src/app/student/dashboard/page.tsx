@@ -1,10 +1,9 @@
 import { CalendarRange, Sparkles, Target } from "lucide-react";
 
 import { AiChatWidget, AiRecommendationPanel, LogoutButton } from "@/components/client-tools";
-import { AuditFeed, HeroBadge, InfoPill, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
+import { HeroBadge, InfoPill, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import {
   getCurrentStudentData,
-  getRecentAuditLogsData,
   getStudentCheckInsData,
   getStudentLiveMetricsData,
   getStudentMilestonesData,
@@ -25,12 +24,11 @@ export default async function StudentDashboardPage() {
     return null;
   }
 
-  const [tasks, milestones, checkIns, notes, logs, metrics] = await Promise.all([
+  const [tasks, milestones, checkIns, notes, metrics] = await Promise.all([
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
     getStudentCheckInsData(student.id),
     getStudentNotesData(student.id),
-    getRecentAuditLogsData(4),
     getStudentLiveMetricsData(student.id),
   ]);
   const ganttRange = buildDashboardRange(tasks, milestones);
@@ -87,7 +85,7 @@ export default async function StudentDashboardPage() {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{pickText(locale, "Target major", "目标专业")}</p>
               <p className="mt-2 text-base font-bold text-foreground sm:text-lg">{student.intendedMajor}</p>
             </div>
-            <InfoPill icon={<Sparkles className="h-4 w-4" />} label={pickText(locale, "AI assistant and logs are live", "AI 助手和日志系统已上线")} />
+            <InfoPill icon={<Sparkles className="h-4 w-4" />} label={pickText(locale, "AI assistant is ready", "AI 助手已就绪")} />
           </div>
         </SectionCard>
       </div>
@@ -156,12 +154,6 @@ export default async function StudentDashboardPage() {
               </div>
             )}
           </div>
-        </SectionCard>
-      </div>
-
-      <div className="mt-6 sm:mt-8">
-        <SectionCard title={pickText(locale, "Recent audit trail", "最近审计记录")} eyebrow={pickText(locale, "Debug readiness", "便于调试")}>
-          <AuditFeed logs={logs} />
         </SectionCard>
       </div>
     </RoleShell>

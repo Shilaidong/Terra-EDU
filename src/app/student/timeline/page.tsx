@@ -10,8 +10,8 @@ import {
   TaskDeleteButton,
   TaskStatusControl,
 } from "@/components/client-tools";
-import { AuditFeed, HeroBadge, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
-import { getCurrentStudentData, getRecentAuditLogsData, getStudentLiveMetricsData, getStudentMilestonesData, getStudentTasksData } from "@/lib/data";
+import { HeroBadge, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
+import { getCurrentStudentData, getStudentLiveMetricsData, getStudentMilestonesData, getStudentTasksData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
@@ -43,10 +43,9 @@ export default async function StudentTimelinePage({
 
   if (!student) return null;
 
-  const [tasks, milestones, logs, metrics] = await Promise.all([
+  const [tasks, milestones, metrics] = await Promise.all([
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
-    getRecentAuditLogsData(6),
     getStudentLiveMetricsData(student.id),
   ]);
   const visibleRange = buildVisibleRange(tasks, milestones, currentView);
@@ -64,7 +63,7 @@ export default async function StudentTimelinePage({
     <RoleShell
       session={session}
       title={pickText(locale, "Academic Journey", "学业旅程")}
-      subtitle={pickText(locale, "A launch-ready timeline view of tasks, milestones, and status changes. First version focuses on reliable updates and logs rather than complex drag scheduling.", "这是可直接上线的任务时间线视图，展示任务、截止日期和状态变化。当前版本优先保证稳定更新和日志可追踪。")}
+      subtitle={pickText(locale, "A launch-ready timeline view of tasks, milestones, and status changes. This version focuses on stable updates and a clear planning rhythm.", "这是可直接上线的任务时间线视图，展示任务、截止日期和状态变化。当前版本优先保证更新稳定、规划清晰。")}
       activeHref="/student/timeline"
       hero={
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -157,12 +156,6 @@ export default async function StudentTimelinePage({
 
       <div className="mt-6 sm:mt-8">
         <StudentTaskBreakdownPanel studentId={student.id} />
-      </div>
-
-      <div className="mt-6 sm:mt-8">
-        <SectionCard title={pickText(locale, "Recent trace log", "最近追踪日志")} eyebrow={pickText(locale, "Observability", "可观测性")}>
-          <AuditFeed logs={logs} />
-        </SectionCard>
       </div>
     </RoleShell>
   );

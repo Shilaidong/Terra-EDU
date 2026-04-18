@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { Bell, Bot, BookOpenText, Compass, FileText, FolderOpen, HelpCircle, LayoutDashboard, LifeBuoy, LineChart, MessageCircle, NotebookPen, PiggyBank, Settings, Shield, Sparkles, Users } from "lucide-react";
+import { Bot, BookOpenText, Compass, FileText, FolderOpen, HelpCircle, LayoutDashboard, LifeBuoy, LineChart, MessageCircle, NotebookPen, PiggyBank, Settings, Sparkles, Users } from "lucide-react";
 
 import { LocaleSwitcher } from "@/components/locale-provider";
 import { pickText } from "@/lib/locale";
@@ -79,10 +79,6 @@ export async function RoleShell({
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 rounded-full bg-surface-container-low px-4 py-2 text-sm text-secondary md:flex">
-              <Bell className="h-4 w-4 text-primary" />
-              {pickText(locale, "Full trace logging enabled", "全链路日志已开启")}
-            </div>
             <LocaleSwitcher className="inline-flex md:hidden" />
             <LocaleSwitcher className="hidden md:inline-flex" />
             <img
@@ -160,22 +156,6 @@ export async function RoleShell({
             </Link>
           ))}
         </nav>
-
-        <div className="space-y-3 px-6 py-6">
-          <div className="rounded-2xl bg-primary p-4 text-white shadow-terra">
-            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-white/80">
-              <Shield className="h-4 w-4" />
-              {pickText(locale, "Observability", "可观测性")}
-            </div>
-            <p className="mt-2 text-sm text-white/85">
-              {pickText(
-                locale,
-                "Every write action stores `trace_id`, `decision_id`, actor, latency, and result.",
-                "每一次写入操作都会记录 `trace_id`、`decision_id`、操作者、耗时和结果。"
-              )}
-            </p>
-          </div>
-        </div>
       </aside>
 
       <main className="lg:ml-64">
@@ -657,8 +637,8 @@ export async function AuditFeed({ logs }: { logs: AuditLog[] }) {
             </div>
           </div>
           <div className="mt-3 rounded-2xl bg-white px-4 py-3 text-xs text-secondary shadow-sm">
-            <p>trace_id: {log.traceId}</p>
-            <p>decision_id: {log.decisionId}</p>
+            <p>{pickText(locale, "Recorded for internal review", "已记录到系统更新中")}</p>
+            <p>{pickText(locale, "Visible in internal diagnostics only", "仅用于内部排查与诊断")}</p>
             <p className="mt-2">{log.outputSummary}</p>
           </div>
         </div>
@@ -706,7 +686,7 @@ export async function PlaceholderCard({
       <SectionCard title={pickText(locale, "What is already live", "当前已上线")} eyebrow={pickText(locale, "Today", "今天")}>
         <ul className="space-y-3 text-sm text-secondary">
           <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "Role-based routing and protected sessions", "基于角色的路由与受保护会话")}</li>
-          <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "Structured logs with `trace_id` and `decision_id`", "带有 `trace_id` 和 `decision_id` 的结构化日志")}</li>
+          <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "A shared planning workspace for students, parents, and consultants", "学生、家长和顾问共享的一体化规划工作台")}</li>
           <li className="rounded-2xl bg-surface-container-low p-4">{pickText(locale, "Shared Terra design system for later AI bug fixing", "统一的 Terra 设计系统，方便后续 AI 修复问题")}</li>
         </ul>
       </SectionCard>
