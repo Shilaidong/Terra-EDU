@@ -12,7 +12,7 @@ import { avatarPresets } from "@/lib/avatar-presets";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { shouldUseBrowserSupabaseAuth } from "@/lib/supabase/shared";
 import { cn } from "@/lib/utils";
-import type { ApiResponse, CheckInRecord, ContentItem, Milestone, StudentActivityEntry, StudentApplicationProfile, StudentCompetitionEntry, Task, TimelineLane, UserRole } from "@/lib/types";
+import type { AdvisorNote, ApiResponse, CheckInRecord, ContentItem, Milestone, StudentActivityEntry, StudentApplicationProfile, StudentCompetitionEntry, Task, TimelineLane, UserRole } from "@/lib/types";
 
 type StudentPhaseValue = "Planning" | "Application" | "Submission" | "Decision" | "Visa";
 
@@ -304,6 +304,7 @@ export function AdminBindingManager({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState<"" | "parent" | "consultant">("");
+  const [pendingRemovalId, setPendingRemovalId] = useState("");
 
   const submitBinding = async (kind: "parent" | "consultant") => {
     setPending(kind);
@@ -330,6 +331,30 @@ export function AdminBindingManager({
       setError(submissionError instanceof Error ? submissionError.message : t("Binding failed.", "绑定失败。"));
     } finally {
       setPending("");
+    }
+  };
+
+  const removeBinding = async (kind: "parent" | "consultant", linkId: string) => {
+    setPendingRemovalId(linkId);
+    setMessage("");
+    setError("");
+
+    try {
+      await jsonFetch("/api/admin/bindings", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, linkId }),
+      });
+      setMessage(
+        kind === "parent"
+          ? t("Parent binding removed.", "家长绑定已移除。")
+          : t("Consultant binding removed.", "顾问绑定已移除。")
+      );
+      router.refresh();
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t("Unbinding failed.", "解绑失败。"));
+    } finally {
+      setPendingRemovalId("");
     }
   };
 
@@ -426,7 +451,17 @@ export function AdminBindingManager({
                 const parent = resolveParent(link.parentUserId);
                 return (
                   <div key={link.id} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-foreground">
-                    {parent?.name ?? link.parentUserId} → {student?.name ?? link.studentId}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <span>{parent?.name ?? link.parentUserId} → {student?.name ?? link.studentId}</span>
+                      <button
+                        type="button"
+                        disabled={pendingRemovalId === link.id}
+                        onClick={() => void removeBinding("parent", link.id)}
+                        className="rounded-full border border-outline-variant px-3 py-1.5 text-[11px] font-bold text-primary disabled:opacity-60"
+                      >
+                        {pendingRemovalId === link.id ? t("Removing...", "移除中...") : t("Remove", "移除绑定")}
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -447,7 +482,17 @@ export function AdminBindingManager({
                 const consultant = resolveConsultant(link.consultantUserId);
                 return (
                   <div key={link.id} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-foreground">
-                    {consultant?.name ?? link.consultantUserId} → {student?.name ?? link.studentId}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <span>{consultant?.name ?? link.consultantUserId} → {student?.name ?? link.studentId}</span>
+                      <button
+                        type="button"
+                        disabled={pendingRemovalId === link.id}
+                        onClick={() => void removeBinding("consultant", link.id)}
+                        className="rounded-full border border-outline-variant px-3 py-1.5 text-[11px] font-bold text-primary disabled:opacity-60"
+                      >
+                        {pendingRemovalId === link.id ? t("Removing...", "移除中...") : t("Remove", "移除绑定")}
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -1573,6 +1618,123 @@ export function CheckInDeleteButton({
 
           try {
             await jsonFetch(`${endpointBase}/${checkInId}`, {
+              method: "DELETE",
+            });
+            router.refresh();
+          } catch (submissionError) {
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Delete failed", "删除失败"));
+          } finally {
+            setPending(false);
+          }
+        }}
+        className="rounded-full border border-error/20 px-3 py-2 text-sm font-semibold text-error disabled:opacity-70"
+      >
+        {pending ? t("Deleting...", "删除中...") : t("Delete", "删除")}
+      </button>
+      {message ? <span className="text-xs font-semibold text-error">{message}</span> : null}
+    </div>
+  );
+}
+
+export function AdvisorNoteEditorControls({
+  note,
+  endpointBase = "/api/consultant/notes",
+}: {
+  note: Pick<AdvisorNote, "id" | "title" | "summary">;
+  endpointBase?: string;
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(note.title);
+  const [summary, setSummary] = useState(note.summary);
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+
+  if (isEditing) {
+    return (
+      <form
+        className="mt-4 space-y-3 rounded-2xl border border-black/5 bg-white p-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setPending(true);
+          setMessage("");
+
+          try {
+            await jsonFetch(`${endpointBase}/${note.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title, summary }),
+            });
+            setIsEditing(false);
+            router.refresh();
+          } catch (submissionError) {
+            setMessage(submissionError instanceof Error ? submissionError.message : t("Update failed", "更新失败"));
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        <input
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          className="w-full rounded-2xl bg-surface-container-low px-4 py-3 text-sm"
+          placeholder={t("Note title", "备注标题")}
+        />
+        <textarea
+          value={summary}
+          onChange={(event) => setSummary(event.target.value)}
+          className="min-h-28 w-full rounded-2xl bg-surface-container-low px-4 py-3 text-sm"
+          placeholder={t("Advisor note", "顾问备注")}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold terra-on-primary disabled:opacity-70"
+          >
+            {pending ? t("Saving...", "保存中...") : t("Save changes", "保存修改")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditing(false);
+              setTitle(note.title);
+              setSummary(note.summary);
+              setMessage("");
+            }}
+            className="rounded-full border border-outline-variant px-4 py-2 text-sm font-semibold text-primary"
+          >
+            {t("Cancel", "取消")}
+          </button>
+          {message ? <p className="text-sm font-semibold text-error">{message}</p> : null}
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setIsEditing(true)}
+        className="rounded-full border border-outline-variant px-3 py-2 text-sm font-semibold text-primary"
+      >
+        {t("Edit", "编辑")}
+      </button>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={async () => {
+          if (!window.confirm(t(`Delete "${note.title}"?`, `确定删除“${note.title}”吗？`))) {
+            return;
+          }
+
+          setPending(true);
+          setMessage("");
+
+          try {
+            await jsonFetch(`${endpointBase}/${note.id}`, {
               method: "DELETE",
             });
             router.refresh();

@@ -4,8 +4,8 @@ import { z } from "zod";
 import { generateChatSummary } from "@/lib/ai/provider";
 import {
   getCurrentStudentData,
+  getLinkedStudentIdsForParent,
   getLinkedStudentIdsForConsultant,
-  getParentOverviewData,
   getStudentApplicationProfileData,
   getStudentByIdData,
   getStudentCheckInsData,
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     session.role === "student"
       ? await getCurrentStudentData(session)
       : session.role === "parent"
-        ? (await getParentOverviewData(session)).student
+        ? await getStudentByIdData(parsed.data.studentId)
         : await getStudentByIdData(parsed.data.studentId);
 
   if (!student) {
@@ -89,6 +89,21 @@ export async function POST(request: Request) {
       },
       { status: 401 }
     );
+  }
+
+  if (session.role === "parent") {
+    const linkedStudentIds = await getLinkedStudentIdsForParent(session.userId);
+    if (!linkedStudentIds.includes(student.id)) {
+      return NextResponse.json(
+        {
+          success: false,
+          trace_id: trace.traceId,
+          decision_id: trace.decisionId,
+          message: "This student is not assigned to the current parent account.",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   if (session.role === "consultant") {

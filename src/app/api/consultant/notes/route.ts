@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createAdvisorNote } from "@/lib/data";
+import { createAdvisorNote, getLinkedStudentIdsForConsultant } from "@/lib/data";
 import { createTraceContext, finishTrace } from "@/lib/observability";
 import { getSession } from "@/lib/session";
 
@@ -38,6 +38,20 @@ export async function POST(request: Request) {
         message: "Invalid advisor note payload.",
       },
       { status: 400 }
+    );
+  }
+
+  const linkedStudentIds = await getLinkedStudentIdsForConsultant(session.userId);
+
+  if (!linkedStudentIds.includes(parsed.data.studentId)) {
+    return NextResponse.json(
+      {
+        success: false,
+        trace_id: trace.traceId,
+        decision_id: trace.decisionId,
+        message: "This student is not assigned to the current consultant.",
+      },
+      { status: 403 }
     );
   }
 

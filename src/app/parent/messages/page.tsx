@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MessageSquareHeart } from "lucide-react";
 
 import { AiChatWidget, LogoutButton } from "@/components/client-tools";
@@ -7,11 +8,16 @@ import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 
-export default async function ParentMessagesPage() {
+export default async function ParentMessagesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ studentId?: string }>;
+}) {
   const locale = await getLocale();
   const session = await requireSession("parent");
-  const overview = await getParentOverviewData(session);
-  const { student } = overview;
+  const params = (await searchParams) ?? {};
+  const overview = await getParentOverviewData(session, params.studentId);
+  const { student, linkedStudents } = overview;
 
   if (!student) {
     return (
@@ -45,6 +51,26 @@ export default async function ParentMessagesPage() {
       activeHref="/parent/messages"
       hero={
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {linkedStudents.length > 1 ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-black/5 bg-surface-container-low px-2 py-2 sm:px-3">
+              {linkedStudents.map((linkedStudent) => {
+                const active = linkedStudent.id === student.id;
+                return (
+                  <Link
+                    key={linkedStudent.id}
+                    href={`/parent/messages?studentId=${linkedStudent.id}`}
+                    className={
+                      active
+                        ? "rounded-full border-2 border-primary bg-primary/5 px-3 py-2 text-xs font-bold text-primary"
+                        : "rounded-full border border-outline-variant bg-white px-3 py-2 text-xs font-bold text-secondary"
+                    }
+                  >
+                    {linkedStudent.name}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
           <HeroBadge icon={<MessageSquareHeart className="h-4 w-4" />} title={pickText(locale, "Student", "当前学生")} value={student.name} />
           <LogoutButton />
         </div>

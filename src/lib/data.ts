@@ -733,6 +733,72 @@ export function createAdvisorNote(input: Omit<AdvisorNote, "id">) {
   return note;
 }
 
+export async function getAdvisorNoteByIdData(noteId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore().advisorNotes.find((note) => note.id === noteId) ?? null;
+  }
+
+  const { data } = await supabase.from("advisor_notes").select("*").eq("id", noteId).maybeSingle();
+  return data ? mapAdvisorNote(data) : getStore().advisorNotes.find((note) => note.id === noteId) ?? null;
+}
+
+export async function updateAdvisorNote(
+  noteId: string,
+  input: Partial<Pick<AdvisorNote, "title" | "summary">>
+) {
+  const store = getStore();
+  const localNote = store.advisorNotes.find((item) => item.id === noteId);
+
+  if (localNote) {
+    Object.assign(localNote, input);
+    await persistAdvisorNote(localNote);
+    return localNote;
+  }
+
+  const persistedNote = await getAdvisorNoteByIdData(noteId);
+
+  if (!persistedNote) {
+    return null;
+  }
+
+  const updatedNote = {
+    ...persistedNote,
+    ...input,
+  };
+
+  const existingIndex = store.advisorNotes.findIndex((item) => item.id === noteId);
+  if (existingIndex === -1) {
+    store.advisorNotes.unshift(updatedNote);
+  } else {
+    store.advisorNotes[existingIndex] = updatedNote;
+  }
+
+  await persistAdvisorNote(updatedNote);
+  return updatedNote;
+}
+
+export async function deleteAdvisorNote(noteId: string) {
+  const store = getStore();
+  const index = store.advisorNotes.findIndex((item) => item.id === noteId);
+
+  if (index !== -1) {
+    const [note] = store.advisorNotes.splice(index, 1);
+    await removeAdvisorNote(note.id);
+    return note;
+  }
+
+  const persistedNote = await getAdvisorNoteByIdData(noteId);
+
+  if (!persistedNote) {
+    return null;
+  }
+
+  await removeAdvisorNote(noteId);
+  return persistedNote;
+}
+
 export function getDemoAccounts() {
   return getStore().users.map((user) => ({
     role: user.role,
@@ -776,12 +842,14 @@ export async function getStudentLiveMetricsData(studentId: string): Promise<Stud
 
 export async function getLinkedStudentIdsForParent(parentUserId: string) {
   const links = await getStudentParentLinksData();
-  return links.filter((link) => link.parentUserId === parentUserId).map((link) => link.studentId);
+  return Array.from(new Set(links.filter((link) => link.parentUserId === parentUserId).map((link) => link.studentId)));
 }
 
 export async function getLinkedStudentIdsForConsultant(consultantUserId: string) {
   const links = await getStudentConsultantLinksData();
-  return links.filter((link) => link.consultantUserId === consultantUserId).map((link) => link.studentId);
+  return Array.from(
+    new Set(links.filter((link) => link.consultantUserId === consultantUserId).map((link) => link.studentId))
+  );
 }
 
 export async function getStudentParentLinksData() {
@@ -865,13 +933,53 @@ export async function createStudentConsultantLink(studentId: string, consultantU
   return link;
 }
 
-export async function getParentOverviewData(session?: SessionPayload) {
+export async function deleteStudentParentLink(linkId: string) {
+  const store = getStore();
+  const index = store.studentParentLinks.findIndex((link) => link.id === linkId);
+
+  if (index !== -1) {
+    const [link] = store.studentParentLinks.splice(index, 1);
+    await removeStudentParentLink(link.id);
+    return link;
+  }
+
+  const persistedLink = await getPersistedStudentParentLinkById(linkId);
+  if (!persistedLink) {
+    return null;
+  }
+
+  await removeStudentParentLink(linkId);
+  return persistedLink;
+}
+
+export async function deleteStudentConsultantLink(linkId: string) {
+  const store = getStore();
+  const index = store.studentConsultantLinks.findIndex((link) => link.id === linkId);
+
+  if (index !== -1) {
+    const [link] = store.studentConsultantLinks.splice(index, 1);
+    await removeStudentConsultantLink(link.id);
+    return link;
+  }
+
+  const persistedLink = await getPersistedStudentConsultantLinkById(linkId);
+  if (!persistedLink) {
+    return null;
+  }
+
+  await removeStudentConsultantLink(linkId);
+  return persistedLink;
+}
+
+export async function getParentOverviewData(session?: SessionPayload, selectedStudentId?: string) {
   const parentUserId = session?.userId;
   const linkedStudentIds = parentUserId ? await getLinkedStudentIdsForParent(parentUserId) : [];
   const students = await getAllStudentsData();
+  const linkedStudents =
+    linkedStudentIds.length > 0 ? students.filter((student) => linkedStudentIds.includes(student.id)) : [];
   const baseStudent =
-    linkedStudentIds.length > 0
-      ? students.find((student) => linkedStudentIds.includes(student.id)) ?? null
+    linkedStudents.length > 0
+      ? linkedStudents.find((student) => student.id === selectedStudentId) ?? linkedStudents[0] ?? null
       : session?.role === "parent"
         ? null
         : (students[0] ?? null);
@@ -879,6 +987,7 @@ export async function getParentOverviewData(session?: SessionPayload) {
   if (!baseStudent) {
     return {
       student: null,
+      linkedStudents,
       tasks: [],
       milestones: [],
       notes: [],
@@ -892,6 +1001,7 @@ export async function getParentOverviewData(session?: SessionPayload) {
   };
   return {
     student,
+    linkedStudents,
     tasks: await getStudentTasksData(student.id),
     milestones: await getStudentMilestonesData(student.id),
     notes: await getStudentNotesData(student.id),
@@ -1407,6 +1517,54 @@ async function getPersistedMilestoneById(milestoneId: string) {
   return data ? mapMilestone(data) : null;
 }
 
+async function getPersistedStudentParentLinkById(linkId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data } = await supabase.from("student_parent_links").select("*").eq("id", linkId).maybeSingle();
+  return data
+    ? {
+        id: String(data.id),
+        studentId: String(data.student_id),
+        parentUserId: String(data.parent_user_id),
+      }
+    : null;
+}
+
+async function getPersistedStudentConsultantLinkById(linkId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data } = await supabase.from("student_consultant_links").select("*").eq("id", linkId).maybeSingle();
+  return data
+    ? {
+        id: String(data.id),
+        studentId: String(data.student_id),
+        consultantUserId: String(data.consultant_user_id),
+      }
+    : null;
+}
+
+async function removeStudentParentLink(linkId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("student_parent_links").delete().eq("id", linkId);
+}
+
+async function removeStudentConsultantLink(linkId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("student_consultant_links").delete().eq("id", linkId);
+}
+
 async function persistStudent(student: StudentRecord) {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
@@ -1733,6 +1891,13 @@ async function persistAdvisorNote(note: AdvisorNote) {
     summary: note.summary,
     created_at: note.createdAt,
   });
+}
+
+async function removeAdvisorNote(noteId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("advisor_notes").delete().eq("id", noteId);
 }
 
 function mapStudent(row: DbRow): StudentRecord {

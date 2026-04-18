@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CalendarRange, HeartHandshake, ShieldCheck, Target } from "lucide-react";
 
 import { LogoutButton, ParentWeeklySummaryPanel } from "@/components/client-tools";
@@ -8,11 +9,16 @@ import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 import type { Milestone, Task } from "@/lib/types";
 
-export default async function ParentDashboardPage() {
+export default async function ParentDashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ studentId?: string }>;
+}) {
   const locale = await getLocale();
   const session = await requireSession("parent");
-  const overview = await getParentOverviewData(session);
-  const { student, tasks, milestones, notes } = overview;
+  const params = (await searchParams) ?? {};
+  const overview = await getParentOverviewData(session, params.studentId);
+  const { student, linkedStudents, tasks, milestones, notes } = overview;
 
   if (!student) {
     return (
@@ -49,6 +55,26 @@ export default async function ParentDashboardPage() {
       activeHref="/parent/dashboard"
       hero={
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {linkedStudents.length > 1 ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-black/5 bg-surface-container-low px-2 py-2 sm:px-3">
+              {linkedStudents.map((linkedStudent) => {
+                const active = linkedStudent.id === student.id;
+                return (
+                  <Link
+                    key={linkedStudent.id}
+                    href={`/parent/dashboard?studentId=${linkedStudent.id}`}
+                    className={
+                      active
+                        ? "rounded-full border-2 border-primary bg-primary/5 px-3 py-2 text-xs font-bold text-primary"
+                        : "rounded-full border border-outline-variant bg-white px-3 py-2 text-xs font-bold text-secondary"
+                    }
+                  >
+                    {linkedStudent.name}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
           <HeroBadge icon={<HeartHandshake className="h-4 w-4" />} title={pickText(locale, "Current focus", "当前重点")} value={student.phase} />
           <HeroBadge icon={<Target className="h-4 w-4" />} title={pickText(locale, "Goal school", "梦校")} value={student.dreamSchools[0]} />
           <LogoutButton />

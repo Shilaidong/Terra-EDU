@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, CalendarRange, GraduationCap, NotebookPen } from "lucide-react";
 
 import {
+  AdvisorNoteEditorControls,
   CheckInEditorControls,
   ConsultantMeetingSummaryPanel,
   ConsultantMilestoneComposer,
@@ -379,6 +380,7 @@ export default async function ConsultantStudentWorkspacePage({
                     <div key={note.id} className="rounded-2xl bg-surface-container-low p-4 sm:p-5">
                       <p className="text-sm font-bold text-foreground">{note.title}</p>
                       <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{note.summary}</p>
+                      <AdvisorNoteEditorControls note={{ id: note.id, title: note.title, summary: note.summary }} />
                       <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-outline sm:text-xs">{note.createdAt.slice(0, 10)}</p>
                     </div>
                   ))
