@@ -407,7 +407,7 @@ export async function TaskGanttChart({
         </div>
 
         <div className="divide-y divide-outline-variant/10">
-          {ganttLaneMeta.map((lane) => {
+          {ganttLaneMeta.filter((lane) => tasks.some((task) => task.timelineLane === lane.lane)).map((lane) => {
             const laneTasks = tasks.filter((task) => task.timelineLane === lane.lane);
 
             return (
@@ -432,64 +432,48 @@ export async function TaskGanttChart({
                     ))}
                   </div>
 
-                  {laneTasks.length > 0 ? (
-                    <div className="relative z-10 space-y-2.5 px-3 sm:space-y-3 sm:px-4">
-                      {laneTasks
-                        .sort(
-                          (left, right) =>
-                            parseDate(left.startDate).getTime() - parseDate(right.startDate).getTime()
-                        )
-                        .map((task) => {
-                          const placement = getTaskPlacement(task, timeline.columns);
+                  <div className="relative z-10 space-y-2.5 px-3 sm:space-y-3 sm:px-4">
+                    {laneTasks
+                      .sort(
+                        (left, right) =>
+                          parseDate(left.startDate).getTime() - parseDate(right.startDate).getTime()
+                      )
+                      .map((task) => {
+                        const placement = getTaskPlacement(task, timeline.columns);
 
-                          if (!placement) {
-                            return null;
-                          }
+                        if (!placement) {
+                          return null;
+                        }
 
-                          return (
+                        return (
+                          <div
+                            key={task.id}
+                            className="grid items-center"
+                            style={{
+                              gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
+                            }}
+                          >
                             <div
-                              key={task.id}
-                              className="grid items-center"
-                              style={{
-                                gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
-                              }}
+                              className={cn(
+                                "relative h-8 rounded-full px-3 shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4",
+                                lane.barClassName
+                              )}
+                              style={{ gridColumn: `${placement.start + 1} / ${placement.end + 2}` }}
                             >
+                              <div className="flex h-full items-center">
+                                <span className="truncate text-[11px] font-bold sm:text-xs">{task.title}</span>
+                              </div>
                               <div
                                 className={cn(
-                                  "relative h-8 rounded-full px-3 shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4",
-                                  lane.barClassName
+                                  "absolute -right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 rounded-[3px] shadow-sm sm:-right-2 sm:h-4 sm:w-4",
+                                  lane.markerClassName
                                 )}
-                                style={{ gridColumn: `${placement.start + 1} / ${placement.end + 2}` }}
-                              >
-                                <div className="flex h-full items-center">
-                                  <span className="truncate text-[11px] font-bold sm:text-xs">{task.title}</span>
-                                </div>
-                                <div
-                                  className={cn(
-                                    "absolute -right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 rounded-[3px] shadow-sm sm:-right-2 sm:h-4 sm:w-4",
-                                    lane.markerClassName
-                                  )}
-                                />
-                              </div>
+                              />
                             </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <div
-                      className="relative z-10 grid px-4 py-2"
-                      style={{
-                        gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
-                      }}
-                    >
-                      {timeline.columns.map((column) => (
-                        <div key={column.key} className="h-10" />
-                      ))}
-                      <p className="col-span-full px-2 text-xs text-secondary sm:text-sm">
-                        {pickText(locale, "No items scheduled in this lane yet.", "这一栏目前还没有安排内容。")}
-                      </p>
-                    </div>
-                  )}
+                          </div>
+                        );
+                      })}
+                  </div>
                 </div>
               </div>
             );

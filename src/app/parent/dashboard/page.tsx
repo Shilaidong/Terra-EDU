@@ -98,8 +98,13 @@ export default async function ParentDashboardPage({
       </div>
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-7 lg:grid-cols-[1.2fr_0.8fr] lg:gap-8">
-        <SectionCard title={pickText(locale, "Current Open Tasks", "当前未完成任务")} eyebrow={pickText(locale, "Read-only visibility", "只读查看")}>
-          <TaskList tasks={openTasks} />
+        <SectionCard
+          title={pickText(locale, "Current Open Tasks", "当前未完成任务")}
+          eyebrow={pickText(locale, "Read-only visibility", "只读查看")}
+        >
+          <div className="max-h-[20rem] overflow-y-auto pr-1">
+            <TaskList tasks={openTasks} />
+          </div>
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Application Progress", "申请进度")} eyebrow={pickText(locale, "Family snapshot", "家长概览")} className="bg-primary-container/70">
@@ -118,12 +123,17 @@ export default async function ParentDashboardPage({
       </div>
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-7 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
-        <SectionCard title={pickText(locale, "Recent Milestones", "近期截止日期")} eyebrow={pickText(locale, "Timeline", "时间线")}>
-          <TimelineRail milestones={milestones} />
+        <SectionCard
+          title={pickText(locale, "Recent Milestones", "近期截止日期")}
+          eyebrow={pickText(locale, "Timeline", "时间线")}
+        >
+          <div className="max-h-[20rem] overflow-y-auto pr-1">
+            <TimelineRail milestones={milestones} />
+          </div>
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Advisor Momentum Notes", "顾问跟进备注")} eyebrow={pickText(locale, "Consultant sync", "顾问同步")} >
-          <div className="space-y-4">
+          <div className="max-h-[22rem] space-y-4 overflow-y-auto pr-1">
             {notes.map((note) => (
               <div key={note.id} className="rounded-2xl bg-surface-container-low p-4 sm:p-5">
                 <p className="font-bold text-foreground">{note.title}</p>

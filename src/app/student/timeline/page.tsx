@@ -108,48 +108,58 @@ export default async function StudentTimelinePage({
       </div>
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard title={pickText(locale, "Task Timeline", "任务时间线")} eyebrow={pickText(locale, "Add, update, and remove items against the active calendar view", "在当前日历视图下新增、更新和删除内容")}>
+        <SectionCard
+          title={pickText(locale, "Task Timeline", "任务时间线")}
+          eyebrow={pickText(locale, "Active planning", "当前计划")}
+        >
           <StudentTimelineTaskComposer studentId={student.id} />
           <div className="mt-5 border-t border-black/5 pt-5 sm:mt-6 sm:pt-6">
-          <TaskList
-            tasks={visibleTasks}
-            action={(taskId) => (
-              <div className="flex flex-wrap items-center gap-2">
-                <TaskStatusControl taskId={taskId} status={visibleTasks.find((task) => task.id === taskId)?.status ?? "pending"} />
-                <TaskDeleteButton
-                  taskId={taskId}
-                  title={visibleTasks.find((task) => task.id === taskId)?.title ?? pickText(locale, "this task", "这个任务")}
-                />
-              </div>
-            )}
-          />
+            <div className="max-h-[24rem] overflow-y-auto pr-1">
+              <TaskList
+                tasks={visibleTasks}
+                action={(taskId) => (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <TaskStatusControl taskId={taskId} status={visibleTasks.find((task) => task.id === taskId)?.status ?? "pending"} />
+                    <TaskDeleteButton
+                      taskId={taskId}
+                      title={visibleTasks.find((task) => task.id === taskId)?.title ?? pickText(locale, "this task", "这个任务")}
+                    />
+                  </div>
+                )}
+              />
+            </div>
           </div>
         </SectionCard>
 
-        <SectionCard title={pickText(locale, "Milestone Rail", "截止日期轨道")} eyebrow={pickText(locale, `Long-range plan within ${viewOptions.find((option) => option.value === currentView)?.label ?? "Year"}`, `${currentView === "year" ? "年视图" : currentView === "three_years" ? "三年视图" : "月视图"}中的长期规划`)}>
+        <SectionCard
+          title={pickText(locale, "Milestone Rail", "截止日期轨道")}
+          eyebrow={pickText(locale, "Key dates", "关键日期")}
+        >
           <StudentMilestoneComposer studentId={student.id} />
           <div className="mt-5 border-t border-black/5 pt-5 sm:mt-6 sm:pt-6">
-            <TimelineRail
-              milestones={visibleMilestones}
-              action={(milestoneId) => {
-                const milestone = visibleMilestones.find((item) => item.id === milestoneId);
+            <div className="max-h-[22rem] overflow-y-auto pr-1">
+              <TimelineRail
+                milestones={visibleMilestones}
+                action={(milestoneId) => {
+                  const milestone = visibleMilestones.find((item) => item.id === milestoneId);
 
-                if (!milestone) {
-                  return null;
-                }
+                  if (!milestone) {
+                    return null;
+                  }
 
-                return (
-                  <MilestoneEditorControls
-                    milestone={{
-                      id: milestone.id,
-                      title: milestone.title,
-                      eventDate: milestone.eventDate,
-                      status: milestone.status,
-                    }}
-                  />
-                );
-              }}
-            />
+                  return (
+                    <MilestoneEditorControls
+                      milestone={{
+                        id: milestone.id,
+                        title: milestone.title,
+                        eventDate: milestone.eventDate,
+                        status: milestone.status,
+                      }}
+                    />
+                  );
+                }}
+              />
+            </div>
           </div>
         </SectionCard>
       </div>

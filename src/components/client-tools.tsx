@@ -1,5 +1,6 @@
 "use client";
 
+import { Bot, ChevronDown, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
@@ -2207,109 +2208,70 @@ function ApplicationProfileEditorForm({
         router.refresh();
       }}
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-4 rounded-3xl bg-white p-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
-              {t("Personal", "个人信息")}
-            </p>
-            <h3 className="mt-2 text-lg font-semibold text-foreground">
-              {t("Identity basics", "身份基础信息")}
-            </h3>
+      <div className="space-y-4">
+        <EditorFoldSection
+          eyebrow={t("Personal", "个人信息")}
+          title={t("Identity basics", "身份基础信息")}
+          description={t("Legal names, date of birth, nationality, and passport basics.", "法定姓名、出生日期、国籍和护照基础信息。")}
+          defaultOpen
+        >
+          <div className="space-y-4">
+            <input value={legalFirstName} onChange={(event) => setLegalFirstName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Legal first name", "法定名字")} />
+            <input value={legalLastName} onChange={(event) => setLegalLastName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Legal last name", "法定姓氏")} />
+            <input value={preferredName} onChange={(event) => setPreferredName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Preferred name", "常用名")} />
+            <input value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Date of birth (YYYY-MM-DD)", "出生日期（YYYY-MM-DD）")} />
+            <input value={citizenship} onChange={(event) => setCitizenship(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Citizenship", "国籍")} />
+            <input value={birthCountry} onChange={(event) => setBirthCountry(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Birth country", "出生国家")} />
+            <input value={passportCountry} onChange={(event) => setPassportCountry(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Passport country", "护照签发国家")} />
           </div>
-          <input value={legalFirstName} onChange={(event) => setLegalFirstName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Legal first name", "法定名字")} />
-          <input value={legalLastName} onChange={(event) => setLegalLastName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Legal last name", "法定姓氏")} />
-          <input value={preferredName} onChange={(event) => setPreferredName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Preferred name", "常用名")} />
-          <input value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Date of birth (YYYY-MM-DD)", "出生日期（YYYY-MM-DD）")} />
-          <input value={citizenship} onChange={(event) => setCitizenship(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Citizenship", "国籍")} />
-          <input value={birthCountry} onChange={(event) => setBirthCountry(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Birth country", "出生国家")} />
-          <input value={passportCountry} onChange={(event) => setPassportCountry(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Passport country", "护照签发国家")} />
-        </div>
+        </EditorFoldSection>
 
-        <div className="space-y-4 rounded-3xl bg-white p-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
-              {t("Contact", "联系信息")}
-            </p>
-            <h3 className="mt-2 text-lg font-semibold text-foreground">
-              {t("Reachable details", "联系与居住信息")}
-            </h3>
+        <EditorFoldSection
+          eyebrow={t("Contact", "联系信息")}
+          title={t("Reachable details", "联系与居住信息")}
+          description={t("Phone, address, and current residence details used in forms.", "电话、地址和当前居住信息，方便后续统一用于申请表。")}
+        >
+          <div className="space-y-4">
+            <input value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Phone number", "手机号")} />
+            <input value={addressLine1} onChange={(event) => setAddressLine1(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Address line", "地址")} />
+            <input value={city} onChange={(event) => setCity(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("City", "城市")} />
+            <input value={stateProvince} onChange={(event) => setStateProvince(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("State / Province", "州 / 省")} />
+            <input value={postalCode} onChange={(event) => setPostalCode(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Postal code", "邮编")} />
+            <input value={countryOfResidence} onChange={(event) => setCountryOfResidence(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Country of residence", "当前居住国家")} />
           </div>
-          <input value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Phone number", "手机号")} />
-          <input value={addressLine1} onChange={(event) => setAddressLine1(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Address line", "地址")} />
-          <input value={city} onChange={(event) => setCity(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("City", "城市")} />
-          <input value={stateProvince} onChange={(event) => setStateProvince(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("State / Province", "州 / 省")} />
-          <input value={postalCode} onChange={(event) => setPostalCode(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Postal code", "邮编")} />
-          <input value={countryOfResidence} onChange={(event) => setCountryOfResidence(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Country of residence", "当前居住国家")} />
-        </div>
+        </EditorFoldSection>
 
-        <div className="space-y-4 rounded-3xl bg-white p-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
-              {t("Education", "教育背景")}
-            </p>
-            <h3 className="mt-2 text-lg font-semibold text-foreground">
-              {t("High school snapshot", "高中信息概览")}
-            </h3>
+        <EditorFoldSection
+          eyebrow={t("Education", "教育背景")}
+          title={t("High school snapshot", "高中信息概览")}
+          description={t("School, curriculum, graduation timing, GPA, and rank.", "学校、课程体系、毕业时间、GPA 和排名等关键信息。")}
+        >
+          <div className="space-y-4">
+            <input value={highSchoolName} onChange={(event) => setHighSchoolName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current high school", "当前高中")} />
+            <select value={curriculumSystem} onChange={(event) => setCurriculumSystem(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3">
+              {["AP", "A-Level", "IBDP", "US High School", "Canadian High School", "Other"].map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+            <input value={graduationYear} onChange={(event) => setGraduationYear(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Graduation year", "毕业年份")} />
+            <input value={gpa} onChange={(event) => setGpa(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("GPA", "GPA")} />
+            <input value={classRank} onChange={(event) => setClassRank(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Class rank / percentile", "班级排名 / 百分位")} />
           </div>
-          <input value={highSchoolName} onChange={(event) => setHighSchoolName(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Current high school", "当前高中")} />
-          <select value={curriculumSystem} onChange={(event) => setCurriculumSystem(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3">
-            {["AP", "A-Level", "IBDP", "US High School", "Canadian High School", "Other"].map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-          <input value={graduationYear} onChange={(event) => setGraduationYear(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Graduation year", "毕业年份")} />
-          <input value={gpa} onChange={(event) => setGpa(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("GPA", "GPA")} />
-          <input value={classRank} onChange={(event) => setClassRank(event.target.value)} className="w-full rounded-2xl bg-surface-container-low px-4 py-3" placeholder={t("Class rank / percentile", "班级排名 / 百分位")} />
-        </div>
+        </EditorFoldSection>
 
-      </div>
-
-      <div className="space-y-6 rounded-3xl bg-white p-5">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
-            {t("Competitions", "竞赛")}
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-foreground">
-            {t("Top 10 competition entries", "10 个竞赛格子")}
-          </h3>
-          <p className="mt-2 text-sm text-secondary">
-            {t(
-              "Fill in the strongest competitions only. Use one row per competition and keep the result concise.",
-              "这里只填最重要的竞赛经历。一行一条，结果尽量写清楚但不要过长。"
-            )}
-          </p>
-        </div>
-        <div className="space-y-3 md:hidden">
-          {competitions.map((entry, index) => (
-            <CompetitionEntryCard
-              key={`competition-mobile-${index}`}
-              index={index}
-              entry={entry}
-              onChange={(nextEntry) =>
-                setCompetitions((current) =>
-                  current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
-                )
-              }
-            />
-          ))}
-        </div>
-        <div className="hidden overflow-x-auto rounded-3xl border border-black/5 md:block">
-          <table className="min-w-[980px] w-full text-left text-sm">
-            <thead className="bg-surface-container-low text-secondary">
-              <tr>
-                <th className="px-3 py-3">#</th>
-                <th className="px-3 py-3">{t("Competition name", "竞赛名称")}</th>
-                <th className="px-3 py-3">{t("Field", "学科 / 方向")}</th>
-                <th className="px-3 py-3">{t("Year", "年份")}</th>
-                <th className="px-3 py-3">{t("Level", "级别")}</th>
-                <th className="px-3 py-3">{t("Result / honor", "结果 / 奖项")}</th>
-              </tr>
-            </thead>
-            <tbody>
+        <EditorFoldSection
+          eyebrow={t("Competitions", "竞赛")}
+          title={t("Top 10 competition entries", "10 个竞赛格子")}
+          description={t(
+            "Fill in the strongest competitions only. Use one row per competition and keep the result concise.",
+            "这里只填最重要的竞赛经历。一行一条，结果尽量写清楚但不要过长。"
+          )}
+        >
+          <div className="space-y-6">
+            <div className="space-y-3 md:hidden">
               {competitions.map((entry, index) => (
-                <CompetitionEntryRow
-                  key={`competition-${index}`}
+                <CompetitionEntryCard
+                  key={`competition-mobile-${index}`}
                   index={index}
                   entry={entry}
                   onChange={(nextEntry) =>
@@ -2319,67 +2281,62 @@ function ApplicationProfileEditorForm({
                   }
                 />
               ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-3">
-          {[
-            t("Competition name: official or commonly used name.", "竞赛名称：填正式名称或大家常用名称。"),
-            t("Level: school, regional, national, or international.", "级别：比如校级、地区级、国家级、国际级。"),
-            t("Result: award, finalist, qualification, or ranking.", "结果：写获奖、入围、晋级、排名等。"),
-          ].map((item) => (
-            <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
-              {item}
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="hidden overflow-x-auto rounded-3xl border border-black/5 md:block">
+              <table className="min-w-[980px] w-full text-left text-sm">
+                <thead className="bg-surface-container-low text-secondary">
+                  <tr>
+                    <th className="px-3 py-3">#</th>
+                    <th className="px-3 py-3">{t("Competition name", "竞赛名称")}</th>
+                    <th className="px-3 py-3">{t("Field", "学科 / 方向")}</th>
+                    <th className="px-3 py-3">{t("Year", "年份")}</th>
+                    <th className="px-3 py-3">{t("Level", "级别")}</th>
+                    <th className="px-3 py-3">{t("Result / honor", "结果 / 奖项")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {competitions.map((entry, index) => (
+                    <CompetitionEntryRow
+                      key={`competition-${index}`}
+                      index={index}
+                      entry={entry}
+                      onChange={(nextEntry) =>
+                        setCompetitions((current) =>
+                          current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
+                        )
+                      }
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-3">
+              {[
+                t("Competition name: official or commonly used name.", "竞赛名称：填正式名称或大家常用名称。"),
+                t("Level: school, regional, national, or international.", "级别：比如校级、地区级、国家级、国际级。"),
+                t("Result: award, finalist, qualification, or ranking.", "结果：写获奖、入围、晋级、排名等。"),
+              ].map((item) => (
+                <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </EditorFoldSection>
 
-      <div className="space-y-6 rounded-3xl bg-white p-5">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">
-            {t("Activities", "活动")}
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-foreground">
-            {t("Top 20 activity entries", "20 个活动格子")}
-          </h3>
-          <p className="mt-2 text-sm text-secondary">
-            {t(
-              "This follows the Common App style more closely. Focus on role, grade span, weekly time, and real impact.",
-              "这里更接近 Common App 的活动填写逻辑。重点写角色、年级跨度、时间投入和真实影响。"
-            )}
-          </p>
-        </div>
-        <div className="space-y-3 md:hidden">
-          {activities.map((entry, index) => (
-            <ActivityEntryCard
-              key={`activity-mobile-${index}`}
-              index={index}
-              entry={entry}
-              onChange={(nextEntry) =>
-                setActivities((current) =>
-                  current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
-                )
-              }
-            />
-          ))}
-        </div>
-        <div className="hidden overflow-x-auto rounded-3xl border border-black/5 md:block">
-          <table className="min-w-[1080px] w-full text-left text-sm">
-            <thead className="bg-surface-container-low text-secondary">
-              <tr>
-                <th className="px-3 py-3">#</th>
-                <th className="px-3 py-3">{t("Activity name", "活动名称")}</th>
-                <th className="px-3 py-3">{t("Role / title", "角色 / 职务")}</th>
-                <th className="px-3 py-3">{t("Grades", "参与年级")}</th>
-                <th className="px-3 py-3">{t("Time commitment", "时间投入")}</th>
-                <th className="px-3 py-3">{t("Impact / description", "影响 / 简述")}</th>
-              </tr>
-            </thead>
-            <tbody>
+        <EditorFoldSection
+          eyebrow={t("Activities", "活动")}
+          title={t("Top 20 activity entries", "20 个活动格子")}
+          description={t(
+            "This follows the Common App style more closely. Focus on role, grade span, weekly time, and real impact.",
+            "这里更接近 Common App 的活动填写逻辑。重点写角色、年级跨度、时间投入和真实影响。"
+          )}
+        >
+          <div className="space-y-6">
+            <div className="space-y-3 md:hidden">
               {activities.map((entry, index) => (
-                <ActivityEntryRow
-                  key={`activity-${index}`}
+                <ActivityEntryCard
+                  key={`activity-mobile-${index}`}
                   index={index}
                   entry={entry}
                   onChange={(nextEntry) =>
@@ -2389,20 +2346,48 @@ function ApplicationProfileEditorForm({
                   }
                 />
               ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-3">
-          {[
-            t("Role / title: founder, captain, member, researcher, volunteer.", "角色 / 职务：比如创始人、队长、成员、研究助理、志愿者。"),
-            t("Grades: list when you participated, such as 9-11.", "参与年级：写你参加的年级，比如 9-11。"),
-            t("Impact: write what changed, led, built, or achieved.", "影响 / 简述：写你做成了什么、带来了什么变化。"),
-          ].map((item) => (
-            <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
-              {item}
             </div>
-          ))}
-        </div>
+            <div className="hidden overflow-x-auto rounded-3xl border border-black/5 md:block">
+              <table className="min-w-[1080px] w-full text-left text-sm">
+                <thead className="bg-surface-container-low text-secondary">
+                  <tr>
+                    <th className="px-3 py-3">#</th>
+                    <th className="px-3 py-3">{t("Activity name", "活动名称")}</th>
+                    <th className="px-3 py-3">{t("Role / title", "角色 / 职务")}</th>
+                    <th className="px-3 py-3">{t("Grades", "参与年级")}</th>
+                    <th className="px-3 py-3">{t("Time commitment", "时间投入")}</th>
+                    <th className="px-3 py-3">{t("Impact / description", "影响 / 简述")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activities.map((entry, index) => (
+                    <ActivityEntryRow
+                      key={`activity-${index}`}
+                      index={index}
+                      entry={entry}
+                      onChange={(nextEntry) =>
+                        setActivities((current) =>
+                          current.map((item, itemIndex) => (itemIndex === index ? nextEntry : item))
+                        )
+                      }
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-3">
+              {[
+                t("Role / title: founder, captain, member, researcher, volunteer.", "角色 / 职务：比如创始人、队长、成员、研究助理、志愿者。"),
+                t("Grades: list when you participated, such as 9-11.", "参与年级：写你参加的年级，比如 9-11。"),
+                t("Impact: write what changed, led, built, or achieved.", "影响 / 简述：写你做成了什么、带来了什么变化。"),
+              ].map((item) => (
+                <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </EditorFoldSection>
       </div>
 
       <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
@@ -2412,6 +2397,39 @@ function ApplicationProfileEditorForm({
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
+  );
+}
+
+function EditorFoldSection({
+  eyebrow,
+  title,
+  description,
+  defaultOpen = false,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details
+      open={defaultOpen}
+      className="group overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm [&_summary::-webkit-details-marker]:hidden"
+    >
+      <summary className="flex list-none cursor-pointer items-start justify-between gap-4 px-5 py-5">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{eyebrow}</p>
+          <h3 className="mt-2 text-lg font-semibold text-foreground">{title}</h3>
+          {description ? <p className="mt-2 text-sm leading-7 text-secondary">{description}</p> : null}
+        </div>
+        <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-primary transition-transform group-open:rotate-180">
+          <ChevronDown className="h-4 w-4" />
+        </div>
+      </summary>
+      <div className="border-t border-black/5 px-5 py-5">{children}</div>
+    </details>
   );
 }
 
@@ -2744,7 +2762,7 @@ export function ConsultantPlanningBookEditor({
       <textarea
         value={markdown}
         onChange={(event) => setMarkdown(event.target.value)}
-        className="min-h-[360px] w-full rounded-[1.4rem] bg-surface-container-low px-3 py-3 font-mono text-xs sm:min-h-[420px] sm:rounded-3xl sm:px-4 sm:py-4 sm:text-sm"
+        className="min-h-[360px] w-full rounded-[1.4rem] border border-black/5 bg-white px-3 py-3 font-mono text-xs shadow-sm sm:min-h-[420px] sm:rounded-3xl sm:px-4 sm:py-4 sm:text-sm"
         placeholder={t("## Student Planning Book\n\n### Positioning\n...\n", "## 学生规划书\n\n### 定位\n...\n")}
       />
       <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
@@ -2997,6 +3015,76 @@ export function ParentProfileEditor({
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
+  );
+}
+
+export function PreviewFoldSection({
+  id,
+  title,
+  eyebrow,
+  description,
+  defaultOpen = false,
+  previewHeightClassName = "max-h-[20rem]",
+  aside,
+  children,
+}: {
+  id?: string;
+  title: string;
+  eyebrow: string;
+  description?: string;
+  defaultOpen?: boolean;
+  previewHeightClassName?: string;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
+  const t = useText();
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div
+      id={id}
+      className="overflow-hidden rounded-[22px] border border-black/5 bg-white transition-all duration-200 shadow-sm sm:rounded-[28px]"
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left sm:px-5 sm:py-5"
+      >
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{eyebrow}</p>
+          <h3 className="mt-2 text-base font-semibold text-foreground sm:text-lg">{title}</h3>
+          {description ? <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{description}</p> : null}
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {aside}
+          <span
+            className={cn(
+              "mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-outline-variant text-base font-bold text-primary transition-transform sm:h-9 sm:w-9 sm:text-lg",
+              open ? "rotate-180" : ""
+            )}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </div>
+      </button>
+      <div className="border-t border-black/5 bg-[#fcfaf6] px-4 py-4 sm:px-5 sm:py-5">
+        <div className={cn("relative overflow-hidden transition-all duration-300", open ? "max-h-[200rem]" : previewHeightClassName)}>
+          <div>{children}</div>
+          {!open ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#fcfaf6] via-[#fcfaf6]/95 to-transparent" />
+          ) : null}
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setOpen((current) => !current)}
+            className="rounded-full border border-outline-variant bg-white px-4 py-2 text-xs font-bold text-primary shadow-sm"
+          >
+            {open ? t("Collapse", "收起") : t("Expand", "展开")}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -3279,6 +3367,8 @@ export function AiChatWidget({
   buttonLabel,
   audience = "student",
   studentOptions,
+  suggestions,
+  compact = false,
 }: {
   studentId: string;
   page?: string;
@@ -3288,6 +3378,8 @@ export function AiChatWidget({
   buttonLabel?: string;
   audience?: UserRole;
   studentOptions?: { id: string; label: string; sublabel?: string }[];
+  suggestions?: string[];
+  compact?: boolean;
 }) {
   const t = useText();
   const [activeStudentId, setActiveStudentId] = useState(studentId);
@@ -3329,12 +3421,12 @@ export function AiChatWidget({
   };
 
   return (
-    <div className="rounded-[1.4rem] border border-primary/10 bg-white p-4 shadow-terra sm:rounded-3xl sm:p-6">
+    <div className={cn("rounded-[1.4rem] border border-primary/10 bg-white shadow-terra sm:rounded-3xl", compact ? "p-4" : "p-4 sm:p-6")}>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{t("AI Assistant", "AI 助手")}</p>
-      <h3 className="mt-2 font-serif text-xl font-bold text-foreground sm:text-2xl">
+      <h3 className={cn("mt-2 font-serif font-bold text-foreground", compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl")}>
         {title ?? t("Question-driven support", "随时提问的中文助手")}
       </h3>
-      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
+      <p className={cn("mt-3 text-secondary", compact ? "text-xs leading-6" : "text-xs leading-6 sm:text-sm sm:leading-7")}>
         {description ??
           t(
             "Ask naturally about planning, stress, priorities, or how to approach a task. The answer stays practical and grounded.",
@@ -3357,16 +3449,30 @@ export function AiChatWidget({
           </select>
         </label>
       ) : null}
+      {suggestions?.length ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {suggestions.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setQuestion(item)}
+              className="rounded-full border border-primary/15 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <textarea
         value={question}
         onChange={(event) => setQuestion(event.target.value)}
-        className="mt-4 min-h-24 w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className={cn("mt-4 w-full rounded-2xl bg-surface-container-low px-4 py-3", compact ? "min-h-20 text-sm leading-6" : "min-h-24")}
       />
       <button
         type="button"
         disabled={pending}
         onClick={runChat}
-        className="mt-4 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white sm:px-5 sm:py-3"
+        className={cn("mt-4 rounded-full bg-primary font-bold text-white", compact ? "px-4 py-2.5 text-sm" : "px-4 py-2.5 text-sm sm:px-5 sm:py-3")}
       >
         {pending ? t("Thinking...", "生成中...") : buttonLabel ?? t("Ask AI", "向 AI 提问")}
       </button>
@@ -3389,6 +3495,77 @@ export function AiChatWidget({
         </div>
       ) : null}
     </div>
+  );
+}
+
+export function ConsultantFloatingAiAssistant({
+  studentId,
+  studentName,
+}: {
+  studentId: string;
+  studentName: string;
+}) {
+  const t = useText();
+  const [open, setOpen] = useState(false);
+  const suggestions = [
+    "我下一次和这个学生沟通时最该抓什么？",
+    "结合当前任务和截止日期，这个学生最大的风险点是什么？",
+    "这周最应该让家长理解的重点是什么？",
+  ];
+
+  return (
+    <>
+      {open ? <button type="button" aria-label={t("Close AI panel", "关闭 AI 面板")} className="fixed inset-0 z-40 bg-black/20 sm:hidden" onClick={() => setOpen(false)} /> : null}
+      <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+        {open ? (
+          <div className="w-[min(92vw,24rem)] overflow-hidden rounded-[1.75rem] border border-primary/15 bg-white shadow-[0_22px_60px_rgba(46,50,48,0.16)] sm:w-[22rem]">
+            <div className="flex items-start justify-between gap-3 border-b border-black/5 bg-surface-container-low px-4 py-4">
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {t("Consultant AI", "顾问 AI")}
+                </div>
+                <p className="mt-3 text-sm font-semibold text-foreground">{studentName}</p>
+                <p className="mt-1 text-xs leading-6 text-secondary">
+                  {t("Ask quickly without leaving the workspace.", "不用离开工作台，直接快速提问。")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-sm"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[72vh] overflow-y-auto p-4">
+              <AiChatWidget
+                studentId={studentId}
+                page="/consultant/students/[studentId]"
+                audience="consultant"
+                compact
+                title={t("Fast AI guidance", "快速 AI 协助")}
+                description={t(
+                  "Use AI for the next conversation, family messaging, and short strategy checks.",
+                  "用 AI 快速判断下一次沟通重点、家长沟通重点和短期策略。"
+                )}
+                buttonLabel={t("Ask", "提问")}
+                suggestions={suggestions}
+              />
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-bold text-white shadow-[0_18px_40px_rgba(74,124,89,0.28)] transition-transform hover:-translate-y-0.5"
+          >
+            <Bot className="h-4 w-4" />
+            {t("Ask AI", "召唤 AI")}
+          </button>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -4162,13 +4339,13 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        className="w-full rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-sm"
         placeholder={t("Task title", "任务标题")}
       />
       <textarea
         value={description}
         onChange={(event) => setDescription(event.target.value)}
-        className="min-h-24 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+        className="min-h-24 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
       />
       <div className="flex flex-wrap gap-2">
         {taskTemplates.map((template) => (
@@ -4196,7 +4373,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           <select
             value={timelineLane}
             onChange={(event) => setTimelineLane(event.target.value as TimelineLane)}
-            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+            className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             {timelineLaneOptions.map((item) => (
               <option key={item.value} value={item.value}>
@@ -4210,7 +4387,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as Task["priority"])}
-            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+            className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="Low">{t("Low", "低")}</option>
             <option value="Medium">{t("Medium", "中")}</option>
@@ -4225,7 +4402,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
             type="date"
             value={startDate}
             onChange={(event) => setStartDate(event.target.value)}
-            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+            className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
@@ -4234,7 +4411,7 @@ export function ConsultantTaskComposer({ studentId }: { studentId: string }) {
             type="date"
             value={endDate}
             onChange={(event) => setEndDate(event.target.value)}
-            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+            className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
       </div>
@@ -4286,7 +4463,7 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+        className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Deadline title", "截止日期标题")}
       />
       <div className="grid gap-3 md:grid-cols-2">
@@ -4296,7 +4473,7 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
             type="date"
             value={eventDate}
             onChange={(event) => setEventDate(event.target.value)}
-            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+            className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
           />
         </label>
         <label className="text-sm font-semibold text-secondary">
@@ -4304,7 +4481,7 @@ export function ConsultantMilestoneComposer({ studentId }: { studentId: string }
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as Milestone["status"])}
-            className="mt-2 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+            className="mt-2 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
           >
             <option value="upcoming">{t("upcoming", "待开始")}</option>
             <option value="done">{t("done", "已完成")}</option>
@@ -4370,14 +4547,14 @@ export function ConsultantStudentProfileEditor({
       }}
     >
       <div className="grid gap-3 md:grid-cols-2">
-        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Current grade", "当前年级")} />
-        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Current school", "当前学校")} />
+        <input value={grade} onChange={(event) => setGrade(event.target.value)} className="rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Current grade", "当前年级")} />
+        <input value={schoolName} onChange={(event) => setSchoolName(event.target.value)} className="rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Current school", "当前学校")} />
       </div>
       <select
         aria-label="Current phase"
         value={phase}
         onChange={(event) => setPhase(event.target.value as StudentPhaseValue)}
-        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm font-medium text-foreground sm:rounded-2xl sm:px-4 sm:py-3 sm:text-base"
+        className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm font-medium text-foreground shadow-sm sm:rounded-2xl sm:px-4 sm:py-3 sm:text-base"
       >
         {studentPhaseOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -4385,9 +4562,9 @@ export function ConsultantStudentProfileEditor({
           </option>
         ))}
       </select>
-      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Target countries", "目标国家")} />
-      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Dream schools", "梦校")} />
-      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Intended major", "意向专业")} />
+      <input value={countries} onChange={(event) => setCountries(event.target.value)} className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Target countries", "目标国家")} />
+      <input value={schools} onChange={(event) => setSchools(event.target.value)} className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Dream schools", "梦校")} />
+      <input value={major} onChange={(event) => setMajor(event.target.value)} className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3" placeholder={t("Intended major", "意向专业")} />
       <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <button className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-white sm:px-5 sm:py-3 sm:text-sm">{t("Save Student Profile", "保存学生资料")}</button>
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
@@ -4432,13 +4609,13 @@ export function ConsultantNoteComposer({ studentId }: { studentId: string }) {
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+        className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Note title", "备注标题")}
       />
       <textarea
         value={summary}
         onChange={(event) => setSummary(event.target.value)}
-        className="min-h-24 w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+        className="min-h-24 w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Consultant note summary", "顾问备注摘要")}
       />
       <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
@@ -4516,7 +4693,7 @@ export function ConsultantStudentPicker({
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        className="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-sm sm:rounded-2xl sm:px-4 sm:py-3"
+        className="w-full rounded-xl border border-black/5 bg-white px-3 py-2.5 text-sm shadow-sm sm:rounded-2xl sm:px-4 sm:py-3"
         placeholder={t("Search students", "搜索学生")}
       />
       <div className="grid grid-cols-2 gap-2">

@@ -71,8 +71,13 @@ export default async function StudentDashboardPage() {
       </div>
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <SectionCard title={pickText(locale, "Today's Tasks", "当前任务")} eyebrow={pickText(locale, "Student workflow", "学生流程")}>
-          <TaskList tasks={tasks} />
+        <SectionCard
+          title={pickText(locale, "Today's Tasks", "当前任务")}
+          eyebrow={pickText(locale, "Student workflow", "学生流程")}
+        >
+          <div className="max-h-[22rem] overflow-y-auto pr-1">
+            <TaskList tasks={tasks} />
+          </div>
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Application Progress", "申请进度")} eyebrow={pickText(locale, "Snapshot", "概览")} className="bg-primary-container/70">
@@ -91,8 +96,13 @@ export default async function StudentDashboardPage() {
       </div>
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <SectionCard title={pickText(locale, "Recent Milestones", "近期截止日期")} eyebrow={pickText(locale, "Timeline", "时间线")}>
-          <TimelineRail milestones={milestones} />
+        <SectionCard
+          title={pickText(locale, "Recent Milestones", "近期截止日期")}
+          eyebrow={pickText(locale, "Timeline", "时间线")}
+        >
+          <div className="max-h-[20rem] overflow-y-auto pr-1">
+            <TimelineRail milestones={milestones} />
+          </div>
         </SectionCard>
 
         <div className="space-y-8">
@@ -115,7 +125,7 @@ export default async function StudentDashboardPage() {
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1fr_1fr]">
         <SectionCard title={pickText(locale, "Advisor Momentum Notes", "顾问跟进备注")} eyebrow={pickText(locale, "Human support", "人工支持")}>
-          <div className="space-y-4">
+          <div className="max-h-[22rem] space-y-4 overflow-y-auto pr-1">
             {notes.map((note) => (
               <div key={note.id} className="rounded-2xl bg-surface-container-low p-4 sm:p-5">
                 <p className="text-sm font-bold text-foreground">{note.title}</p>
@@ -178,6 +188,7 @@ function buildDashboardRange(tasks: Task[], milestones: Milestone[]) {
     end: endOfMonth(addMonths(start, 11)),
   };
 }
+
 
 function taskIntersectsRange(task: Task, rangeStart: Date, rangeEnd: Date) {
   const taskStart = parseDate(task.startDate);
