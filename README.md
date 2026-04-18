@@ -21,7 +21,6 @@ Terra Edu is a launch-ready Next.js web app built from the Stitch UI designs in 
 - Student: `student@terra.edu` / `terra123`
 - Parent: `parent@terra.edu` / `terra123`
 - Consultant: `consultant@terra.edu` / `terra123`
-- Admin: `admin@terra.edu` / `terra123`
 
 ## Access plans and admin binding
 
