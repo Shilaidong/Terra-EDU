@@ -1,15 +1,15 @@
 import { Settings2 } from "lucide-react";
 
-import { LogoutButton, ParentProfileEditor, PasswordChangeForm } from "@/components/client-tools";
+import { ConsultantProfileEditor, LogoutButton, PasswordChangeForm } from "@/components/client-tools";
 import { HeroBadge, RoleShell, SectionCard, SummaryCard } from "@/components/terra-shell";
 import { getCurrentUserData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
 
-export default async function ParentSettingsPage() {
+export default async function ConsultantSettingsPage() {
   const locale = await getLocale();
-  const session = await requireSession("parent");
+  const session = await requireSession("consultant");
   const user = await getCurrentUserData(session);
 
   if (!user) {
@@ -19,12 +19,12 @@ export default async function ParentSettingsPage() {
   return (
     <RoleShell
       session={session}
-      title={pickText(locale, "Parent Settings", "家长设置")}
-      activeHref="/parent/settings"
-      subtitle={pickText(locale, "Update the parent display name and avatar while keeping the family dashboard read-only.", "你可以修改家长名称和头像，同时保持家长仪表盘为只读模式。")}
+      title={pickText(locale, "Consultant Settings", "顾问设置")}
+      activeHref="/consultant/settings"
+      subtitle={pickText(locale, "Update your consultant profile, avatar, and password while keeping student workspaces unchanged.", "你可以在这里修改顾问资料、头像和密码，不会影响学生工作台数据。")}
       hero={
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <HeroBadge icon={<Settings2 className="h-4 w-4" />} title={pickText(locale, "Account type", "账号类型")} value={pickText(locale, "Parent", "家长")} />
+          <HeroBadge icon={<Settings2 className="h-4 w-4" />} title={pickText(locale, "Account type", "账号类型")} value={pickText(locale, "Consultant", "顾问")} />
           <LogoutButton />
         </div>
       }
@@ -36,13 +36,13 @@ export default async function ParentSettingsPage() {
             <h2 className="mt-4 font-serif text-[1.9rem] font-bold text-foreground sm:mt-5 sm:text-3xl">{user.name}</h2>
             <p className="mt-2 text-xs text-secondary sm:text-sm">{user.email}</p>
             <div className="mt-4 inline-flex rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold text-primary sm:text-sm">
-              {pickText(locale, "Parent account", "家长账号")}
+              {pickText(locale, "Consultant account", "顾问账号")}
             </div>
           </div>
         </SectionCard>
 
         <SectionCard title={pickText(locale, "Profile Basics", "基础资料")} eyebrow={pickText(locale, "Editable", "可编辑")}>
-          <ParentProfileEditor userId={user.id} defaultName={user.name} defaultAvatar={user.avatar || session.avatar || ""} />
+          <ConsultantProfileEditor userId={user.id} defaultName={user.name} defaultAvatar={user.avatar || session.avatar || ""} />
         </SectionCard>
       </div>
 
@@ -50,17 +50,17 @@ export default async function ParentSettingsPage() {
         <SectionCard title={pickText(locale, "Password & Access", "密码与访问")} eyebrow={pickText(locale, "Security", "安全设置")}>
           <PasswordChangeForm
             title={pickText(locale, "Change your password", "修改你的密码")}
-            description={pickText(locale, "Use your current password to set a new one. This only changes login access and does not affect any linked student data.", "输入当前密码后设置新密码。这只会影响登录访问，不会影响任何已绑定学生的数据。")}
+            description={pickText(locale, "Use your current password to set a new one. This only changes login access and does not affect any assigned student data.", "输入当前密码后设置新密码。这只会影响登录访问，不会影响任何已分配的学生数据。")}
           />
         </SectionCard>
       </div>
 
       <div className="mt-6 sm:mt-8">
-        <SectionCard title={pickText(locale, "Parent Access", "家长权限说明")} eyebrow={pickText(locale, "Read-only guidance", "只读说明")}>
+        <SectionCard title={pickText(locale, "Consultant Access", "顾问权限说明")} eyebrow={pickText(locale, "Workspace rules", "工作台规则")}>
           <SummaryCard
-            title={pickText(locale, "Clear family visibility, without extra admin work", "清晰查看孩子进展，而不增加额外管理负担")}
-            body={pickText(locale, "Parents can personalize their own account details here, while student planning, tasks, check-ins, and milestones remain protected in the student workflow.", "家长可以在这里调整自己的账号资料，但学生的规划、任务、打卡和截止日期仍然由学生端维护。")}
-            footer={pickText(locale, "This keeps the parent role lightweight and aligned with the dashboard design.", "这样能让家长角色保持轻量，也和当前仪表盘定位一致。")}
+            title={pickText(locale, "Profile changes are separate from student work", "账号修改与学生工作是分开的")}
+            body={pickText(locale, "You can safely update your own display name, avatar, and password here. Student profiles, planning books, notes, and bindings stay exactly where they are.", "你可以放心在这里修改自己的显示名称、头像和密码。学生档案、规划书、备注和绑定关系都不会因此变化。")}
+            footer={pickText(locale, "This keeps account maintenance light while the student workspace remains stable.", "这样既能让账号维护更轻量，也能保持学生工作台稳定。")}
           />
         </SectionCard>
       </div>

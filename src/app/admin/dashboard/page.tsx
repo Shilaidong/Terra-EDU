@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 
 import {
   AdminBindingManager,
+  AdminMemberProvisioner,
   AdminMemberManager,
   AdminStudentImportManager,
   LogoutButton,
@@ -71,6 +72,13 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
+          title={pickText(locale, "Manual member setup", "手动建档")}
+          eyebrow={pickText(locale, "Second-level admin menu", "二级管理菜单")}
+        >
+          <AdminMemberProvisioner />
+        </SectionCard>
+
+        <SectionCard
           title={pickText(locale, "Registration Queue and Bindings", "注册队列与绑定")}
           eyebrow={pickText(locale, "Admin operations", "管理员操作")}
         >
@@ -87,16 +95,18 @@ export default async function AdminDashboardPage() {
             consultantLinks={overview.consultantLinks}
           />
         </SectionCard>
+      </div>
 
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-8">
           <SectionCard
             title={pickText(locale, "How the logic works", "这套逻辑怎么工作")}
             eyebrow={pickText(locale, "Platform rules", "平台规则")}
           >
             <div className="space-y-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
-              <p>{pickText(locale, "Students can register directly and get their own profile immediately.", "学生可以直接注册，并立刻拥有自己的学生档案。")}</p>
-              <p>{pickText(locale, "Parents can register, but they only see data after an admin binds them to a student.", "家长可以先注册，但必须由管理员绑定到学生后才能看到对应数据。")}</p>
-              <p>{pickText(locale, "Consultants can register, but they only manage the students assigned by admin.", "顾问可以先注册，但只能管理管理员分配给自己的学生。")}</p>
+              <p>{pickText(locale, "Students can be created manually by admin or imported in bulk, and they immediately receive their own archive.", "学生可以由管理员手动建档，也可以批量导入，创建后会立刻拥有自己的完整档案。")}</p>
+              <p>{pickText(locale, "Parents and consultants can also be created manually. They only see student data after binding or assignment.", "家长和顾问也可以手动创建，但只有在绑定或分配学生后，才会看到对应学生数据。")}</p>
+              <p>{pickText(locale, "One student can be linked to multiple parents and multiple consultants at the same time.", "同一个学生现在可以同时绑定多个家长，也可以同时分配给多个顾问。")}</p>
             </div>
           </SectionCard>
 
@@ -110,9 +120,6 @@ export default async function AdminDashboardPage() {
             </div>
           </SectionCard>
         </div>
-      </div>
-
-      <div className="mt-6 sm:mt-8">
         <SectionCard
           title={pickText(locale, "Student workbook import", "学生工作簿导入")}
           eyebrow={pickText(locale, "Migration helper", "迁移辅助")}
@@ -123,8 +130,8 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-6 sm:mt-8">
         <SectionCard
-          title={pickText(locale, "Member exports and deletion", "成员导出与删除")}
-          eyebrow={pickText(locale, "High-risk operations", "高风险操作")}
+          title={pickText(locale, "Member exports, password reset, and deletion", "成员导出、改密与删除")}
+          eyebrow={pickText(locale, "High-impact operations", "高影响操作")}
         >
           <AdminMemberManager members={members} />
         </SectionCard>

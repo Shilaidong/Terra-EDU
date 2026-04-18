@@ -620,6 +620,17 @@ export function updateUserProfile(
   return user;
 }
 
+export function updateUserPassword(userId: string, password: string) {
+  const user = getStore().users.find((item) => item.id === userId);
+
+  if (!user) {
+    return null;
+  }
+
+  user.password = password;
+  return user;
+}
+
 export async function updateStudentApplicationProfile(
   studentId: string,
   input: Omit<StudentApplicationProfile, "studentId">

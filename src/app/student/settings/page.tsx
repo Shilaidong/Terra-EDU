@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Settings2 } from "lucide-react";
 
-import { AiRecommendationPanel, LogoutButton, StudentProfileEditor } from "@/components/client-tools";
+import { AiRecommendationPanel, LogoutButton, PasswordChangeForm, StudentProfileEditor } from "@/components/client-tools";
 import { AuditFeed, HeroBadge, InfoPill, RoleShell, SectionCard } from "@/components/terra-shell";
 import { getCurrentStudentData, getRecentAuditLogsData } from "@/lib/data";
 import { pickText } from "@/lib/locale";
@@ -74,6 +74,15 @@ export default async function StudentSettingsPage() {
             buttonLabel={pickText(locale, "Generate Profile Summary", "生成档案摘要")}
           />
         </div>
+      </div>
+
+      <div className="mt-8">
+        <SectionCard title={pickText(locale, "Password & Access", "密码与访问")} eyebrow={pickText(locale, "Security", "安全设置")}>
+          <PasswordChangeForm
+            title={pickText(locale, "Change your password", "修改你的密码")}
+            description={pickText(locale, "Use your current password to set a new one. This only changes how you log in and does not affect your profile, tasks, materials, or AI records.", "输入当前密码后设置新密码。这只会影响你的登录方式，不会影响个人资料、任务、材料和 AI 记录。")}
+          />
+        </SectionCard>
       </div>
 
       <div className="mt-8">

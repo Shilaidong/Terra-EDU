@@ -508,6 +508,164 @@ export function AdminBindingManager({
   );
 }
 
+export function AdminMemberProvisioner() {
+  const t = useText();
+  const router = useRouter();
+  const [role, setRole] = useState<"student" | "parent" | "consultant">("student");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [grade, setGrade] = useState("");
+  const [school, setSchool] = useState("");
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap gap-3">
+        {(["student", "parent", "consultant"] as const).map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setRole(item)}
+            className={
+              role === item
+                ? "rounded-full border-2 border-primary bg-primary/5 px-4 py-2 text-sm font-bold text-primary"
+                : "rounded-full border border-outline-variant bg-white px-4 py-2 text-sm font-bold text-secondary"
+            }
+          >
+            {item === "student"
+              ? t("Student record", "学生档案")
+              : item === "parent"
+                ? t("Parent account", "家长账号")
+                : t("Consultant account", "顾问账号")}
+          </button>
+        ))}
+      </div>
+
+      <form
+        className="space-y-4 rounded-3xl bg-white p-5"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setPending(true);
+          setMessage("");
+          setError("");
+
+          try {
+            await jsonFetch("/api/admin/members", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                role,
+                name,
+                email,
+                password,
+                grade,
+                school,
+              }),
+            });
+            setMessage(
+              role === "student"
+                ? t("Student record created. You can bind family and consultant next.", "学生档案已创建，接下来可以继续绑定家长和顾问。")
+                : role === "parent"
+                  ? t("Parent account created. You can bind it to a student next.", "家长账号已创建，接下来可以绑定到学生。")
+                  : t("Consultant account created. You can assign students next.", "顾问账号已创建，接下来可以分配学生。")
+            );
+            setName("");
+            setEmail("");
+            setPassword("");
+            setGrade("");
+            setSchool("");
+            router.refresh();
+          } catch (submissionError) {
+            setError(submissionError instanceof Error ? submissionError.message : t("Creation failed.", "创建失败。"));
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        <div className="space-y-1">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+            {role === "student"
+              ? t("Student intake", "学生建档")
+              : role === "parent"
+                ? t("Parent onboarding", "家长建档")
+                : t("Consultant onboarding", "顾问建档")}
+          </p>
+          <p className="text-sm leading-7 text-secondary">
+            {role === "student"
+              ? t("Create the student archive first, then bind family members and consultants later.", "先把学生档案建好，后续再绑定家长和顾问。")
+              : role === "parent"
+                ? t("Create a parent account now. Student visibility will appear after binding.", "先创建家长账号，绑定学生后才会出现对应可见内容。")
+                : t("Create a consultant account now. Student visibility will appear after assignment.", "先创建顾问账号，分配学生后才会出现对应工作台内容。")}
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Full name", "姓名")}
+          />
+          <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            type="email"
+            className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Email address", "邮箱地址")}
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <input
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            type="password"
+            className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Initial password (at least 6 characters)", "初始密码（至少 6 位）")}
+          />
+          {role === "student" ? (
+            <input
+              value={grade}
+              onChange={(event) => setGrade(event.target.value)}
+              className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+              placeholder={t("Current grade", "当前年级")}
+            />
+          ) : (
+            <div className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-secondary">
+              {role === "parent"
+                ? t("Parent accounts can be bound later to one or more students.", "家长账号后续可以绑定到一个或多个学生。")
+                : t("Consultant accounts can be assigned later to one or more students.", "顾问账号后续可以分配给一个或多个学生。")}
+            </div>
+          )}
+        </div>
+
+        {role === "student" ? (
+          <input
+            value={school}
+            onChange={(event) => setSchool(event.target.value)}
+            className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+            placeholder={t("Current school", "当前学校")}
+          />
+        ) : null}
+
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+        {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary disabled:opacity-70"
+        >
+          {pending ? t("Creating...", "创建中...") : t("Create record", "创建档案")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export function AdminMemberManager({
   members,
 }: {
@@ -524,6 +682,9 @@ export function AdminMemberManager({
   const [confirmingUserId, setConfirmingUserId] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
   const [pendingDeleteUserId, setPendingDeleteUserId] = useState("");
+  const [resettingUserId, setResettingUserId] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [pendingResetUserId, setPendingResetUserId] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -557,6 +718,20 @@ export function AdminMemberManager({
               <button
                 type="button"
                 onClick={() => {
+                  setResettingUserId((current) => (current === member.id ? "" : member.id));
+                  setResetPassword("");
+                  setConfirmingUserId("");
+                  setConfirmationText("");
+                  setError("");
+                  setMessage("");
+                }}
+                className="w-full rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary sm:w-auto"
+              >
+                {t("Reset password", "重置密码")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   setConfirmingUserId((current) => (current === member.id ? "" : member.id));
                   setConfirmationText("");
                   setError("");
@@ -568,6 +743,69 @@ export function AdminMemberManager({
               </button>
             </div>
           </div>
+
+          {resettingUserId === member.id ? (
+            <div className="mt-4 rounded-2xl bg-surface-container-low p-4">
+              <p className="text-sm font-semibold text-foreground">
+                {t("Reset password without touching data", "重置密码但不影响数据")}
+              </p>
+              <p className="mt-2 text-sm leading-7 text-secondary">
+                {t(
+                  "This only updates the login password. All student, binding, and history data stays intact.",
+                  "这里只会更新登录密码，账号绑定、学生档案和历史数据都不会被重置。"
+                )}
+              </p>
+              <input
+                value={resetPassword}
+                onChange={(event) => setResetPassword(event.target.value)}
+                type="password"
+                className="mt-3 w-full rounded-2xl bg-white px-4 py-3"
+                placeholder={t("New password (at least 6 characters)", "新密码（至少 6 位）")}
+              />
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  disabled={pendingResetUserId === member.id || resetPassword.trim().length < 6}
+                  onClick={async () => {
+                    setPendingResetUserId(member.id);
+                    setError("");
+                    setMessage("");
+                    try {
+                      await jsonFetch(`/api/admin/members/${member.id}/password`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ newPassword: resetPassword }),
+                      });
+                      setMessage(t("Password reset.", "密码已重置。"));
+                      setResettingUserId("");
+                      setResetPassword("");
+                    } catch (submissionError) {
+                      setError(
+                        submissionError instanceof Error
+                          ? submissionError.message
+                          : t("Password reset failed.", "密码重置失败。")
+                      );
+                    } finally {
+                      setPendingResetUserId("");
+                    }
+                  }}
+                  className="w-full rounded-full bg-primary px-4 py-2 text-sm font-bold terra-on-primary disabled:opacity-70 sm:w-auto"
+                >
+                  {pendingResetUserId === member.id ? t("Resetting...", "重置中...") : t("Confirm reset", "确认重置")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResettingUserId("");
+                    setResetPassword("");
+                  }}
+                  className="w-full rounded-full border border-outline-variant px-4 py-2 text-sm font-bold text-primary sm:w-auto"
+                >
+                  {t("Cancel", "取消")}
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {confirmingUserId === member.id ? (
             <div className="mt-4 rounded-2xl bg-error/5 p-4">
@@ -2759,6 +2997,159 @@ export function ParentProfileEditor({
         {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
       </div>
     </form>
+  );
+}
+
+export function ConsultantProfileEditor({
+  userId,
+  defaultName,
+  defaultAvatar,
+}: {
+  userId: string;
+  defaultName: string;
+  defaultAvatar: string;
+}) {
+  const t = useText();
+  const [name, setName] = useState(defaultName);
+  const [avatar, setAvatar] = useState(defaultAvatar);
+  const [message, setMessage] = useState("");
+  const router = useRouter();
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        await jsonFetch("/api/consultant/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            name,
+            avatar,
+          }),
+        });
+        setMessage(t("Consultant profile updated.", "顾问资料已更新。"));
+        router.refresh();
+      }}
+    >
+      <div>
+        <p className="text-sm font-semibold text-secondary">{t("Avatar", "头像")}</p>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {avatarPresets.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              onClick={() => setAvatar(preset.value)}
+              className={cn(
+                "flex items-center justify-center rounded-3xl border bg-white p-4 transition-all",
+                avatar === preset.value
+                  ? "border-primary shadow-terra ring-2 ring-primary/20"
+                  : "border-black/5 hover:border-primary/30"
+              )}
+              aria-label={preset.label}
+            >
+              <img alt={preset.label} src={preset.value} className="h-24 w-24 rounded-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <input
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+        placeholder={t("Your display name", "你的显示名称")}
+      />
+
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <button className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
+          {t("Save Profile", "保存资料")}
+        </button>
+        {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+export function PasswordChangeForm({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  const t = useText();
+  const router = useRouter();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-lg font-semibold text-foreground">{title}</p>
+        <p className="mt-2 text-sm leading-7 text-secondary">{description}</p>
+      </div>
+      <form
+        className="space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setPending(true);
+          setMessage("");
+          setError("");
+
+          try {
+            await jsonFetch("/api/account/password", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                currentPassword,
+                newPassword,
+              }),
+            });
+            setCurrentPassword("");
+            setNewPassword("");
+            setMessage(t("Password updated.", "密码已更新。"));
+            router.refresh();
+          } catch (submissionError) {
+            setError(
+              submissionError instanceof Error ? submissionError.message : t("Password update failed.", "密码更新失败。")
+            );
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        <input
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          type="password"
+          className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          placeholder={t("Current password", "当前密码")}
+        />
+        <input
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
+          type="password"
+          className="w-full rounded-2xl bg-surface-container-low px-4 py-3"
+          placeholder={t("New password (at least 6 characters)", "新密码（至少 6 位）")}
+        />
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <button
+            type="submit"
+            disabled={pending || currentPassword.trim().length === 0 || newPassword.trim().length < 6}
+            className="rounded-full bg-primary px-5 py-3 text-sm font-bold terra-on-primary disabled:opacity-70"
+          >
+            {pending ? t("Updating...", "更新中...") : t("Change password", "修改密码")}
+          </button>
+          {message ? <p className="text-sm font-semibold text-primary">{message}</p> : null}
+          {error ? <p className="text-sm font-semibold text-error">{error}</p> : null}
+        </div>
+      </form>
+    </div>
   );
 }
 

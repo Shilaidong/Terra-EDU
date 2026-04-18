@@ -39,6 +39,7 @@ export function getRoleNav(locale: Locale): Record<UserRole, NavItem[]> {
       { label: pickText(locale, "Applications", "申请"), href: "/consultant/applications" },
       { label: pickText(locale, "Documents", "材料"), href: "/consultant/documents" },
       { label: pickText(locale, "Messages", "消息"), href: "/consultant/messages" },
+      { label: pickText(locale, "Settings", "设置"), href: "/consultant/settings" },
       { label: pickText(locale, "Finances", "财务"), href: "/consultant/finances" },
     ],
   };
