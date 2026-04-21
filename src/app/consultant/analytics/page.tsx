@@ -47,8 +47,8 @@ export default async function ConsultantAnalyticsPage() {
         <SectionCard title={pickText(locale, "Reporting Center", "报表中心")} eyebrow={pickText(locale, "Export", "导出")}>
           <SummaryCard
             title={pickText(locale, "Weekly operating picture", "本周运营概览")}
-            body={pickText(locale, `Live cohort completion is ${Math.round(analytics.taskCompletionRate * 100)}%, milestone discipline is ${Math.round(analytics.milestoneHitRate * 100)}%, average mastery is ${averageMastery}/5, and the average check-in streak is ${averageStreak} days.`, `当前学生群组任务完成率为 ${Math.round(analytics.taskCompletionRate * 100)}% ，截止日期达成率为 ${Math.round(analytics.milestoneHitRate * 100)}% ，平均掌握度为 ${averageMastery}/5 ，平均连续打卡为 ${averageStreak} 天。`)}
-            footer={pickText(locale, "These metrics now follow the same live student task, deadline, and check-in data shown across the product.", "这些指标已经和产品内学生真实任务、截止日期和打卡数据保持一致。")}
+            body={pickText(locale, `Live cohort completion is ${Math.round(analytics.taskCompletionRate * 100)}%, milestone discipline is ${Math.round(analytics.milestoneHitRate * 100)}%, average learning quality is ${averageMastery}/5, and the average study streak is ${averageStreak} days.`, `当前学生群组任务完成率为 ${Math.round(analytics.taskCompletionRate * 100)}% ，截止日期达成率为 ${Math.round(analytics.milestoneHitRate * 100)}% ，平均学习质量为 ${averageMastery}/5 ，平均连续学习为 ${averageStreak} 天。`)}
+            footer={pickText(locale, "These metrics now follow the same live task, deadline, and study center data shown across the product.", "这些指标已经和产品内学生真实任务、截止日期和学习中心数据保持一致。")}
           />
           <div className="mt-5">
             <AnalyticsExportButton />

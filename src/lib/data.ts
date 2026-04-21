@@ -7,8 +7,17 @@ import type {
   AuditLog,
   CheckInRecord,
   ContentItem,
+  HomeworkQuestionAttempt,
+  HomeworkQuestionItem,
+  HomeworkGradingRecord,
   Milestone,
+  ReadingPassageItem,
+  ReadingQuizAttempt,
+  ReadingQuizQuestion,
+  ReadingTrainingRecord,
   SessionPayload,
+  StudyCenterData,
+  StudyCenterMetrics,
   StudentActivityEntry,
   StudentApplicationProfile,
   StudentCompetitionEntry,
@@ -17,6 +26,10 @@ import type {
   TimelineLane,
   User,
   UserRole,
+  VocabularyAttempt,
+  VocabularyPack,
+  VocabularyWordItem,
+  VocabularyStudyRecord,
 } from "@/lib/types";
 
 type DbRow = Record<string, unknown>;
@@ -33,6 +46,7 @@ type ContentDetailMaps = {
   course: Map<string, CourseContentDetails>;
   chapter: Map<string, ChapterContentDetails>;
 };
+const VOCABULARY_REVIEW_INTERVALS = [1, 2, 4, 7, 15, 30];
 
 export function getUserByCredentials(email: string, password: string, role: UserRole) {
   const store = getStore();
@@ -317,6 +331,274 @@ export async function getStudentCheckInsData(studentId: string) {
   return data?.length ? data.map(mapCheckIn) : getStudentCheckInsFallback(studentId);
 }
 
+export async function getStudentVocabularyStudyData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStudentVocabularyStudyFallback(studentId);
+  }
+
+  const { data, error } = await supabase
+    .from("vocabulary_study_records")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("date", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStudentVocabularyStudyFallback(studentId);
+  }
+
+  return data.map(mapVocabularyStudyRecord);
+}
+
+export async function getStudentHomeworkGradingData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStudentHomeworkGradingFallback(studentId);
+  }
+
+  const { data, error } = await supabase
+    .from("homework_grading_records")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("date", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStudentHomeworkGradingFallback(studentId);
+  }
+
+  return data.map(mapHomeworkGradingRecord);
+}
+
+export async function getStudentReadingTrainingData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStudentReadingTrainingFallback(studentId);
+  }
+
+  const { data, error } = await supabase
+    .from("reading_training_records")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("date", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStudentReadingTrainingFallback(studentId);
+  }
+
+  return data.map(mapReadingTrainingRecord);
+}
+
+export async function getStudentStudyCenterData(studentId: string): Promise<StudyCenterData> {
+  const [
+    vocabularyPacks,
+    vocabularyWords,
+    vocabularyAttempts,
+    homeworkQuestions,
+    homeworkAttempts,
+    readingPassages,
+    readingQuizAttempts,
+  ] = await Promise.all([
+    getStudentVocabularyPacksData(studentId),
+    getStudentVocabularyWordsData(studentId),
+    getStudentVocabularyAttemptsData(studentId),
+    getStudentHomeworkQuestionsData(studentId),
+    getStudentHomeworkQuestionAttemptsData(studentId),
+    getStudentReadingPassagesData(studentId),
+    getStudentReadingQuizAttemptsData(studentId),
+  ]);
+
+  return {
+    vocabularyPacks,
+    vocabularyWords,
+    vocabularyAttempts,
+    homeworkQuestions,
+    homeworkAttempts,
+    readingPassages,
+    readingQuizAttempts,
+  };
+}
+
+export async function getStudentStudyCenterMetrics(studentId: string): Promise<StudyCenterMetrics> {
+  const studyCenter = await getStudentStudyCenterData(studentId);
+  return calculateStudyCenterMetrics(studyCenter);
+}
+
+export async function getStudentVocabularyReviewQueue(studentId: string) {
+  const studyCenter = await getStudentStudyCenterData(studentId);
+  return buildVocabularyReviewQueue(studyCenter.vocabularyPacks, studyCenter.vocabularyWords);
+}
+
+export async function getStudentVocabularyPacksData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .vocabularyPacks.filter((pack) => pack.studentId === studentId)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  }
+
+  const { data, error } = await supabase
+    .from("vocabulary_packs")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStore()
+      .vocabularyPacks.filter((pack) => pack.studentId === studentId)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  }
+
+  return data.map(mapVocabularyPack);
+}
+
+export async function getStudentVocabularyWordsData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .vocabularyWords.filter((item) => item.studentId === studentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  const { data, error } = await supabase
+    .from("vocabulary_word_items")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("sort_order", { ascending: true });
+
+  if (error || !data?.length) {
+    return getStore()
+      .vocabularyWords.filter((item) => item.studentId === studentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  return data.map(mapVocabularyWordItem);
+}
+
+export async function getStudentVocabularyAttemptsData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .vocabularyAttempts.filter((attempt) => attempt.studentId === studentId)
+      .sort((left, right) => right.date.localeCompare(left.date));
+  }
+
+  const { data, error } = await supabase
+    .from("vocabulary_attempts")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("date", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStore()
+      .vocabularyAttempts.filter((attempt) => attempt.studentId === studentId)
+      .sort((left, right) => right.date.localeCompare(left.date));
+  }
+
+  return data.map(mapVocabularyAttempt);
+}
+
+export async function getStudentHomeworkQuestionsData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .homeworkQuestions.filter((item) => item.studentId === studentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  const { data, error } = await supabase
+    .from("homework_question_items")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("sort_order", { ascending: true });
+
+  if (error || !data?.length) {
+    return getStore()
+      .homeworkQuestions.filter((item) => item.studentId === studentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  return data.map(mapHomeworkQuestionItem);
+}
+
+export async function getStudentHomeworkQuestionAttemptsData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .homeworkQuestionAttempts.filter((attempt) => attempt.studentId === studentId)
+      .sort((left, right) => right.date.localeCompare(left.date));
+  }
+
+  const { data, error } = await supabase
+    .from("homework_question_attempts")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("date", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStore()
+      .homeworkQuestionAttempts.filter((attempt) => attempt.studentId === studentId)
+      .sort((left, right) => right.date.localeCompare(left.date));
+  }
+
+  return data.map(mapHomeworkQuestionAttempt);
+}
+
+export async function getStudentReadingPassagesData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .readingPassages.filter((passage) => passage.studentId === studentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  const { data, error } = await supabase
+    .from("reading_passage_items")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("sort_order", { ascending: true });
+
+  if (error || !data?.length) {
+    return getStore()
+      .readingPassages.filter((passage) => passage.studentId === studentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  return data.map(mapReadingPassageItem);
+}
+
+export async function getStudentReadingQuizAttemptsData(studentId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return getStore()
+      .readingQuizAttempts.filter((attempt) => attempt.studentId === studentId)
+      .sort((left, right) => right.date.localeCompare(left.date));
+  }
+
+  const { data, error } = await supabase
+    .from("reading_quiz_attempts")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("date", { ascending: false });
+
+  if (error || !data?.length) {
+    return getStore()
+      .readingQuizAttempts.filter((attempt) => attempt.studentId === studentId)
+      .sort((left, right) => right.date.localeCompare(left.date));
+  }
+
+  return data.map(mapReadingQuizAttempt);
+}
+
 export async function getStudentNotesData(studentId: string) {
   const supabase = getSupabaseAdminClient();
 
@@ -512,6 +794,415 @@ export function createCheckIn(input: Omit<CheckInRecord, "id">) {
   getStore().checkIns.unshift(record);
   void persistCheckIn(record);
   return record;
+}
+
+export function createVocabularyStudyRecord(input: Omit<VocabularyStudyRecord, "id" | "reviewStage">) {
+  const latestForPack = getStore()
+    .vocabularyStudyRecords.filter((record) => record.studentId === input.studentId && record.packName === input.packName)
+    .sort((left, right) => right.date.localeCompare(left.date))[0];
+
+  const record: VocabularyStudyRecord = {
+    id: crypto.randomUUID(),
+    ...input,
+    reviewStage: latestForPack ? Math.min(latestForPack.reviewStage + 1, VOCABULARY_REVIEW_INTERVALS.length - 1) : 0,
+  };
+
+  getStore().vocabularyStudyRecords.unshift(record);
+  void persistVocabularyStudyRecord(record);
+  return record;
+}
+
+export async function updateVocabularyStudyRecord(
+  recordId: string,
+  input: Partial<Pick<VocabularyStudyRecord, "date" | "packName" | "newWordsCount" | "reviewWordsCount" | "completed" | "mastery" | "notes" | "reviewStage">>
+) {
+  const store = getStore();
+  const localRecord = store.vocabularyStudyRecords.find((item) => item.id === recordId);
+
+  if (localRecord) {
+    Object.assign(localRecord, input);
+    await persistVocabularyStudyRecord(localRecord);
+    return localRecord;
+  }
+
+  const persistedRecord = await getPersistedVocabularyStudyRecordById(recordId);
+  if (!persistedRecord) {
+    return null;
+  }
+
+  const updatedRecord = { ...persistedRecord, ...input };
+  upsertVocabularyStudyRecordInStore(updatedRecord);
+  await persistVocabularyStudyRecord(updatedRecord);
+  return updatedRecord;
+}
+
+export async function deleteVocabularyStudyRecord(recordId: string) {
+  const store = getStore();
+  const index = store.vocabularyStudyRecords.findIndex((item) => item.id === recordId);
+
+  if (index !== -1) {
+    const [record] = store.vocabularyStudyRecords.splice(index, 1);
+    await removeVocabularyStudyRecord(record.id);
+    return record;
+  }
+
+  const persistedRecord = await getPersistedVocabularyStudyRecordById(recordId);
+  if (!persistedRecord) {
+    return null;
+  }
+
+  await removeVocabularyStudyRecord(recordId);
+  return persistedRecord;
+}
+
+export function createHomeworkGradingRecord(input: Omit<HomeworkGradingRecord, "id">) {
+  const record: HomeworkGradingRecord = {
+    id: crypto.randomUUID(),
+    ...input,
+  };
+
+  getStore().homeworkGradingRecords.unshift(record);
+  void persistHomeworkGradingRecord(record);
+  return record;
+}
+
+export async function updateHomeworkGradingRecord(
+  recordId: string,
+  input: Partial<Omit<HomeworkGradingRecord, "id" | "studentId">>
+) {
+  const store = getStore();
+  const localRecord = store.homeworkGradingRecords.find((item) => item.id === recordId);
+
+  if (localRecord) {
+    Object.assign(localRecord, input);
+    await persistHomeworkGradingRecord(localRecord);
+    return localRecord;
+  }
+
+  const persistedRecord = await getPersistedHomeworkGradingRecordById(recordId);
+  if (!persistedRecord) {
+    return null;
+  }
+
+  const updatedRecord = { ...persistedRecord, ...input };
+  upsertHomeworkGradingRecordInStore(updatedRecord);
+  await persistHomeworkGradingRecord(updatedRecord);
+  return updatedRecord;
+}
+
+export async function deleteHomeworkGradingRecord(recordId: string) {
+  const store = getStore();
+  const index = store.homeworkGradingRecords.findIndex((item) => item.id === recordId);
+
+  if (index !== -1) {
+    const [record] = store.homeworkGradingRecords.splice(index, 1);
+    await removeHomeworkGradingRecord(record.id);
+    return record;
+  }
+
+  const persistedRecord = await getPersistedHomeworkGradingRecordById(recordId);
+  if (!persistedRecord) {
+    return null;
+  }
+
+  await removeHomeworkGradingRecord(recordId);
+  return persistedRecord;
+}
+
+export function createReadingTrainingRecord(input: Omit<ReadingTrainingRecord, "id">) {
+  const record: ReadingTrainingRecord = {
+    id: crypto.randomUUID(),
+    ...input,
+  };
+
+  getStore().readingTrainingRecords.unshift(record);
+  void persistReadingTrainingRecord(record);
+  return record;
+}
+
+export async function updateReadingTrainingRecord(
+  recordId: string,
+  input: Partial<Omit<ReadingTrainingRecord, "id" | "studentId">>
+) {
+  const store = getStore();
+  const localRecord = store.readingTrainingRecords.find((item) => item.id === recordId);
+
+  if (localRecord) {
+    Object.assign(localRecord, input);
+    await persistReadingTrainingRecord(localRecord);
+    return localRecord;
+  }
+
+  const persistedRecord = await getPersistedReadingTrainingRecordById(recordId);
+  if (!persistedRecord) {
+    return null;
+  }
+
+  const updatedRecord = { ...persistedRecord, ...input };
+  upsertReadingTrainingRecordInStore(updatedRecord);
+  await persistReadingTrainingRecord(updatedRecord);
+  return updatedRecord;
+}
+
+export async function deleteReadingTrainingRecord(recordId: string) {
+  const store = getStore();
+  const index = store.readingTrainingRecords.findIndex((item) => item.id === recordId);
+
+  if (index !== -1) {
+    const [record] = store.readingTrainingRecords.splice(index, 1);
+    await removeReadingTrainingRecord(record.id);
+    return record;
+  }
+
+  const persistedRecord = await getPersistedReadingTrainingRecordById(recordId);
+  if (!persistedRecord) {
+    return null;
+  }
+
+  await removeReadingTrainingRecord(recordId);
+  return persistedRecord;
+}
+
+export async function importVocabularyPack(input: {
+  studentId: string;
+  name: string;
+  dailyNewCount: number;
+  dailyReviewCount: number;
+  words: Array<{ word: string; meaning: string; notes?: string }>;
+}) {
+  const pack: VocabularyPack = {
+    id: crypto.randomUUID(),
+    studentId: input.studentId,
+    name: input.name,
+    dailyNewCount: input.dailyNewCount,
+    dailyReviewCount: input.dailyReviewCount,
+    totalWords: input.words.length,
+    active: true,
+    createdAt: new Date().toISOString().slice(0, 10),
+  };
+
+  const words: VocabularyWordItem[] = input.words.map((row, index) => ({
+    id: crypto.randomUUID(),
+    studentId: input.studentId,
+    packId: pack.id,
+    word: row.word,
+    meaning: row.meaning,
+    notes: row.notes ?? "",
+    sortOrder: index + 1,
+    introducedOn: "",
+    nextReviewOn: "",
+    reviewStage: 0,
+    totalAttempts: 0,
+    correctAttempts: 0,
+    completed: false,
+  }));
+
+  getStore().vocabularyPacks.unshift(pack);
+  getStore().vocabularyWords.unshift(...words);
+  await persistVocabularyPack(pack);
+  await Promise.all(words.map((word) => persistVocabularyWordItem(word)));
+  return { pack, words };
+}
+
+export async function submitVocabularyPractice(input: {
+  studentId: string;
+  packId: string;
+  answers: Array<{ wordItemId: string; studentAnswer: string }>;
+}) {
+  const words = await getStudentVocabularyWordsData(input.studentId);
+  const targetWords = words.filter((word) => word.packId === input.packId);
+  const answerMap = new Map(input.answers.map((item) => [item.wordItemId, item.studentAnswer]));
+  const today = new Date().toISOString().slice(0, 10);
+  const attempts: VocabularyAttempt[] = [];
+
+  for (const word of targetWords) {
+    const studentAnswer = answerMap.get(word.id);
+    if (studentAnswer === undefined) continue;
+
+    const correct = compareAnswer(studentAnswer, word.meaning);
+    const mode = word.introducedOn ? "review" : "new";
+    const updatedWord: VocabularyWordItem = {
+      ...word,
+      introducedOn: word.introducedOn || today,
+      nextReviewOn: calculateNextVocabularyReviewDate(today, correct ? Math.min(word.reviewStage + 1, VOCABULARY_REVIEW_INTERVALS.length - 1) : 0),
+      reviewStage: correct ? Math.min(word.reviewStage + 1, VOCABULARY_REVIEW_INTERVALS.length - 1) : 0,
+      totalAttempts: word.totalAttempts + 1,
+      correctAttempts: word.correctAttempts + (correct ? 1 : 0),
+      completed: correct && word.reviewStage >= VOCABULARY_REVIEW_INTERVALS.length - 2,
+    };
+
+    const attempt: VocabularyAttempt = {
+      id: crypto.randomUUID(),
+      studentId: input.studentId,
+      packId: input.packId,
+      wordItemId: word.id,
+      date: today,
+      mode,
+      prompt: word.word,
+      expectedAnswer: word.meaning,
+      studentAnswer,
+      correct,
+    };
+
+    upsertVocabularyWordItemInStore(updatedWord);
+    getStore().vocabularyAttempts.unshift(attempt);
+    attempts.push(attempt);
+    await persistVocabularyWordItem(updatedWord);
+    await persistVocabularyAttempt(attempt);
+  }
+
+  const correctCount = attempts.filter((item) => item.correct).length;
+  return {
+    attempts,
+    totalCount: attempts.length,
+    correctCount,
+    accuracy: attempts.length > 0 ? Math.round((correctCount / attempts.length) * 100) : 0,
+  };
+}
+
+export async function importHomeworkQuestions(input: {
+  studentId: string;
+  rows: Array<{ subject: string; prompt: string; correctAnswer: string; explanation?: string }>;
+}) {
+  const questions = input.rows.map((row, index) => ({
+    id: crypto.randomUUID(),
+    studentId: input.studentId,
+    subject: row.subject,
+    prompt: row.prompt,
+    correctAnswer: row.correctAnswer,
+    explanation: row.explanation ?? "",
+    sortOrder: index + 1,
+    completed: false,
+    createdAt: new Date().toISOString().slice(0, 10),
+  })) satisfies HomeworkQuestionItem[];
+
+  getStore().homeworkQuestions.unshift(...questions);
+  await Promise.all(questions.map((question) => persistHomeworkQuestionItem(question)));
+  return questions;
+}
+
+export async function getStudentHomeworkTodayQuestion(studentId: string) {
+  const questions = await getStudentHomeworkQuestionsData(studentId);
+  const attempts = await getStudentHomeworkQuestionAttemptsData(studentId);
+  const incompleteQuestions = questions.filter((question) => !question.completed);
+
+  if (incompleteQuestions.length === 0) {
+    return {
+      question: null,
+      currentSubject: null,
+      subjectProgress: [],
+    };
+  }
+
+  const bySubject = groupQuestionsBySubject(questions);
+  const orderedSubjects = [...bySubject.keys()];
+  const currentSubject = orderedSubjects.find((subject) =>
+    (bySubject.get(subject) ?? []).some((question) => !question.completed)
+  ) ?? orderedSubjects[0];
+
+  const subjectQuestions = (bySubject.get(currentSubject) ?? []).filter((question) => !question.completed);
+  const today = new Date().toISOString().slice(0, 10);
+  const seed = hashString(`${studentId}-${today}-${currentSubject}`);
+  const question = subjectQuestions[seed % subjectQuestions.length] ?? null;
+
+  return {
+    question,
+    currentSubject,
+    subjectProgress: orderedSubjects.map((subject) => {
+      const subjectItems = bySubject.get(subject) ?? [];
+      const completedCount = subjectItems.filter((item) => item.completed).length;
+      const latestAttempt = attempts.find((attempt) => attempt.subject === subject);
+      return {
+        subject,
+        total: subjectItems.length,
+        completed: completedCount,
+        latestDate: latestAttempt?.date ?? "",
+      };
+    }),
+  };
+}
+
+export async function submitHomeworkQuestionAnswer(input: {
+  studentId: string;
+  questionId: string;
+  studentAnswer: string;
+}) {
+  const questions = await getStudentHomeworkQuestionsData(input.studentId);
+  const question = questions.find((item) => item.id === input.questionId);
+  if (!question) return null;
+
+  const correct = compareAnswer(input.studentAnswer, question.correctAnswer);
+  const attempt: HomeworkQuestionAttempt = {
+    id: crypto.randomUUID(),
+    studentId: input.studentId,
+    questionId: question.id,
+    date: new Date().toISOString().slice(0, 10),
+    subject: question.subject,
+    studentAnswer: input.studentAnswer,
+    correctAnswer: question.correctAnswer,
+    correct,
+  };
+
+  const updatedQuestion = { ...question, completed: question.completed || correct };
+  upsertHomeworkQuestionItemInStore(updatedQuestion);
+  getStore().homeworkQuestionAttempts.unshift(attempt);
+  await persistHomeworkQuestionItem(updatedQuestion);
+  await persistHomeworkQuestionAttempt(attempt);
+
+  return { attempt, question: updatedQuestion };
+}
+
+export async function importReadingPassages(input: {
+  studentId: string;
+  rows: Array<{ title: string; passage: string; source?: string }>;
+}) {
+  const passages = input.rows.map((row, index) => ({
+    id: crypto.randomUUID(),
+    studentId: input.studentId,
+    title: row.title,
+    passage: row.passage,
+    source: row.source ?? "",
+    sortOrder: index + 1,
+    createdAt: new Date().toISOString().slice(0, 10),
+  })) satisfies ReadingPassageItem[];
+
+  getStore().readingPassages.unshift(...passages);
+  await Promise.all(passages.map((passage) => persistReadingPassageItem(passage)));
+  return passages;
+}
+
+export async function getReadingPassageById(studentId: string, passageId: string) {
+  const passages = await getStudentReadingPassagesData(studentId);
+  return passages.find((item) => item.id === passageId) ?? null;
+}
+
+export async function createReadingQuizAttempt(input: {
+  studentId: string;
+  passageId: string;
+  title: string;
+  questions: ReadingQuizQuestion[];
+  selectedAnswers: number[];
+}) {
+  const correctCount = input.questions.reduce((sum, question, index) => {
+    return sum + (question.answerIndex === input.selectedAnswers[index] ? 1 : 0);
+  }, 0);
+
+  const attempt: ReadingQuizAttempt = {
+    id: crypto.randomUUID(),
+    studentId: input.studentId,
+    passageId: input.passageId,
+    date: new Date().toISOString().slice(0, 10),
+    title: input.title,
+    questions: input.questions,
+    selectedAnswers: input.selectedAnswers,
+    correctCount,
+    totalQuestions: input.questions.length,
+    perfect: input.questions.length > 0 && correctCount === input.questions.length,
+  };
+
+  getStore().readingQuizAttempts.unshift(attempt);
+  await persistReadingQuizAttempt(attempt);
+  return attempt;
 }
 
 export async function updateCheckIn(
@@ -839,15 +1530,15 @@ export async function getStudentCompletionData(studentId: string) {
 }
 
 export async function getStudentLiveMetricsData(studentId: string): Promise<StudentLiveMetrics> {
-  const [tasks, checkIns] = await Promise.all([
+  const [tasks, studyCenterMetrics] = await Promise.all([
     getStudentTasksData(studentId),
-    getStudentCheckInsData(studentId),
+    getStudentStudyCenterMetrics(studentId),
   ]);
 
   return {
     completion: calculateTaskCompletion(tasks),
-    checkInStreak: calculateCheckInStreak(checkIns),
-    masteryAverage: calculateMasteryAverage(checkIns),
+    checkInStreak: studyCenterMetrics.streakDays,
+    masteryAverage: studyCenterMetrics.averagePerformance,
   };
 }
 
@@ -1116,12 +1807,48 @@ export async function getAdminMemberExportData(userId: string) {
         })
       : null;
 
-  const [applicationProfile, tasks, milestones, checkIns, notes, parentLinks, consultantLinks, aiArtifacts, auditLogs] =
+  const [
+    applicationProfile,
+    tasks,
+    milestones,
+    checkIns,
+    vocabularyStudyRecords,
+    homeworkGradingRecords,
+    readingTrainingRecords,
+    vocabularyPacks,
+    vocabularyWords,
+    vocabularyAttempts,
+    homeworkQuestions,
+    homeworkQuestionAttempts,
+    readingPassages,
+    readingQuizAttempts,
+    notes,
+    parentLinks,
+    consultantLinks,
+    aiArtifacts,
+    auditLogs,
+  ] =
     await Promise.all([
       student ? getStudentApplicationProfileData(student.id) : Promise.resolve(null),
       student ? getStudentTasksData(student.id) : Promise.resolve([]),
       student ? getStudentMilestonesData(student.id) : Promise.resolve([]),
       student ? getStudentCheckInsData(student.id) : Promise.resolve([]),
+      student
+        ? supabase.from("vocabulary_study_records").select("*").eq("student_id", student.id)
+        : Promise.resolve({ data: [] }),
+      student
+        ? supabase.from("homework_grading_records").select("*").eq("student_id", student.id)
+        : Promise.resolve({ data: [] }),
+      student
+        ? supabase.from("reading_training_records").select("*").eq("student_id", student.id)
+        : Promise.resolve({ data: [] }),
+      student ? supabase.from("vocabulary_packs").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
+      student ? supabase.from("vocabulary_word_items").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
+      student ? supabase.from("vocabulary_attempts").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
+      student ? supabase.from("homework_question_items").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
+      student ? supabase.from("homework_question_attempts").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
+      student ? supabase.from("reading_passage_items").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
+      student ? supabase.from("reading_quiz_attempts").select("*").eq("student_id", student.id) : Promise.resolve({ data: [] }),
       user.role === "consultant"
         ? supabase.from("advisor_notes").select("*").eq("consultant_id", userId)
         : student
@@ -1143,6 +1870,16 @@ export async function getAdminMemberExportData(userId: string) {
     tasks,
     milestones,
     checkIns,
+    vocabularyStudyRecords: vocabularyStudyRecords.data ?? [],
+    homeworkGradingRecords: homeworkGradingRecords.data ?? [],
+    readingTrainingRecords: readingTrainingRecords.data ?? [],
+    vocabularyPacks: vocabularyPacks.data ?? [],
+    vocabularyWords: vocabularyWords.data ?? [],
+    vocabularyAttempts: vocabularyAttempts.data ?? [],
+    homeworkQuestions: homeworkQuestions.data ?? [],
+    homeworkQuestionAttempts: homeworkQuestionAttempts.data ?? [],
+    readingPassages: readingPassages.data ?? [],
+    readingQuizAttempts: readingQuizAttempts.data ?? [],
     notes: "data" in notes ? notes.data ?? [] : [],
     parentLinks: parentLinks.data ?? [],
     consultantLinks: consultantLinks.data ?? [],
@@ -1169,6 +1906,16 @@ export async function deleteMemberAccount(userId: string) {
     const studentIds = (studentRows ?? []).map((row) => String(row.id));
 
     if (studentIds.length > 0) {
+      await supabase.from("vocabulary_study_records").delete().in("student_id", studentIds);
+      await supabase.from("homework_grading_records").delete().in("student_id", studentIds);
+      await supabase.from("reading_training_records").delete().in("student_id", studentIds);
+      await supabase.from("vocabulary_packs").delete().in("student_id", studentIds);
+      await supabase.from("vocabulary_word_items").delete().in("student_id", studentIds);
+      await supabase.from("vocabulary_attempts").delete().in("student_id", studentIds);
+      await supabase.from("homework_question_items").delete().in("student_id", studentIds);
+      await supabase.from("homework_question_attempts").delete().in("student_id", studentIds);
+      await supabase.from("reading_passage_items").delete().in("student_id", studentIds);
+      await supabase.from("reading_quiz_attempts").delete().in("student_id", studentIds);
       await supabase.from("student_application_profiles").delete().in("student_id", studentIds);
       await supabase.from("student_parent_links").delete().in("student_id", studentIds);
       await supabase.from("student_consultant_links").delete().in("student_id", studentIds);
@@ -1247,6 +1994,24 @@ function getStudentCheckInsFallback(studentId: string) {
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
+function getStudentVocabularyStudyFallback(studentId: string) {
+  return getStore()
+    .vocabularyStudyRecords.filter((record) => record.studentId === studentId)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function getStudentHomeworkGradingFallback(studentId: string) {
+  return getStore()
+    .homeworkGradingRecords.filter((record) => record.studentId === studentId)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function getStudentReadingTrainingFallback(studentId: string) {
+  return getStore()
+    .readingTrainingRecords.filter((record) => record.studentId === studentId)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
 function getStudentApplicationProfileFallback(studentId: string) {
   const existing =
     (getStore().applicationProfiles ?? []).find((profile) => profile.studentId === studentId) ?? null;
@@ -1293,6 +2058,16 @@ function buildAdminMemberExportFallback(userId: string) {
     tasks: student ? store.tasks.filter((item) => item.studentId === student.id) : [],
     milestones: student ? store.milestones.filter((item) => item.studentId === student.id) : [],
     checkIns: student ? store.checkIns.filter((item) => item.studentId === student.id) : [],
+    vocabularyStudyRecords: student ? store.vocabularyStudyRecords.filter((item) => item.studentId === student.id) : [],
+    homeworkGradingRecords: student ? store.homeworkGradingRecords.filter((item) => item.studentId === student.id) : [],
+    readingTrainingRecords: student ? store.readingTrainingRecords.filter((item) => item.studentId === student.id) : [],
+    vocabularyPacks: student ? store.vocabularyPacks.filter((item) => item.studentId === student.id) : [],
+    vocabularyWords: student ? store.vocabularyWords.filter((item) => item.studentId === student.id) : [],
+    vocabularyAttempts: student ? store.vocabularyAttempts.filter((item) => item.studentId === student.id) : [],
+    homeworkQuestions: student ? store.homeworkQuestions.filter((item) => item.studentId === student.id) : [],
+    homeworkQuestionAttempts: student ? store.homeworkQuestionAttempts.filter((item) => item.studentId === student.id) : [],
+    readingPassages: student ? store.readingPassages.filter((item) => item.studentId === student.id) : [],
+    readingQuizAttempts: student ? store.readingQuizAttempts.filter((item) => item.studentId === student.id) : [],
     notes:
       user.role === "consultant"
         ? store.advisorNotes.filter((item) => item.consultantId === userId)
@@ -1329,6 +2104,16 @@ function deleteMemberAccountFallback(userId: string, role: UserRole) {
     store.tasks = store.tasks.filter((task) => !studentIds.includes(task.studentId));
     store.milestones = store.milestones.filter((milestone) => !studentIds.includes(milestone.studentId));
     store.checkIns = store.checkIns.filter((checkIn) => !studentIds.includes(checkIn.studentId));
+    store.vocabularyStudyRecords = store.vocabularyStudyRecords.filter((record) => !studentIds.includes(record.studentId));
+    store.homeworkGradingRecords = store.homeworkGradingRecords.filter((record) => !studentIds.includes(record.studentId));
+    store.readingTrainingRecords = store.readingTrainingRecords.filter((record) => !studentIds.includes(record.studentId));
+    store.vocabularyPacks = store.vocabularyPacks.filter((record) => !studentIds.includes(record.studentId));
+    store.vocabularyWords = store.vocabularyWords.filter((record) => !studentIds.includes(record.studentId));
+    store.vocabularyAttempts = store.vocabularyAttempts.filter((record) => !studentIds.includes(record.studentId));
+    store.homeworkQuestions = store.homeworkQuestions.filter((record) => !studentIds.includes(record.studentId));
+    store.homeworkQuestionAttempts = store.homeworkQuestionAttempts.filter((record) => !studentIds.includes(record.studentId));
+    store.readingPassages = store.readingPassages.filter((record) => !studentIds.includes(record.studentId));
+    store.readingQuizAttempts = store.readingQuizAttempts.filter((record) => !studentIds.includes(record.studentId));
     store.advisorNotes = store.advisorNotes.filter((note) => !studentIds.includes(note.studentId));
     store.studentParentLinks = store.studentParentLinks.filter((link) => !studentIds.includes(link.studentId));
     store.studentConsultantLinks = store.studentConsultantLinks.filter(
@@ -1462,6 +2247,241 @@ async function persistCheckIn(record: CheckInRecord) {
     date: record.date,
     notes: record.notes,
   });
+}
+
+async function persistVocabularyStudyRecord(record: VocabularyStudyRecord) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("vocabulary_study_records").upsert({
+    id: record.id,
+    student_id: record.studentId,
+    date: record.date,
+    pack_name: record.packName,
+    new_words_count: record.newWordsCount,
+    review_words_count: record.reviewWordsCount,
+    completed: record.completed,
+    mastery: record.mastery,
+    notes: record.notes,
+    review_stage: record.reviewStage,
+  });
+}
+
+async function removeVocabularyStudyRecord(recordId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("vocabulary_study_records").delete().eq("id", recordId);
+}
+
+async function getPersistedVocabularyStudyRecordById(recordId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("vocabulary_study_records")
+    .select("*")
+    .eq("id", recordId)
+    .maybeSingle();
+
+  return data ? mapVocabularyStudyRecord(data) : null;
+}
+
+async function persistHomeworkGradingRecord(record: HomeworkGradingRecord) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("homework_grading_records").upsert({
+    id: record.id,
+    student_id: record.studentId,
+    date: record.date,
+    assignment_title: record.assignmentTitle,
+    prompt_content: record.promptContent,
+    student_answer: record.studentAnswer,
+    reference_answer: record.referenceAnswer,
+    overall_evaluation: record.overallEvaluation,
+    error_analysis: record.errorAnalysis,
+    remediation_plan: record.remediationPlan,
+    next_step: record.nextStep,
+  });
+}
+
+async function removeHomeworkGradingRecord(recordId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("homework_grading_records").delete().eq("id", recordId);
+}
+
+async function getPersistedHomeworkGradingRecordById(recordId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("homework_grading_records")
+    .select("*")
+    .eq("id", recordId)
+    .maybeSingle();
+
+  return data ? mapHomeworkGradingRecord(data) : null;
+}
+
+async function persistReadingTrainingRecord(record: ReadingTrainingRecord) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("reading_training_records").upsert({
+    id: record.id,
+    student_id: record.studentId,
+    date: record.date,
+    material_title: record.materialTitle,
+    training_type: record.trainingType,
+    duration_minutes: record.durationMinutes,
+    completed_units: record.completedUnits,
+    comprehension: record.comprehension,
+    notes: record.notes,
+  });
+}
+
+async function persistVocabularyPack(pack: VocabularyPack) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("vocabulary_packs").upsert({
+    id: pack.id,
+    student_id: pack.studentId,
+    name: pack.name,
+    daily_new_count: pack.dailyNewCount,
+    daily_review_count: pack.dailyReviewCount,
+    total_words: pack.totalWords,
+    active: pack.active,
+    created_at: pack.createdAt,
+  });
+}
+
+async function persistVocabularyWordItem(word: VocabularyWordItem) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("vocabulary_word_items").upsert({
+    id: word.id,
+    student_id: word.studentId,
+    pack_id: word.packId,
+    word: word.word,
+    meaning: word.meaning,
+    notes: word.notes,
+    sort_order: word.sortOrder,
+    introduced_on: word.introducedOn || null,
+    next_review_on: word.nextReviewOn || null,
+    review_stage: word.reviewStage,
+    total_attempts: word.totalAttempts,
+    correct_attempts: word.correctAttempts,
+    completed: word.completed,
+  });
+}
+
+async function persistVocabularyAttempt(attempt: VocabularyAttempt) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("vocabulary_attempts").upsert({
+    id: attempt.id,
+    student_id: attempt.studentId,
+    pack_id: attempt.packId,
+    word_item_id: attempt.wordItemId,
+    date: attempt.date,
+    mode: attempt.mode,
+    prompt: attempt.prompt,
+    expected_answer: attempt.expectedAnswer,
+    student_answer: attempt.studentAnswer,
+    correct: attempt.correct,
+  });
+}
+
+async function persistHomeworkQuestionItem(item: HomeworkQuestionItem) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("homework_question_items").upsert({
+    id: item.id,
+    student_id: item.studentId,
+    subject: item.subject,
+    prompt: item.prompt,
+    correct_answer: item.correctAnswer,
+    explanation: item.explanation,
+    sort_order: item.sortOrder,
+    completed: item.completed,
+    created_at: item.createdAt,
+  });
+}
+
+async function persistHomeworkQuestionAttempt(attempt: HomeworkQuestionAttempt) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("homework_question_attempts").upsert({
+    id: attempt.id,
+    student_id: attempt.studentId,
+    question_id: attempt.questionId,
+    date: attempt.date,
+    subject: attempt.subject,
+    student_answer: attempt.studentAnswer,
+    correct_answer: attempt.correctAnswer,
+    correct: attempt.correct,
+  });
+}
+
+async function persistReadingPassageItem(item: ReadingPassageItem) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("reading_passage_items").upsert({
+    id: item.id,
+    student_id: item.studentId,
+    title: item.title,
+    passage: item.passage,
+    source: item.source,
+    sort_order: item.sortOrder,
+    created_at: item.createdAt,
+  });
+}
+
+async function persistReadingQuizAttempt(attempt: ReadingQuizAttempt) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("reading_quiz_attempts").upsert({
+    id: attempt.id,
+    student_id: attempt.studentId,
+    passage_id: attempt.passageId,
+    date: attempt.date,
+    title: attempt.title,
+    questions: attempt.questions,
+    selected_answers: attempt.selectedAnswers,
+    correct_count: attempt.correctCount,
+    total_questions: attempt.totalQuestions,
+    perfect: attempt.perfect,
+  });
+}
+
+async function removeReadingTrainingRecord(recordId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("reading_training_records").delete().eq("id", recordId);
+}
+
+async function getPersistedReadingTrainingRecordById(recordId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("reading_training_records")
+    .select("*")
+    .eq("id", recordId)
+    .maybeSingle();
+
+  return data ? mapReadingTrainingRecord(data) : null;
 }
 
 async function removeCheckIn(checkInId: string) {
@@ -2076,6 +3096,151 @@ function mapCheckIn(row: DbRow): CheckInRecord {
   };
 }
 
+function mapVocabularyStudyRecord(row: DbRow): VocabularyStudyRecord {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    date: String(row.date),
+    packName: String(row.pack_name),
+    newWordsCount: Number(row.new_words_count ?? 0),
+    reviewWordsCount: Number(row.review_words_count ?? 0),
+    completed: Boolean(row.completed),
+    mastery: Number(row.mastery),
+    notes: String(row.notes ?? ""),
+    reviewStage: Number(row.review_stage ?? 0),
+  };
+}
+
+function mapVocabularyPack(row: DbRow): VocabularyPack {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    name: String(row.name),
+    dailyNewCount: Number(row.daily_new_count ?? 0),
+    dailyReviewCount: Number(row.daily_review_count ?? 0),
+    totalWords: Number(row.total_words ?? 0),
+    active: Boolean(row.active),
+    createdAt: String(row.created_at ?? new Date().toISOString().slice(0, 10)),
+  };
+}
+
+function mapVocabularyWordItem(row: DbRow): VocabularyWordItem {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    packId: String(row.pack_id),
+    word: String(row.word),
+    meaning: String(row.meaning),
+    notes: String(row.notes ?? ""),
+    sortOrder: Number(row.sort_order ?? 0),
+    introducedOn: String(row.introduced_on ?? ""),
+    nextReviewOn: String(row.next_review_on ?? ""),
+    reviewStage: Number(row.review_stage ?? 0),
+    totalAttempts: Number(row.total_attempts ?? 0),
+    correctAttempts: Number(row.correct_attempts ?? 0),
+    completed: Boolean(row.completed),
+  };
+}
+
+function mapVocabularyAttempt(row: DbRow): VocabularyAttempt {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    packId: String(row.pack_id),
+    wordItemId: String(row.word_item_id),
+    date: String(row.date),
+    mode: row.mode as VocabularyAttempt["mode"],
+    prompt: String(row.prompt),
+    expectedAnswer: String(row.expected_answer),
+    studentAnswer: String(row.student_answer ?? ""),
+    correct: Boolean(row.correct),
+  };
+}
+
+function mapHomeworkGradingRecord(row: DbRow): HomeworkGradingRecord {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    date: String(row.date),
+    assignmentTitle: String(row.assignment_title),
+    promptContent: String(row.prompt_content),
+    studentAnswer: String(row.student_answer),
+    referenceAnswer: String(row.reference_answer ?? ""),
+    overallEvaluation: String(row.overall_evaluation),
+    errorAnalysis: String(row.error_analysis),
+    remediationPlan: String(row.remediation_plan),
+    nextStep: String(row.next_step),
+  };
+}
+
+function mapHomeworkQuestionItem(row: DbRow): HomeworkQuestionItem {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    subject: String(row.subject),
+    prompt: String(row.prompt),
+    correctAnswer: String(row.correct_answer),
+    explanation: String(row.explanation ?? ""),
+    sortOrder: Number(row.sort_order ?? 0),
+    completed: Boolean(row.completed),
+    createdAt: String(row.created_at ?? new Date().toISOString().slice(0, 10)),
+  };
+}
+
+function mapHomeworkQuestionAttempt(row: DbRow): HomeworkQuestionAttempt {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    questionId: String(row.question_id),
+    date: String(row.date),
+    subject: String(row.subject),
+    studentAnswer: String(row.student_answer ?? ""),
+    correctAnswer: String(row.correct_answer ?? ""),
+    correct: Boolean(row.correct),
+  };
+}
+
+function mapReadingTrainingRecord(row: DbRow): ReadingTrainingRecord {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    date: String(row.date),
+    materialTitle: String(row.material_title),
+    trainingType: String(row.training_type),
+    durationMinutes: Number(row.duration_minutes ?? 0),
+    completedUnits: String(row.completed_units ?? ""),
+    comprehension: Number(row.comprehension),
+    notes: String(row.notes ?? ""),
+  };
+}
+
+function mapReadingPassageItem(row: DbRow): ReadingPassageItem {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    title: String(row.title),
+    passage: String(row.passage),
+    source: String(row.source ?? ""),
+    sortOrder: Number(row.sort_order ?? 0),
+    createdAt: String(row.created_at ?? new Date().toISOString().slice(0, 10)),
+  };
+}
+
+function mapReadingQuizAttempt(row: DbRow): ReadingQuizAttempt {
+  return {
+    id: String(row.id),
+    studentId: String(row.student_id),
+    passageId: String(row.passage_id),
+    date: String(row.date),
+    title: String(row.title),
+    questions: (Array.isArray(row.questions) ? row.questions : []) as ReadingQuizQuestion[],
+    selectedAnswers: (Array.isArray(row.selected_answers) ? row.selected_answers : []).map((value) => Number(value)),
+    correctCount: Number(row.correct_count ?? 0),
+    totalQuestions: Number(row.total_questions ?? 0),
+    perfect: Boolean(row.perfect),
+  };
+}
+
 function mapAdvisorNote(row: DbRow): AdvisorNote {
   return {
     id: String(row.id),
@@ -2245,6 +3410,36 @@ function calculateMasteryAverage(checkIns: CheckInRecord[]) {
   return Number((total / checkIns.length).toFixed(1));
 }
 
+function calculateStudyCenterMetrics(studyCenter: StudyCenterData): StudyCenterMetrics {
+  const streakDays = calculateStudyStreakDays(studyCenter);
+  const recentSessionCount = calculateRecentStudySessionCount(studyCenter);
+  const vocabularyReviewCompletionRate = calculateVocabularyReviewCompletionRate(studyCenter.vocabularyAttempts);
+  const readingSessionCount = studyCenter.readingQuizAttempts.length;
+  const performanceSignals = [
+    ...buildVocabularyAccuracySignals(studyCenter.vocabularyWords),
+    ...studyCenter.homeworkAttempts.map((attempt) => (attempt.correct ? 4 : 2)),
+    ...studyCenter.readingQuizAttempts.map((attempt) =>
+      attempt.totalQuestions > 0 ? Number(((attempt.correctCount / attempt.totalQuestions) * 5).toFixed(1)) : 0
+    ),
+  ];
+  const averagePerformance =
+    performanceSignals.length === 0
+      ? 0
+      : Number(
+          (
+            performanceSignals.reduce((sum, value) => sum + value, 0) / performanceSignals.length
+          ).toFixed(1)
+        );
+
+  return {
+    streakDays,
+    recentSessionCount,
+    vocabularyReviewCompletionRate,
+    readingSessionCount,
+    averagePerformance,
+  };
+}
+
 function calculateMilestoneHitRate(milestones: Milestone[]) {
   if (milestones.length === 0) {
     return 0;
@@ -2343,8 +3538,162 @@ function calculateCheckInStreak(checkIns: CheckInRecord[]) {
   return streak;
 }
 
+function calculateStudyStreakDays(studyCenter: StudyCenterData) {
+  const uniqueDates = Array.from(
+    new Set([
+      ...studyCenter.vocabularyAttempts.map((record) => record.date),
+      ...studyCenter.homeworkAttempts.map((record) => record.date),
+      ...studyCenter.readingQuizAttempts.map((record) => record.date),
+    ])
+  )
+    .map(parseLocalDate)
+    .sort((left, right) => right.getTime() - left.getTime());
+
+  if (uniqueDates.length === 0) {
+    return 0;
+  }
+
+  let streak = 1;
+
+  for (let index = 1; index < uniqueDates.length; index += 1) {
+    const previous = uniqueDates[index - 1] as Date;
+    const current = uniqueDates[index] as Date;
+    const diff = Math.round((previous.getTime() - current.getTime()) / (24 * 60 * 60 * 1000));
+
+    if (diff !== 1) {
+      break;
+    }
+
+    streak += 1;
+  }
+
+  return streak;
+}
+
+function calculateRecentStudySessionCount(studyCenter: StudyCenterData) {
+  const today = startOfDay(new Date());
+  const threshold = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+
+  return [
+    ...studyCenter.vocabularyAttempts.map((record) => record.date),
+    ...studyCenter.homeworkAttempts.map((record) => record.date),
+    ...studyCenter.readingQuizAttempts.map((record) => record.date),
+  ].filter((value) => parseLocalDate(value).getTime() >= threshold.getTime()).length;
+}
+
+function calculateVocabularyReviewCompletionRate(records: VocabularyAttempt[]) {
+  const reviewRecords = records.filter((record) => record.mode === "review");
+
+  if (reviewRecords.length === 0) {
+    return 0;
+  }
+
+  const completedCount = reviewRecords.filter((record) => record.correct).length;
+  return Math.round((completedCount / reviewRecords.length) * 100);
+}
+
+function buildVocabularyReviewQueue(packs: VocabularyPack[], words: VocabularyWordItem[]) {
+  const today = startOfDay(new Date());
+  return packs
+    .filter((pack) => pack.active)
+    .map((pack) => {
+      const dueWords = words.filter(
+        (word) =>
+          word.packId === pack.id &&
+          word.introducedOn &&
+          !word.completed &&
+          word.nextReviewOn &&
+          startOfDay(parseLocalDate(word.nextReviewOn)).getTime() <= today.getTime()
+      );
+      const latestWord =
+        dueWords.sort((left, right) => right.nextReviewOn.localeCompare(left.nextReviewOn))[0] ??
+        words.find((word) => word.packId === pack.id) ??
+        null;
+
+      if (!latestWord || dueWords.length === 0) {
+        return null;
+      }
+
+      return {
+        packName: pack.name,
+        nextDueDate: formatDateLabel(parseLocalDate(latestWord.nextReviewOn)),
+        stageLabel: `Day ${VOCABULARY_REVIEW_INTERVALS[Math.min(latestWord.reviewStage, VOCABULARY_REVIEW_INTERVALS.length - 1)]}`,
+        latestRecord: {
+          id: latestWord.id,
+          studentId: latestWord.studentId,
+          date: latestWord.introducedOn || latestWord.nextReviewOn,
+          packName: pack.name,
+          newWordsCount: pack.dailyNewCount,
+          reviewWordsCount: dueWords.length,
+          completed: latestWord.completed,
+          mastery: latestWord.totalAttempts > 0 ? Math.max(1, Math.min(5, Math.round((latestWord.correctAttempts / latestWord.totalAttempts) * 5))) : 3,
+          notes: latestWord.notes,
+          reviewStage: latestWord.reviewStage,
+        } satisfies VocabularyStudyRecord,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+}
+
+function buildVocabularyAccuracySignals(words: VocabularyWordItem[]) {
+  return words
+    .filter((word) => word.totalAttempts > 0)
+    .map((word) => Number(((word.correctAttempts / word.totalAttempts) * 5).toFixed(1)));
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatDateLabel(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 function parseLocalDate(value: string) {
   return new Date(`${value}T00:00:00`);
+}
+
+function calculateNextVocabularyReviewDate(baseDate: string, reviewStage: number) {
+  const base = parseLocalDate(baseDate);
+  const interval = VOCABULARY_REVIEW_INTERVALS[Math.min(reviewStage, VOCABULARY_REVIEW_INTERVALS.length - 1)] ?? 1;
+  return formatDateLabel(new Date(base.getTime() + interval * 24 * 60 * 60 * 1000));
+}
+
+function compareAnswer(studentAnswer: string, expectedAnswer: string) {
+  const normalizedStudent = normalizeAnswer(studentAnswer);
+  const acceptableAnswers = expectedAnswer
+    .split(/[\n|;/]/g)
+    .map((value) => normalizeAnswer(value))
+    .filter(Boolean);
+
+  return acceptableAnswers.some((answer) => answer === normalizedStudent);
+}
+
+function normalizeAnswer(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[，。、“”‘’：:；;,.!?]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function groupQuestionsBySubject(questions: HomeworkQuestionItem[]) {
+  const map = new Map<string, HomeworkQuestionItem[]>();
+  questions.forEach((question) => {
+    const list = map.get(question.subject) ?? [];
+    list.push(question);
+    list.sort((left, right) => left.sortOrder - right.sortOrder);
+    map.set(question.subject, list);
+  });
+  return map;
+}
+
+function hashString(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
 }
 
 function upsertCheckInInStore(record: CheckInRecord) {
@@ -2357,6 +3706,66 @@ function upsertCheckInInStore(record: CheckInRecord) {
   }
 
   store.checkIns[index] = record;
+}
+
+function upsertVocabularyStudyRecordInStore(record: VocabularyStudyRecord) {
+  const store = getStore();
+  const index = store.vocabularyStudyRecords.findIndex((item) => item.id === record.id);
+
+  if (index === -1) {
+    store.vocabularyStudyRecords.unshift(record);
+    return;
+  }
+
+  store.vocabularyStudyRecords[index] = record;
+}
+
+function upsertVocabularyWordItemInStore(record: VocabularyWordItem) {
+  const store = getStore();
+  const index = store.vocabularyWords.findIndex((item) => item.id === record.id);
+
+  if (index === -1) {
+    store.vocabularyWords.unshift(record);
+    return;
+  }
+
+  store.vocabularyWords[index] = record;
+}
+
+function upsertHomeworkQuestionItemInStore(record: HomeworkQuestionItem) {
+  const store = getStore();
+  const index = store.homeworkQuestions.findIndex((item) => item.id === record.id);
+
+  if (index === -1) {
+    store.homeworkQuestions.unshift(record);
+    return;
+  }
+
+  store.homeworkQuestions[index] = record;
+}
+
+function upsertHomeworkGradingRecordInStore(record: HomeworkGradingRecord) {
+  const store = getStore();
+  const index = store.homeworkGradingRecords.findIndex((item) => item.id === record.id);
+
+  if (index === -1) {
+    store.homeworkGradingRecords.unshift(record);
+    return;
+  }
+
+  store.homeworkGradingRecords[index] = record;
+}
+
+function upsertReadingTrainingRecordInStore(record: ReadingTrainingRecord) {
+  const store = getStore();
+  const index = store.readingTrainingRecords.findIndex((item) => item.id === record.id);
+
+  if (index === -1) {
+    store.readingTrainingRecords.unshift(record);
+    return;
+  }
+
+  store.readingTrainingRecords[index] = record;
 }
 
 function upsertMilestoneInStore(milestone: Milestone) {

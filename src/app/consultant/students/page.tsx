@@ -52,7 +52,7 @@ export default async function ConsultantStudentsPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <StatCard label={pickText(locale, "Active students", "活跃学生")} value={`${overview.students.length}`} hint={pickText(locale, "Consultant portfolio view.", "顾问名下学生概览。")} />
         <StatCard label={pickText(locale, "Open tasks", "未完成任务")} value={`${overview.tasks.filter((task) => task.status !== "done").length}`} hint={pickText(locale, "Across all students.", "统计全部学生的任务。")} tone="tertiary" />
-        <StatCard label={pickText(locale, "At risk", "风险学生")} value={`${overview.analytics.atRiskCount}`} hint={pickText(locale, "Calculated from low completion, short streaks, or weak mastery.", "根据低完成率、短打卡连续天数或低掌握度计算。")} tone="secondary" />
+        <StatCard label={pickText(locale, "At risk", "风险学生")} value={`${overview.analytics.atRiskCount}`} hint={pickText(locale, "Calculated from low completion, weak learning rhythm, or low learning quality.", "根据低完成率、学习节奏偏弱或学习质量偏低计算。")} tone="secondary" />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
@@ -83,7 +83,7 @@ export default async function ConsultantStudentsPage() {
                   <div className="rounded-2xl bg-surface-container-low p-3">
                     <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-secondary/70">{pickText(locale, "Study rhythm", "学习节奏")}</p>
                     <p className="mt-2 text-sm font-semibold text-foreground">
-                      {pickText(locale, `${student.checkInStreak} day streak`, `连续 ${student.checkInStreak} 天`)}
+                      {pickText(locale, `${student.checkInStreak} day study streak`, `连续学习 ${student.checkInStreak} 天`)}
                     </p>
                     <p className="mt-1 text-xs text-secondary">
                       {pickText(locale, `Mastery ${student.masteryAverage}/5`, `掌握度 ${student.masteryAverage}/5`)}
@@ -150,7 +150,7 @@ export default async function ConsultantStudentsPage() {
                       <p className="text-xs text-secondary">{student.intendedMajor}</p>
                     </td>
                     <td className="px-4 py-3 text-secondary">
-                      <p>{pickText(locale, `${student.checkInStreak} day streak`, `连续 ${student.checkInStreak} 天`)}</p>
+                      <p>{pickText(locale, `${student.checkInStreak} day study streak`, `连续学习 ${student.checkInStreak} 天`)}</p>
                       <p className="text-xs text-secondary">{pickText(locale, `Mastery ${student.masteryAverage}/5`, `掌握度 ${student.masteryAverage}/5`)}</p>
                     </td>
                     <td className="px-4 py-3">
@@ -205,7 +205,7 @@ export default async function ConsultantStudentsPage() {
             <div className="rounded-2xl bg-surface-container-low p-5">
               <p className="font-bold text-foreground">{pickText(locale, "Live completion is already aligned", "实时完成率已经同步")}</p>
               <p className="mt-2 text-sm leading-7 text-secondary">
-                {pickText(locale, "The completion, streak, and mastery values here now follow the same live task and check-in logic used on the student dashboard.", "这里的完成率、连续打卡和掌握度，已经和学生端仪表盘使用同一套实时计算逻辑。")}
+                {pickText(locale, "The completion, learning streak, and learning quality values here now follow the same live task and study center logic used on the student dashboard.", "这里的完成率、连续学习和学习质量，已经和学生端仪表盘使用同一套实时任务与学习中心逻辑。")}
               </p>
             </div>
             <div className="rounded-2xl bg-surface-container-low p-5">

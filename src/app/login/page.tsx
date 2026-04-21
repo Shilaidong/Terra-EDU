@@ -124,7 +124,7 @@ export default async function LoginPage() {
             <div className="rounded-3xl bg-surface-container-high p-4 sm:p-5">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-tertiary">{pickText(locale, "Student demo", "学生示例")}</p>
               <p className="mt-2 text-xs leading-6 text-secondary sm:text-sm">
-                {pickText(locale, "Best for seeing planning, check-ins, documents, and AI guidance as a student would actually use them.", "适合查看规划、打卡、材料中心和 AI 助手在学生端的真实使用方式。")}
+                {pickText(locale, "Best for seeing planning, the learning center, documents, and AI guidance as a student would actually use them.", "适合查看规划、学习中心、材料中心和 AI 助手在学生端的真实使用方式。")}
               </p>
             </div>
             <div className="rounded-3xl bg-surface-container-high p-4 sm:p-5">

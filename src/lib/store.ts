@@ -5,14 +5,24 @@ import type {
   AuditLog,
   CheckInRecord,
   ContentItem,
+  HomeworkQuestionAttempt,
+  HomeworkQuestionItem,
   Milestone,
   Profile,
+  HomeworkGradingRecord,
+  ReadingPassageItem,
+  ReadingQuizAttempt,
+  ReadingTrainingRecord,
   StudentApplicationProfile,
   StudentConsultantLink,
   StudentParentLink,
   StudentRecord,
   Task,
   User,
+  VocabularyAttempt,
+  VocabularyPack,
+  VocabularyWordItem,
+  VocabularyStudyRecord,
 } from "@/lib/types";
 import { avatarPresetValues, getDefaultStudentAvatar } from "@/lib/avatar-presets";
 
@@ -30,6 +40,16 @@ export interface TerraStore {
   tasks: Task[];
   milestones: Milestone[];
   checkIns: CheckInRecord[];
+  vocabularyStudyRecords: VocabularyStudyRecord[];
+  vocabularyPacks: VocabularyPack[];
+  vocabularyWords: VocabularyWordItem[];
+  vocabularyAttempts: VocabularyAttempt[];
+  homeworkGradingRecords: HomeworkGradingRecord[];
+  homeworkQuestions: HomeworkQuestionItem[];
+  homeworkQuestionAttempts: HomeworkQuestionAttempt[];
+  readingTrainingRecords: ReadingTrainingRecord[];
+  readingPassages: ReadingPassageItem[];
+  readingQuizAttempts: ReadingQuizAttempt[];
   contentItems: ContentItem[];
   advisorNotes: AdvisorNote[];
   analyticsSnapshots: AnalyticsSnapshot[];
@@ -368,6 +388,209 @@ function seedStore(): TerraStore {
         notes: "Needs stronger real-world examples.",
       },
     ],
+    vocabularyStudyRecords: [
+      {
+        id: "study_vocab_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        date: "2026-04-18",
+        packName: "托福核心词汇 A1",
+        newWordsCount: 28,
+        reviewWordsCount: 0,
+        completed: true,
+        mastery: 4,
+        notes: "第一次过词表，能记住大部分词义。",
+        reviewStage: 0,
+      },
+      {
+        id: "study_vocab_2",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        date: "2026-04-19",
+        packName: "托福核心词汇 A1",
+        newWordsCount: 0,
+        reviewWordsCount: 28,
+        completed: true,
+        mastery: 4,
+        notes: "第二次复习时仍有 5 个词容易混淆。",
+        reviewStage: 1,
+      },
+      {
+        id: "study_vocab_3",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        date: "2026-04-20",
+        packName: "托福核心词汇 B1",
+        newWordsCount: 30,
+        reviewWordsCount: 0,
+        completed: true,
+        mastery: 3,
+        notes: "新词量略多，晚上复习有点吃力。",
+        reviewStage: 0,
+      },
+    ],
+    vocabularyPacks: [
+      {
+        id: "vocab_pack_demo_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        name: "托福核心词汇 C1",
+        dailyNewCount: 8,
+        dailyReviewCount: 16,
+        totalWords: 4,
+        active: true,
+        createdAt: "2026-04-18",
+      },
+    ],
+    vocabularyWords: [
+      {
+        id: "vocab_word_demo_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        packId: "vocab_pack_demo_1",
+        word: "mitigate",
+        meaning: "缓解|减轻",
+        notes: "",
+        sortOrder: 1,
+        introducedOn: "2026-04-18",
+        nextReviewOn: "2026-04-22",
+        reviewStage: 2,
+        totalAttempts: 3,
+        correctAttempts: 2,
+        completed: false,
+      },
+      {
+        id: "vocab_word_demo_2",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        packId: "vocab_pack_demo_1",
+        word: "resilient",
+        meaning: "有韧性的|能迅速恢复的",
+        notes: "",
+        sortOrder: 2,
+        introducedOn: "2026-04-19",
+        nextReviewOn: "2026-04-21",
+        reviewStage: 1,
+        totalAttempts: 2,
+        correctAttempts: 2,
+        completed: false,
+      },
+      {
+        id: "vocab_word_demo_3",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        packId: "vocab_pack_demo_1",
+        word: "feasible",
+        meaning: "可行的",
+        notes: "",
+        sortOrder: 3,
+        introducedOn: "",
+        nextReviewOn: "",
+        reviewStage: 0,
+        totalAttempts: 0,
+        correctAttempts: 0,
+        completed: false,
+      },
+      {
+        id: "vocab_word_demo_4",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        packId: "vocab_pack_demo_1",
+        word: "allocate",
+        meaning: "分配|拨给",
+        notes: "",
+        sortOrder: 4,
+        introducedOn: "",
+        nextReviewOn: "",
+        reviewStage: 0,
+        totalAttempts: 0,
+        correctAttempts: 0,
+        completed: false,
+      },
+    ],
+    vocabularyAttempts: [
+      {
+        id: "vocab_attempt_demo_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        packId: "vocab_pack_demo_1",
+        wordItemId: "vocab_word_demo_1",
+        date: "2026-04-20",
+        mode: "review",
+        prompt: "mitigate",
+        expectedAnswer: "缓解|减轻",
+        studentAnswer: "减轻",
+        correct: true,
+      },
+    ],
+    homeworkGradingRecords: [
+      {
+        id: "study_grading_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        date: "2026-04-20",
+        assignmentTitle: "托福独立写作：Should students do volunteer work?",
+        promptContent: "Discuss whether high school students should be required to do volunteer work before graduation.",
+        studentAnswer: "Students should do volunteer work because it helps society and also improves communication ability, but my example part was not strong enough.",
+        referenceAnswer: "Teacher note: strengthen concrete examples and improve the logic between the first and second paragraph.",
+        overallEvaluation: "整体观点清楚，立场稳定，但论证层次还不够扎实，尤其例子支撑偏弱。",
+        errorAnalysis: "主要问题在于论点展开不足、例子不够具体、段落之间衔接略显生硬。",
+        remediationPlan: "先把每一段的核心论点写成一句话，再给每段补一个真实或可想象的具体场景例子。",
+        nextStep: "下一次重写时优先修正文中例子和连接句，再重新检查段落逻辑。",
+      },
+    ],
+    homeworkQuestions: [
+      {
+        id: "homework_question_demo_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        subject: "写作",
+        prompt: "请用英文说明为什么高中生应该参与志愿活动。",
+        correctAnswer: "因为志愿活动能帮助学生建立责任感、同理心，并通过真实社会参与提升表达与协作能力。",
+        explanation: "核心在于责任感、同理心、真实参与和成长收益。",
+        sortOrder: 1,
+        completed: false,
+        createdAt: "2026-04-19",
+      },
+      {
+        id: "homework_question_demo_2",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        subject: "语法",
+        prompt: "改写句子：He don't like to study in the morning.",
+        correctAnswer: "He doesn't like to study in the morning.",
+        explanation: "第三人称单数一般现在时需要使用 doesn't。",
+        sortOrder: 2,
+        completed: false,
+        createdAt: "2026-04-19",
+      },
+    ],
+    homeworkQuestionAttempts: [],
+    readingTrainingRecords: [
+      {
+        id: "study_reading_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        date: "2026-04-19",
+        materialTitle: "National Geographic: Ocean Climate Systems",
+        trainingType: "精读",
+        durationMinutes: 35,
+        completedUnits: "1 篇文章 + 8 道题",
+        comprehension: 4,
+        notes: "主旨题和推断题表现稳定，细节定位还可以更快。",
+      },
+      {
+        id: "study_reading_2",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        date: "2026-04-20",
+        materialTitle: "Scientific American: Clean Energy Storage",
+        trainingType: "限时阅读",
+        durationMinutes: 42,
+        completedUnits: "2 篇文章",
+        comprehension: 3,
+        notes: "第二篇后半段速度下降，信息整合还不够稳。",
+      },
+    ],
+    readingPassages: [
+      {
+        id: "reading_passage_demo_1",
+        studentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        title: "Urban Trees and Heat Islands",
+        passage:
+          "Cities often become warmer than surrounding rural areas because roads, buildings, and other hard surfaces absorb and retain heat. This phenomenon is called the urban heat island effect. Researchers have found that planting more trees can reduce surface temperatures by providing shade and releasing moisture into the air through transpiration. However, the effectiveness of tree planting depends on species selection, long-term maintenance, and how evenly green spaces are distributed across different neighborhoods.",
+        source: "Demo reading bank",
+        sortOrder: 1,
+        createdAt: "2026-04-20",
+      },
+    ],
+    readingQuizAttempts: [],
     contentItems: [
       {
         id: "77777777-7777-7777-7777-777777777771",
@@ -509,6 +732,39 @@ export function getStore(): TerraStore {
 
   if (!global.__terraStore.studentConsultantLinks) {
     global.__terraStore.studentConsultantLinks = [];
+  }
+
+  if (!global.__terraStore.vocabularyStudyRecords) {
+    global.__terraStore.vocabularyStudyRecords = [];
+  }
+  if (!global.__terraStore.vocabularyPacks) {
+    global.__terraStore.vocabularyPacks = [];
+  }
+  if (!global.__terraStore.vocabularyWords) {
+    global.__terraStore.vocabularyWords = [];
+  }
+  if (!global.__terraStore.vocabularyAttempts) {
+    global.__terraStore.vocabularyAttempts = [];
+  }
+
+  if (!global.__terraStore.homeworkGradingRecords) {
+    global.__terraStore.homeworkGradingRecords = [];
+  }
+  if (!global.__terraStore.homeworkQuestions) {
+    global.__terraStore.homeworkQuestions = [];
+  }
+  if (!global.__terraStore.homeworkQuestionAttempts) {
+    global.__terraStore.homeworkQuestionAttempts = [];
+  }
+
+  if (!global.__terraStore.readingTrainingRecords) {
+    global.__terraStore.readingTrainingRecords = [];
+  }
+  if (!global.__terraStore.readingPassages) {
+    global.__terraStore.readingPassages = [];
+  }
+  if (!global.__terraStore.readingQuizAttempts) {
+    global.__terraStore.readingQuizAttempts = [];
   }
 
   return global.__terraStore;

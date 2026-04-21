@@ -133,6 +133,156 @@ export interface CheckInRecord {
   notes: string;
 }
 
+export interface VocabularyStudyRecord {
+  id: string;
+  studentId: string;
+  date: string;
+  packName: string;
+  newWordsCount: number;
+  reviewWordsCount: number;
+  completed: boolean;
+  mastery: number;
+  notes: string;
+  reviewStage: number;
+}
+
+export interface VocabularyPack {
+  id: string;
+  studentId: string;
+  name: string;
+  dailyNewCount: number;
+  dailyReviewCount: number;
+  totalWords: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface VocabularyWordItem {
+  id: string;
+  studentId: string;
+  packId: string;
+  word: string;
+  meaning: string;
+  notes: string;
+  sortOrder: number;
+  introducedOn: string;
+  nextReviewOn: string;
+  reviewStage: number;
+  totalAttempts: number;
+  correctAttempts: number;
+  completed: boolean;
+}
+
+export interface VocabularyAttempt {
+  id: string;
+  studentId: string;
+  packId: string;
+  wordItemId: string;
+  date: string;
+  mode: "new" | "review";
+  prompt: string;
+  expectedAnswer: string;
+  studentAnswer: string;
+  correct: boolean;
+}
+
+export interface HomeworkGradingRecord {
+  id: string;
+  studentId: string;
+  date: string;
+  assignmentTitle: string;
+  promptContent: string;
+  studentAnswer: string;
+  referenceAnswer: string;
+  overallEvaluation: string;
+  errorAnalysis: string;
+  remediationPlan: string;
+  nextStep: string;
+}
+
+export interface HomeworkQuestionItem {
+  id: string;
+  studentId: string;
+  subject: string;
+  prompt: string;
+  correctAnswer: string;
+  explanation: string;
+  sortOrder: number;
+  completed: boolean;
+  createdAt: string;
+}
+
+export interface HomeworkQuestionAttempt {
+  id: string;
+  studentId: string;
+  questionId: string;
+  date: string;
+  subject: string;
+  studentAnswer: string;
+  correctAnswer: string;
+  correct: boolean;
+}
+
+export interface ReadingPassageItem {
+  id: string;
+  studentId: string;
+  title: string;
+  passage: string;
+  source: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface ReadingQuizQuestion {
+  stem: string;
+  options: string[];
+  answerIndex: number;
+  explanation: string;
+}
+
+export interface ReadingTrainingRecord {
+  id: string;
+  studentId: string;
+  date: string;
+  materialTitle: string;
+  trainingType: string;
+  durationMinutes: number;
+  completedUnits: string;
+  comprehension: number;
+  notes: string;
+}
+
+export interface ReadingQuizAttempt {
+  id: string;
+  studentId: string;
+  passageId: string;
+  date: string;
+  title: string;
+  questions: ReadingQuizQuestion[];
+  selectedAnswers: number[];
+  correctCount: number;
+  totalQuestions: number;
+  perfect: boolean;
+}
+
+export interface StudyCenterMetrics {
+  streakDays: number;
+  recentSessionCount: number;
+  vocabularyReviewCompletionRate: number;
+  readingSessionCount: number;
+  averagePerformance: number;
+}
+
+export interface StudyCenterData {
+  vocabularyPacks: VocabularyPack[];
+  vocabularyWords: VocabularyWordItem[];
+  vocabularyAttempts: VocabularyAttempt[];
+  homeworkQuestions: HomeworkQuestionItem[];
+  homeworkAttempts: HomeworkQuestionAttempt[];
+  readingPassages: ReadingPassageItem[];
+  readingQuizAttempts: ReadingQuizAttempt[];
+}
+
 export interface ContentItem {
   id: string;
   type: "course" | "chapter" | "competition" | "school" | "major";

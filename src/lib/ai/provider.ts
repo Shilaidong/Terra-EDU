@@ -1,11 +1,23 @@
 import type {
   AdvisorNote,
-  CheckInRecord,
+  HomeworkQuestionAttempt,
+  HomeworkQuestionItem,
+  HomeworkGradingRecord,
   Milestone,
+  ReadingPassageItem,
+  ReadingQuizAttempt,
+  ReadingQuizQuestion,
+  ReadingTrainingRecord,
   StudentApplicationProfile,
   StudentRecord,
+  StudyCenterData,
+  StudyCenterMetrics,
   Task,
   UserRole,
+  VocabularyAttempt,
+  VocabularyPack,
+  VocabularyWordItem,
+  VocabularyStudyRecord,
 } from "@/lib/types";
 
 export type TerraAiProvider = "mock" | "minimax_anthropic";
@@ -33,7 +45,16 @@ type StudentContextPayload = {
   applicationProfile?: StudentApplicationProfile | null;
   tasks?: Task[];
   milestones?: Milestone[];
-  checkIns?: CheckInRecord[];
+  studyCenter?: {
+    vocabularyPacks: VocabularyPack[];
+    vocabularyWords: VocabularyWordItem[];
+    vocabularyAttempts: VocabularyAttempt[];
+    homeworkQuestions: HomeworkQuestionItem[];
+    homeworkAttempts: HomeworkQuestionAttempt[];
+    readingPassages: ReadingPassageItem[];
+    readingQuizAttempts: ReadingQuizAttempt[];
+    metrics?: StudyCenterMetrics | null;
+  };
   notes?: AdvisorNote[];
 };
 
@@ -68,7 +89,7 @@ export async function generateRecommendationPayload(input: {
   applicationProfile?: StudentApplicationProfile | null;
   tasks: Task[];
   milestones?: Milestone[];
-  checkIns?: CheckInRecord[];
+  studyCenter?: StudentContextPayload["studyCenter"];
   notes?: AdvisorNote[];
 }) {
   const config = getAiProviderConfig();
@@ -121,7 +142,7 @@ export async function generateChatSummary(input: {
   applicationProfile?: StudentApplicationProfile | null;
   tasks: Task[];
   milestones?: Milestone[];
-  checkIns?: CheckInRecord[];
+  studyCenter?: StudentContextPayload["studyCenter"];
   notes?: AdvisorNote[];
 }) {
   const config = getAiProviderConfig();
@@ -165,7 +186,127 @@ export async function generateChatSummary(input: {
     model: response.model || config.model,
     promptVersion: config.promptVersion,
     summary: normalizeString(response.data.summary, "AI 已生成回答，请结合你的真实进度和顾问建议一起参考。"),
-    sources: ["学生资料", "申请档案", "任务清单", "截止日期", "打卡记录", "顾问备注"],
+    sources: ["学生资料", "申请档案", "任务清单", "截止日期", "学习中心记录", "顾问备注"],
+  };
+}
+
+export async function generateHomeworkGradingAnalysis(input: {
+  student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
+  assignmentTitle: string;
+  promptContent: string;
+  studentAnswer: string;
+  referenceAnswer?: string;
+}) {
+  const config = getAiProviderConfig();
+
+  if (config.provider === "mock") {
+    return {
+      provider: config.provider,
+      model: "mock-simulated",
+      promptVersion: config.promptVersion,
+      overallEvaluation: "整体完成度不错，中心观点清楚，但论证深度和例子支撑还有提升空间。",
+      errorAnalysis: "主要问题在于例子不够具体、论证链条略短，以及段落衔接句还不够自然。",
+      remediationPlan: "先把每一段的中心句写清，再为每段补一个更具体的例子，同时检查连接句是否真的推动了逻辑。",
+      nextStep: "下一版优先补强例子和段落连接，再回头压缩重复表达。",
+    };
+  }
+
+  const response = await callMiniMaxJson<{
+    overallEvaluation: string;
+    errorAnalysis: string;
+    remediationPlan: string;
+    nextStep: string;
+  }>({
+    system: [
+      "你是 Terra Edu 的 AI 阅读出题助手。",
+      "你要根据学生提供的题目、答案以及可选参考答案/老师批注给出结构化反馈。",
+      "输出必须为简体中文。",
+      "不能杜撰额外作业要求、评分标准或外部背景。",
+      "只返回 JSON，键名必须是 overallEvaluation、errorAnalysis、remediationPlan、nextStep。",
+    ].join(""),
+    user: [
+      `作业标题：${input.assignmentTitle}`,
+      buildStudentContext(input.student),
+      buildApplicationProfileContext(input.applicationProfile),
+      `题目内容：${input.promptContent}`,
+      `学生答案：${input.studentAnswer}`,
+      `可选标准答案/老师批注：${input.referenceAnswer || "未提供"}`,
+      '返回 JSON：{"overallEvaluation":"string","errorAnalysis":"string","remediationPlan":"string","nextStep":"string"}',
+    ].join("\n\n"),
+    maxTokens: 1500,
+  });
+
+  return {
+    provider: config.provider,
+    model: response.model || config.model,
+    promptVersion: config.promptVersion,
+    overallEvaluation: normalizeString(response.data.overallEvaluation, "整体完成度较稳定，但还需要继续补强论证和表达。"),
+    errorAnalysis: normalizeString(response.data.errorAnalysis, "主要问题集中在表达不够具体和逻辑支撑不足。"),
+    remediationPlan: normalizeString(response.data.remediationPlan, "建议先补齐关键例子，再检查论证链条是否完整。"),
+    nextStep: normalizeString(response.data.nextStep, "下一步先根据批改结果完成一轮针对性重写。"),
+  };
+}
+
+export async function generateReadingQuiz(input: {
+  student: StudentRecord | null;
+  applicationProfile?: StudentApplicationProfile | null;
+  title: string;
+  passage: string;
+}) {
+  const config = getAiProviderConfig();
+
+  if (config.provider === "mock") {
+    return {
+      provider: config.provider,
+      model: "mock-simulated",
+      promptVersion: config.promptVersion,
+      questions: buildMockReadingQuiz(input.title),
+    };
+  }
+
+  const response = await callMiniMaxJson<{
+    questions: Array<{
+      stem: string;
+      options: string[];
+      answerIndex: number;
+      explanation: string;
+    }>;
+  }>({
+    system: [
+      "你是 Terra Edu 的阅读题生成助手。",
+      "你必须根据给定文章内容生成 5 道四选一选择题。",
+      "题目要覆盖主旨、细节、推断、词义或结构理解，但不要超出原文信息。",
+      "输出必须为简体中文。",
+      "只返回 JSON，键名必须是 questions。",
+      "每道题必须包含 stem、options、answerIndex、explanation。",
+      "options 必须是 4 个选项，answerIndex 必须是 0 到 3 的整数。",
+    ].join(""),
+    user: [
+      `文章标题：${input.title}`,
+      buildStudentContext(input.student),
+      buildApplicationProfileContext(input.applicationProfile),
+      `文章内容：${input.passage}`,
+      '返回 JSON：{"questions":[{"stem":"string","options":["A","B","C","D"],"answerIndex":0,"explanation":"string"}]}',
+    ].join("\n\n"),
+    maxTokens: 2200,
+  });
+
+  const questions = (response.data.questions ?? [])
+    .map((question) => ({
+      stem: normalizeString(question.stem, "这篇文章最主要的观点是什么？"),
+      options: Array.isArray(question.options) ? question.options.map((item) => normalizeString(item, "")).filter(Boolean).slice(0, 4) : [],
+      answerIndex: Number(question.answerIndex ?? 0),
+      explanation: normalizeString(question.explanation, "答案依据文章内容判断。"),
+    }))
+    .filter((question) => question.options.length === 4 && question.answerIndex >= 0 && question.answerIndex < 4)
+    .slice(0, 5);
+
+  return {
+    provider: config.provider,
+    model: response.model || config.model,
+    promptVersion: config.promptVersion,
+    questions: questions.length === 5 ? questions : buildMockReadingQuiz(input.title),
   };
 }
 
@@ -316,7 +457,7 @@ export async function generateConsultantWeeklyReport(input: StudentContextPayloa
       promptVersion: config.promptVersion,
       summary: `${input.student?.name ?? "该学生"}本周整体推进还算稳定，但高优先级任务需要更早前置，尤其要注意临近截止日期的项目。`,
       progress: [
-        "近期仍有真实打卡记录，学习节奏没有完全中断。",
+        "近期仍有真实学习记录，学习节奏没有完全中断。",
         "任务完成度有基础，但关键任务还需要更聚焦的推进。",
       ],
       risks: [
@@ -327,7 +468,7 @@ export async function generateConsultantWeeklyReport(input: StudentContextPayloa
         "把下周任务压缩成 3 个最关键动作，由顾问确认优先级。",
         "必要时在下一次沟通中先处理学生的情绪和执行阻力。",
       ],
-      sources: ["学生资料", "任务清单", "打卡记录", "顾问备注"],
+      sources: ["学生资料", "任务清单", "学习中心记录", "顾问备注"],
     };
   }
 
@@ -364,7 +505,7 @@ export async function generateConsultantWeeklyReport(input: StudentContextPayloa
     progress: normalizeStringList(response.data.progress, 4),
     risks: normalizeStringList(response.data.risks, 4),
     nextActions: normalizeStringList(response.data.nextActions, 4),
-    sources: ["学生资料", "任务清单", "打卡记录", "顾问备注"],
+    sources: ["学生资料", "任务清单", "学习中心记录", "顾问备注"],
   };
 }
 
@@ -454,7 +595,7 @@ export async function generateParentWeeklySummary(input: StudentContextPayload) 
       parentSupport: [
         "多做提醒和节奏支持，少做结果施压。",
       ],
-      sources: ["学生资料", "任务清单", "打卡记录", "顾问备注"],
+      sources: ["学生资料", "任务清单", "学习中心记录", "顾问备注"],
     };
   }
 
@@ -491,7 +632,7 @@ export async function generateParentWeeklySummary(input: StudentContextPayload) 
     progress: normalizeStringList(response.data.progress, 4),
     nextFocus: normalizeStringList(response.data.nextFocus, 4),
     parentSupport: normalizeStringList(response.data.parentSupport, 4),
-    sources: ["学生资料", "任务清单", "打卡记录", "顾问备注"],
+    sources: ["学生资料", "任务清单", "学习中心记录", "顾问备注"],
   };
 }
 
@@ -640,7 +781,7 @@ function buildMockRecommendationPayload(
       summary: `${studentName}目前的画像已经能支持稳定规划，但还需要把目标、任务节奏和学习证据进一步对齐。`,
       recommendations: [
         "优先保证目标学校、国家和专业信息始终和当前计划一致。",
-        "保持稳定打卡，让后续建议基于真实证据而不是猜测。",
+        "保持稳定训练记录，让后续建议基于真实证据而不是猜测。",
         "把下一阶段最重要的 1-2 个目标说清楚，方便顾问和家长同步理解。",
       ],
     },
@@ -680,10 +821,45 @@ function buildFullStudentContext(input: StudentContextPayload) {
     buildApplicationProfileContext(input.applicationProfile),
     buildTaskContext(input.tasks ?? []),
     buildMilestoneContext(input.milestones ?? []),
-    buildCheckInContext(input.checkIns ?? []),
+    buildStudyCenterContext(input.studyCenter),
     buildAdvisorNoteContext(input.notes ?? []),
-    buildDerivedSignals(input.tasks ?? [], input.milestones ?? [], input.checkIns ?? []),
+    buildDerivedSignals(input.tasks ?? [], input.milestones ?? [], input.studyCenter),
   ].join("\n\n");
+}
+
+function buildMockReadingQuiz(title: string): ReadingQuizQuestion[] {
+  return [
+    {
+      stem: `关于《${title}》，文章的核心主题最可能是什么？`,
+      options: ["介绍一个中心现象及其影响", "记录作者的个人经历", "比较两位科学家的观点", "预测未来十年的经济趋势"],
+      answerIndex: 0,
+      explanation: "文章通常围绕一个中心主题展开，再说明影响与条件。",
+    },
+    {
+      stem: "根据文章内容，下列哪项最可能被作者用来支持主观点？",
+      options: ["一个具体研究发现", "一个与主题无关的历史故事", "完全脱离原文的假设", "作者的情绪表达"],
+      answerIndex: 0,
+      explanation: "支持主观点通常依赖文章中给出的研究或事实依据。",
+    },
+    {
+      stem: "如果文中提到某项措施效果有限，最可能的原因是什么？",
+      options: ["实施条件和环境分布不同", "文章没有给任何信息", "作者突然更换立场", "读者理解错误"],
+      answerIndex: 0,
+      explanation: "阅读材料常通过条件限制来说明措施并非在所有场景都同样有效。",
+    },
+    {
+      stem: "文中某个专业词汇最可能在文中承担什么作用？",
+      options: ["界定核心概念", "转移话题", "制造悬念", "补充人物描写"],
+      answerIndex: 0,
+      explanation: "专业词通常用于定义或精确说明核心概念。",
+    },
+    {
+      stem: "下列哪项最符合文章的整体结构？",
+      options: ["提出现象，再解释原因与限制", "先讲故事，再给结论", "按时间顺序记录人物成长", "只罗列数据，没有观点"],
+      answerIndex: 0,
+      explanation: "说明文常采用提出现象、解释机制、补充限制条件的结构。",
+    },
+  ];
 }
 
 function buildStudentContext(student: StudentRecord | null) {
@@ -764,19 +940,47 @@ function buildMilestoneContext(milestones: Milestone[]) {
   ].join("\n");
 }
 
-function buildCheckInContext(checkIns: CheckInRecord[]) {
-  if (checkIns.length === 0) {
-    return "打卡记录：暂无";
+function buildStudyCenterContext(studyCenter?: StudentContextPayload["studyCenter"]) {
+  if (!studyCenter) {
+    return "学习中心记录：暂无";
   }
 
+  const vocabularySummary =
+    studyCenter.vocabularyPacks.length > 0
+      ? studyCenter.vocabularyPacks
+          .slice(0, 5)
+          .map((pack) => {
+            const packWords = studyCenter.vocabularyWords.filter((word) => word.packId === pack.id);
+            const dueCount = packWords.filter((word) => word.nextReviewOn).length;
+            return `${pack.name}｜词量 ${pack.totalWords}｜每日新词 ${pack.dailyNewCount}｜每日复习 ${pack.dailyReviewCount}｜已开启复习 ${dueCount}`;
+          })
+          .join("；")
+      : "暂无";
+
+  const gradingSummary =
+    studyCenter.homeworkAttempts.length > 0
+      ? studyCenter.homeworkAttempts
+          .slice(0, 3)
+          .map((record) => `${record.date}｜${record.subject}｜作答 ${record.correct ? "正确" : "待改进"}｜${clipForContext(record.studentAnswer, 60)}`)
+          .join("；")
+      : "暂无";
+
+  const readingSummary =
+    studyCenter.readingQuizAttempts.length > 0
+      ? studyCenter.readingQuizAttempts
+          .slice(0, 5)
+          .map(
+            (record) =>
+              `${record.date}｜${record.title}｜${record.correctCount}/${record.totalQuestions}｜${record.perfect ? "全对" : "继续练习"}`
+          )
+          .join("；")
+      : "暂无";
+
   return [
-    "打卡记录：",
-    ...checkIns
-      .slice(0, 8)
-      .map(
-        (record) =>
-          `- ${record.date}｜${record.curriculum} / ${record.chapter}｜掌握度：${record.mastery}/5｜备注：${record.notes}`
-      ),
+    "学习中心记录：",
+    `- 单词背诵：${vocabularySummary}`,
+    `- AI出题批改：${gradingSummary}`,
+    `- 应试阅读：${readingSummary}`,
   ].join("\n");
 }
 
@@ -793,14 +997,22 @@ function buildAdvisorNoteContext(notes: AdvisorNote[]) {
   ].join("\n");
 }
 
-function buildDerivedSignals(tasks: Task[], milestones: Milestone[], checkIns: CheckInRecord[]) {
+function buildDerivedSignals(
+  tasks: Task[],
+  milestones: Milestone[],
+  studyCenter?: StudentContextPayload["studyCenter"]
+) {
   const pendingTasks = tasks.filter((task) => task.status !== "done");
   const inProgressTasks = tasks.filter((task) => task.status === "in_progress");
   const completedTasks = tasks.filter((task) => task.status === "done");
   const nearestMilestone = sortMilestonesByDate(
     milestones.filter((milestone) => milestone.status !== "done")
   )[0];
-  const latestCheckIn = checkIns[0];
+  const latestActivity = [
+    ...(studyCenter?.vocabularyAttempts ?? []).map((record) => ({ date: record.date, label: `${record.prompt}｜单词背诵` })),
+    ...(studyCenter?.homeworkAttempts ?? []).map((record) => ({ date: record.date, label: `${record.subject}｜AI出题批改` })),
+    ...(studyCenter?.readingQuizAttempts ?? []).map((record) => ({ date: record.date, label: `${record.title}｜应试阅读` })),
+  ].sort((left, right) => right.date.localeCompare(left.date))[0];
 
   return [
     "衍生信号：",
@@ -808,7 +1020,9 @@ function buildDerivedSignals(tasks: Task[], milestones: Milestone[], checkIns: C
     `- 进行中任务数：${inProgressTasks.length}`,
     `- 已完成任务数：${completedTasks.length}`,
     `- 最近待处理截止日期：${nearestMilestone ? `${nearestMilestone.title}（${nearestMilestone.eventDate}）` : "暂无"}`,
-    `- 最近一次打卡：${latestCheckIn ? `${latestCheckIn.date}｜掌握度 ${latestCheckIn.mastery}/5` : "暂无"}`,
+    `- 最近一次学习动作：${latestActivity ? `${latestActivity.date}｜${latestActivity.label}` : "暂无"}`,
+    `- 连续学习天数：${studyCenter?.metrics?.streakDays ?? 0}`,
+    `- 最近 7 天训练次数：${studyCenter?.metrics?.recentSessionCount ?? 0}`,
   ].join("\n");
 }
 

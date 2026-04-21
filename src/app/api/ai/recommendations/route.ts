@@ -5,9 +5,10 @@ import { generateRecommendationPayload } from "@/lib/ai/provider";
 import {
   getCurrentStudentData,
   getStudentApplicationProfileData,
-  getStudentCheckInsData,
   getStudentMilestonesData,
   getStudentNotesData,
+  getStudentStudyCenterData,
+  getStudentStudyCenterMetrics,
   getStudentTasksData,
 } from "@/lib/data";
 import { createTraceContext, finishTrace, logAiArtifact } from "@/lib/observability";
@@ -52,15 +53,31 @@ export async function POST(request: Request) {
   }
 
   const student = await getCurrentStudentData(session);
-  const [applicationProfile, tasks, milestones, checkIns, notes] = student
+  const [applicationProfile, tasks, milestones, studyCenterData, studyCenterMetrics, notes] = student
     ? await Promise.all([
         getStudentApplicationProfileData(student.id),
         getStudentTasksData(student.id),
         getStudentMilestonesData(student.id),
-        getStudentCheckInsData(student.id),
+        getStudentStudyCenterData(student.id),
+        getStudentStudyCenterMetrics(student.id),
         getStudentNotesData(student.id),
       ])
-    : [null, [], [], [], []];
+    : [
+        null,
+        [],
+        [],
+        {
+          vocabularyPacks: [],
+          vocabularyWords: [],
+          vocabularyAttempts: [],
+          homeworkQuestions: [],
+          homeworkAttempts: [],
+          readingPassages: [],
+          readingQuizAttempts: [],
+        },
+        null,
+        [],
+      ];
 
   try {
     const result = await generateRecommendationPayload({
@@ -71,7 +88,10 @@ export async function POST(request: Request) {
       applicationProfile,
       tasks,
       milestones,
-      checkIns,
+      studyCenter: {
+        ...studyCenterData,
+        metrics: studyCenterMetrics,
+      },
       notes,
     });
 

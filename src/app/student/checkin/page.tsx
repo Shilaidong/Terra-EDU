@@ -1,8 +1,17 @@
-import { Activity } from "lucide-react";
+import type { ReactNode } from "react";
+import { Activity, BookOpenText, BrainCircuit, FileCheck2 } from "lucide-react";
 
-import { CheckInComposer, CheckInEditorControls, LogoutButton } from "@/components/client-tools";
-import { HeroBadge, Notice, RoleShell, SectionCard, StatCard } from "@/components/terra-shell";
-import { getCurrentStudentData, getStudentCheckInsData, getStudentLiveMetricsData } from "@/lib/data";
+import { LogoutButton } from "@/components/client-tools";
+import { StudentStudyCenterWorkspace } from "@/components/study-center";
+import { HeroBadge, RoleShell, SectionCard } from "@/components/terra-shell";
+import {
+  getCurrentStudentData,
+  getStudentHomeworkTodayQuestion,
+  getStudentLiveMetricsData,
+  getStudentStudyCenterData,
+  getStudentStudyCenterMetrics,
+  getStudentVocabularyReviewQueue,
+} from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
@@ -13,70 +22,97 @@ export default async function StudentCheckinPage() {
   const student = await getCurrentStudentData(session);
   if (!student) return null;
 
-  const [checkIns, metrics] = await Promise.all([
-    getStudentCheckInsData(student.id),
+  const [studyCenter, studyCenterMetrics, metrics, reviewQueue, homeworkToday] = await Promise.all([
+    getStudentStudyCenterData(student.id),
+    getStudentStudyCenterMetrics(student.id),
     getStudentLiveMetricsData(student.id),
+    getStudentVocabularyReviewQueue(student.id),
+    getStudentHomeworkTodayQuestion(student.id),
   ]);
 
   return (
     <RoleShell
       session={session}
-      title={pickText(locale, "Daily Task Check-in", "每日学习打卡")}
-      subtitle={pickText(locale, "Capture curriculum mastery, chapter notes, and learning momentum without changing the core visual style.", "记录课程掌握度、章节笔记和学习节奏，同时保持现有视觉风格。")}
+      title={pickText(locale, "Study Center", "学习中心")}
+      subtitle={pickText(
+        locale,
+        "Keep vocabulary review, AI homework grading, and exam reading in one calm place so your daily learning evidence keeps building over time.",
+        "把单词复习、AI 出题批改和应试阅读集中在一个安静的学习中心里，让你的日常训练记录持续积累。"
+      )}
       activeHref="/student/checkin"
       hero={
-        <div className="flex flex-wrap items-center gap-3">
-          <HeroBadge icon={<Activity className="h-4 w-4" />} title={pickText(locale, "Streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} />
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <HeroBadge
+            icon={<Activity className="h-4 w-4" />}
+            title={pickText(locale, "Study streak", "连续学习")}
+            value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)}
+          />
           <LogoutButton />
         </div>
       }
     >
-      <div className="grid gap-6 md:grid-cols-3">
-        <StatCard label={pickText(locale, "Average mastery", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Calculated from all saved check-ins.", "根据全部已保存打卡实时计算。")} />
-        <StatCard label={pickText(locale, "Recent entries", "最近记录")} value={`${checkIns.length}`} hint={pickText(locale, "Saved check-ins will keep building your learning picture.", "每一次打卡都会继续补完整体学习画像。")} tone="tertiary" />
-        <StatCard label={pickText(locale, "Launch focus", "当前重点")} value={pickText(locale, "Steady rhythm", "稳定节奏")} hint={pickText(locale, "Keep the rhythm consistent and your next recommendation will stay much clearer.", "只要持续保持稳定节奏，后面的建议也会更清晰。")} tone="secondary" />
+      <div className="grid gap-4 sm:grid-cols-3 md:gap-6">
+        <HeroStat
+          icon={<BookOpenText className="h-4 w-4" />}
+          title={pickText(locale, "Vocabulary", "单词背诵")}
+          body={pickText(
+            locale,
+            "Follow a simple Ebbinghaus-style rhythm, keep the packs small, and let steady repetition do the real work.",
+            "按艾宾浩斯节奏做词包复习，保持小批量、持续性，让复习真正形成长期积累。"
+          )}
+        />
+        <HeroStat
+          icon={<FileCheck2 className="h-4 w-4" />}
+          title={pickText(locale, "AI Question Grading", "AI 出题批改")}
+          body={pickText(
+            locale,
+            "Import your own question bank. The system serves one non-repeated question each day and grades your answer automatically.",
+            "导入你自己的题库后，系统会每天抽一道未完成的题，并自动判断你的作答是否正确。"
+          )}
+        />
+        <HeroStat
+          icon={<BrainCircuit className="h-4 w-4" />}
+          title={pickText(locale, "Exam Reading", "应试阅读")}
+          body={pickText(
+            locale,
+            "Log short daily reading sessions so language input, speed, and comprehension all move forward together.",
+            "把每日阅读训练稳定记录下来，让语言输入、速度和理解力一起稳步向前。"
+          )}
+        />
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <SectionCard title={pickText(locale, "Save today's mastery", "保存今日掌握度")} eyebrow={pickText(locale, "Writable", "可编辑")}>
-          <CheckInComposer studentId={student.id} />
-        </SectionCard>
-
-        <SectionCard title={pickText(locale, "Recent study signals", "近期学习信号")} eyebrow={pickText(locale, "History", "历史记录")}>
-          <div className="space-y-4">
-            {checkIns.map((record) => (
-              <div key={record.id} className="rounded-2xl bg-surface-container-low p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-bold text-foreground">
-                      {record.curriculum} · {record.chapter}
-                    </p>
-                    <p className="mt-1 text-sm text-secondary">{record.notes}</p>
-                  </div>
-                  <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
-                    {record.mastery}/5
-                  </div>
-                </div>
-                <CheckInEditorControls
-                  checkIn={{
-                    id: record.id,
-                    curriculum: record.curriculum,
-                    chapter: record.chapter,
-                    mastery: record.mastery,
-                    date: record.date,
-                    notes: record.notes,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-5">
-            <Notice title={pickText(locale, "Why this matters", "为什么这很重要")}>
-              {pickText(locale, "These notes flow into the AI summary and consultant analytics so the next recommendation is evidence-based, not guessed.", "这些笔记会进入 AI 摘要和顾问分析，让后续建议基于真实证据，而不是主观猜测。")}
-            </Notice>
-          </div>
+      <div className="mt-8">
+        <SectionCard
+          title={pickText(locale, "Three modules, one learning rhythm", "三个模块，一套学习节奏")}
+          eyebrow={pickText(locale, "Daily evidence", "日常证据")}
+        >
+          <StudentStudyCenterWorkspace
+            studentId={student.id}
+            metrics={studyCenterMetrics}
+            studyCenter={studyCenter}
+            reviewQueue={reviewQueue}
+            homeworkToday={homeworkToday}
+          />
         </SectionCard>
       </div>
     </RoleShell>
+  );
+}
+
+function HeroStat({
+  icon,
+  title,
+  body,
+}: {
+  icon: ReactNode;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-black/5 bg-surface-container-low p-5 sm:p-6">
+      <div className="inline-flex rounded-full bg-white px-3 py-2 text-primary shadow-sm">{icon}</div>
+      <p className="mt-4 font-serif text-xl font-bold text-foreground sm:text-2xl">{title}</p>
+      <p className="mt-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">{body}</p>
+    </div>
   );
 }

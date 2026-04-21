@@ -61,8 +61,8 @@ export default async function ConsultantMessagesPage() {
           title={pickText(locale, "Ask with consultant context", "以顾问视角提问")}
           description={pickText(
             locale,
-            "The assistant will combine tasks, milestones, check-ins, advisor notes, and application profile details for the selected student.",
-            "助手会结合所选学生的任务、截止日期、打卡、顾问备注和申请档案来回答。"
+            "The assistant will combine tasks, milestones, learning center history, advisor notes, and application profile details for the selected student.",
+            "助手会结合所选学生的任务、截止日期、学习中心记录、顾问备注和申请档案来回答。"
           )}
           buttonLabel={pickText(locale, "Ask as consultant", "以顾问身份提问")}
         />
@@ -90,7 +90,7 @@ export default async function ConsultantMessagesPage() {
             eyebrow={pickText(locale, "Grounding signals", "上下文信号")}
           >
             <div className="space-y-3 text-sm leading-7 text-secondary">
-              <p>{pickText(locale, "Live tasks, deadlines, and study rhythm", "实时任务、截止日期和学习节奏")}</p>
+              <p>{pickText(locale, "Live tasks, deadlines, and study center rhythm", "实时任务、截止日期和学习中心节奏")}</p>
               <p>{pickText(locale, "Application profile details like curriculum, GPA, competitions, and activities", "申请档案里的课程体系、GPA、竞赛和活动")}</p>
               <p>{pickText(locale, "Advisor notes for the selected student", "所选学生的顾问备注")}</p>
             </div>

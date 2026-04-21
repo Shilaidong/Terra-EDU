@@ -56,7 +56,7 @@ export default async function StudentMessagesPage() {
           >
             <div className="space-y-3 text-sm leading-7 text-secondary">
               <p>{pickText(locale, "Your current tasks and deadlines", "你当前的任务和截止日期")}</p>
-              <p>{pickText(locale, "Recent study check-ins and advisor notes", "最近的学习打卡和顾问备注")}</p>
+              <p>{pickText(locale, "Recent study center activity and advisor notes", "最近的学习中心记录和顾问备注")}</p>
               <p>{pickText(locale, "Your application profile, including curriculum, GPA, competitions, and activities", "你的申请档案，包括课程体系、GPA、竞赛和活动")}</p>
             </div>
           </SectionCard>

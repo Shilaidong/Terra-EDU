@@ -59,7 +59,7 @@ export default async function ParentSettingsPage() {
         <SectionCard title={pickText(locale, "Parent Access", "家长权限说明")} eyebrow={pickText(locale, "Read-only guidance", "只读说明")}>
           <SummaryCard
             title={pickText(locale, "Clear family visibility, without extra admin work", "清晰查看孩子进展，而不增加额外管理负担")}
-            body={pickText(locale, "Parents can personalize their own account details here, while student planning, tasks, check-ins, and milestones remain protected in the student workflow.", "家长可以在这里调整自己的账号资料，但学生的规划、任务、打卡和截止日期仍然由学生端维护。")}
+            body={pickText(locale, "Parents can personalize their own account details here, while student planning, tasks, learning records, and milestones remain protected in the student workflow.", "家长可以在这里调整自己的账号资料，但学生的规划、任务、学习记录和截止日期仍然由学生端维护。")}
             footer={pickText(locale, "This keeps the parent role lightweight and aligned with the dashboard design.", "这样能让家长角色保持轻量，也和当前仪表盘定位一致。")}
           />
         </SectionCard>

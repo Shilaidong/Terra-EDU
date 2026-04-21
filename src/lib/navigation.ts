@@ -14,7 +14,7 @@ export function getRoleNav(locale: Locale): Record<UserRole, NavItem[]> {
     student: [
       { label: pickText(locale, "Dashboard", "仪表盘"), href: "/student/dashboard" },
       { label: pickText(locale, "Timeline", "时间线"), href: "/student/timeline" },
-      { label: pickText(locale, "Check-ins", "打卡"), href: "/student/checkin" },
+      { label: pickText(locale, "Learning", "学习中心"), href: "/student/checkin" },
       { label: pickText(locale, "Explore", "探索"), href: "/student/explore" },
       { label: pickText(locale, "Settings", "设置"), href: "/student/settings" },
       { label: pickText(locale, "Applications", "申请"), href: "/student/applications" },
@@ -25,6 +25,7 @@ export function getRoleNav(locale: Locale): Record<UserRole, NavItem[]> {
     ],
     parent: [
       { label: pickText(locale, "Dashboard", "仪表盘"), href: "/parent/dashboard" },
+      { label: pickText(locale, "Learning", "学习中心"), href: "/parent/checkin" },
       { label: pickText(locale, "Applications", "申请"), href: "/parent/applications" },
       { label: pickText(locale, "Documents", "材料"), href: "/parent/documents" },
       { label: pickText(locale, "Finances", "财务"), href: "/parent/finances" },

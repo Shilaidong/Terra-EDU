@@ -409,6 +409,7 @@ export async function TaskGanttChart({
         <div className="divide-y divide-outline-variant/10">
           {ganttLaneMeta.filter((lane) => tasks.some((task) => task.timelineLane === lane.lane)).map((lane) => {
             const laneTasks = tasks.filter((task) => task.timelineLane === lane.lane);
+            const packedTaskRows = packTaskRows(laneTasks, timeline.columns);
 
             return (
               <div key={lane.lane} className="grid grid-cols-[180px_minmax(0,1fr)] md:grid-cols-[240px_minmax(0,1fr)]">
@@ -433,46 +434,30 @@ export async function TaskGanttChart({
                   </div>
 
                   <div className="relative z-10 space-y-2.5 px-3 sm:space-y-3 sm:px-4">
-                    {laneTasks
-                      .sort(
-                        (left, right) =>
-                          parseDate(left.startDate).getTime() - parseDate(right.startDate).getTime()
-                      )
-                      .map((task) => {
-                        const placement = getTaskPlacement(task, timeline.columns);
-
-                        if (!placement) {
-                          return null;
-                        }
-
-                        return (
+                    {packedTaskRows.map((row, rowIndex) => (
+                      <div
+                        key={`${lane.lane}-row-${rowIndex}`}
+                        className="grid items-center"
+                        style={{
+                          gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
+                        }}
+                      >
+                        {row.map(({ task, placement }) => (
                           <div
                             key={task.id}
-                            className="grid items-center"
-                            style={{
-                              gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
-                            }}
+                            className={cn(
+                              "relative h-8 rounded-full px-3 shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4",
+                              lane.barClassName
+                            )}
+                            style={{ gridColumn: `${placement.start + 1} / ${placement.end + 2}` }}
                           >
-                            <div
-                              className={cn(
-                                "relative h-8 rounded-full px-3 shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4",
-                                lane.barClassName
-                              )}
-                              style={{ gridColumn: `${placement.start + 1} / ${placement.end + 2}` }}
-                            >
-                              <div className="flex h-full items-center">
-                                <span className="truncate text-[11px] font-bold sm:text-xs">{task.title}</span>
-                              </div>
-                              <div
-                                className={cn(
-                                  "absolute -right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 rounded-[3px] shadow-sm sm:-right-2 sm:h-4 sm:w-4",
-                                  lane.markerClassName
-                                )}
-                              />
+                            <div className="flex h-full items-center">
+                              <span className="truncate text-[11px] font-bold sm:text-xs">{task.title}</span>
                             </div>
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -502,39 +487,28 @@ export async function TaskGanttChart({
 
               {milestones.length > 0 ? (
                 <div className="relative z-10 space-y-2.5 px-3 sm:space-y-3 sm:px-4">
-                  {milestones
-                    .slice()
-                    .sort(
-                      (left, right) =>
-                        parseDate(left.eventDate).getTime() - parseDate(right.eventDate).getTime()
-                    )
-                    .map((milestone) => {
-                      const placement = getMilestonePlacement(milestone, timeline.columns);
-
-                      if (placement === -1) {
-                        return null;
-                      }
-
-                      return (
+                  {packMilestoneRows(milestones, timeline.columns).map((row, rowIndex) => (
+                    <div
+                      key={`milestone-row-${rowIndex}`}
+                      className="grid items-center"
+                      style={{
+                        gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
+                      }}
+                    >
+                      {row.map(({ milestone, placement }) => (
                         <div
                           key={milestone.id}
-                          className="grid items-center"
-                          style={{
-                            gridTemplateColumns: `repeat(${timeline.columns.length}, minmax(${timeline.columnWidth}px, ${timeline.columnWidth}px))`,
-                          }}
+                          className="relative h-8 rounded-full border border-outline/20 bg-surface-container-highest px-3 text-on-surface-variant shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4"
+                          style={{ gridColumn: `${placement + 1} / ${placement + 2}` }}
                         >
-                          <div
-                            className="relative h-8 rounded-full border border-outline/20 bg-surface-container-highest px-3 text-on-surface-variant shadow-sm transition-colors hover:opacity-90 sm:h-9 sm:px-4"
-                            style={{ gridColumn: `${placement + 1} / ${placement + 2}` }}
-                          >
-                            <div className="flex h-full items-center">
-                              <span className="truncate text-[11px] font-bold sm:text-xs">{milestone.title}</span>
-                            </div>
-                            <div className="absolute -left-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-error shadow-sm sm:h-3 sm:w-3" />
+                          <div className="flex h-full items-center">
+                            <span className="truncate text-[11px] font-bold sm:text-xs">{milestone.title}</span>
                           </div>
+                          <div className="absolute -left-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-error shadow-sm sm:h-3 sm:w-3" />
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div
@@ -847,6 +821,73 @@ function getMilestonePlacement(milestone: Milestone, columns: TimelineColumn[]) 
     const milestoneDate = parseDate(milestone.eventDate);
     return milestoneDate.getTime() >= column.start.getTime() && milestoneDate.getTime() <= column.end.getTime();
   });
+}
+
+function packTaskRows(tasks: Task[], columns: TimelineColumn[]) {
+  const placements = tasks
+    .slice()
+    .sort(
+      (left, right) =>
+        parseDate(left.startDate).getTime() - parseDate(right.startDate).getTime() ||
+        parseDate(left.endDate).getTime() - parseDate(right.endDate).getTime()
+    )
+    .map((task) => {
+      const placement = getTaskPlacement(task, columns);
+      return placement ? { task, placement } : null;
+    })
+    .filter((item): item is { task: Task; placement: NonNullable<ReturnType<typeof getTaskPlacement>> } => item !== null);
+
+  const rows: { items: { task: Task; placement: NonNullable<ReturnType<typeof getTaskPlacement>> }[]; lastEnd: number }[] = [];
+
+  placements.forEach((item) => {
+    const matchedRow = rows.find((row) => item.placement.start > row.lastEnd);
+
+    if (matchedRow) {
+      matchedRow.items.push(item);
+      matchedRow.lastEnd = item.placement.end;
+      return;
+    }
+
+    rows.push({
+      items: [item],
+      lastEnd: item.placement.end,
+    });
+  });
+
+  return rows.map((row) => row.items);
+}
+
+function packMilestoneRows(milestones: Milestone[], columns: TimelineColumn[]) {
+  const placements = milestones
+    .slice()
+    .sort(
+      (left, right) =>
+        parseDate(left.eventDate).getTime() - parseDate(right.eventDate).getTime()
+    )
+    .map((milestone) => {
+      const placement = getMilestonePlacement(milestone, columns);
+      return placement === -1 ? null : { milestone, placement };
+    })
+    .filter((item): item is { milestone: Milestone; placement: number } => item !== null);
+
+  const rows: { items: { milestone: Milestone; placement: number }[]; used: Set<number> }[] = [];
+
+  placements.forEach((item) => {
+    const matchedRow = rows.find((row) => !row.used.has(item.placement));
+
+    if (matchedRow) {
+      matchedRow.items.push(item);
+      matchedRow.used.add(item.placement);
+      return;
+    }
+
+    rows.push({
+      items: [item],
+      used: new Set([item.placement]),
+    });
+  });
+
+  return rows.map((row) => row.items);
 }
 
 function findLastIndex<T>(values: T[], predicate: (value: T) => boolean) {

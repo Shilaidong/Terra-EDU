@@ -96,7 +96,7 @@ export default async function ParentMessagesPage({
             eyebrow={pickText(locale, "Family context", "家长上下文")}
           >
             <div className="space-y-3 text-xs leading-6 text-secondary sm:text-sm sm:leading-7">
-              <p>{pickText(locale, "Open tasks, milestones, and recent check-ins", "未完成任务、截止日期和最近打卡")}</p>
+              <p>{pickText(locale, "Open tasks, milestones, and recent learning center records", "未完成任务、截止日期和最近学习中心记录")}</p>
               <p>{pickText(locale, "Advisor notes and live progress signals", "顾问备注和实时进度信号")}</p>
               <p>
                 {pickText(

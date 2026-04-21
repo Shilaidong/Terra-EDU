@@ -16,9 +16,10 @@ import {
   getLinkedStudentIdsForConsultant,
   getStudentApplicationProfileData,
   getStudentByIdData,
-  getStudentCheckInsData,
   getStudentMilestonesData,
   getStudentNotesData,
+  getStudentStudyCenterData,
+  getStudentStudyCenterMetrics,
   getStudentTasksData,
 } from "@/lib/data";
 import { createTraceContext, finishTrace, logAiArtifact } from "@/lib/observability";
@@ -118,11 +119,12 @@ export async function POST(request: Request) {
     }
   }
 
-  const [applicationProfile, tasks, milestones, checkIns, notes] = await Promise.all([
+  const [applicationProfile, tasks, milestones, studyCenterData, studyCenterMetrics, notes] = await Promise.all([
     getStudentApplicationProfileData(student.id),
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
-    getStudentCheckInsData(student.id),
+    getStudentStudyCenterData(student.id),
+    getStudentStudyCenterMetrics(student.id),
     getStudentNotesData(student.id),
   ]);
 
@@ -134,7 +136,10 @@ export async function POST(request: Request) {
       applicationProfile,
       tasks,
       milestones,
-      checkIns,
+      studyCenter: {
+        ...studyCenterData,
+        metrics: studyCenterMetrics,
+      },
       notes,
     });
 
@@ -230,7 +235,9 @@ async function runWorkflow(input: {
   applicationProfile: Awaited<ReturnType<typeof getStudentApplicationProfileData>>;
   tasks: Awaited<ReturnType<typeof getStudentTasksData>>;
   milestones: Awaited<ReturnType<typeof getStudentMilestonesData>>;
-  checkIns: Awaited<ReturnType<typeof getStudentCheckInsData>>;
+  studyCenter: Awaited<ReturnType<typeof getStudentStudyCenterData>> & {
+    metrics: Awaited<ReturnType<typeof getStudentStudyCenterMetrics>>;
+  };
   notes: Awaited<ReturnType<typeof getStudentNotesData>>;
 }) {
   if (input.kind === "student_task_breakdown") {
@@ -290,7 +297,7 @@ async function runWorkflow(input: {
       applicationProfile: input.applicationProfile,
       tasks: input.tasks,
       milestones: input.milestones,
-      checkIns: input.checkIns,
+      studyCenter: input.studyCenter,
       notes: input.notes,
     });
 
@@ -342,7 +349,7 @@ async function runWorkflow(input: {
       applicationProfile: input.applicationProfile,
       tasks: input.tasks,
       milestones: input.milestones,
-      checkIns: input.checkIns,
+      studyCenter: input.studyCenter,
     notes: input.notes,
   });
 

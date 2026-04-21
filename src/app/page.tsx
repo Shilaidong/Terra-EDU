@@ -12,23 +12,23 @@ const timelineRows = [
   {
     title: { en: "Standardized Exams", zh: "标化考试" },
     segments: [
-      { label: { en: "SAT Prep", zh: "SAT 备考" }, start: "8%", width: "16%", tone: "bg-primary-container text-on-primary-container" },
-      { label: { en: "ACT Mock", zh: "ACT 模考" }, start: "31%", width: "11%", tone: "bg-primary text-on-primary" },
+      { label: { en: "SAT Prep", zh: "SAT 备考" }, start: "8%", width: "16%", tone: "bg-[#8CB596] text-[#183726]" },
+      { label: { en: "ACT Mock", zh: "ACT 模考" }, start: "31%", width: "11%", tone: "bg-primary text-white" },
     ],
     markers: [],
   },
   {
     title: { en: "Application Progress", zh: "申请进度" },
     segments: [
-      { label: { en: "Essay Brainstorming", zh: "文书构思" }, start: "2%", width: "36%", tone: "bg-tertiary-container text-on-tertiary-container" },
-      { label: { en: "Portfolio Review", zh: "材料复盘" }, start: "42%", width: "24%", tone: "bg-tertiary text-on-tertiary" },
+      { label: { en: "Essay Brainstorming", zh: "文书构思" }, start: "2%", width: "36%", tone: "bg-[#D3B36D] text-[#3F2D09]" },
+      { label: { en: "Portfolio Review", zh: "材料复盘" }, start: "42%", width: "24%", tone: "bg-tertiary text-white" },
     ],
     markers: [],
   },
   {
     title: { en: "Activities & Competitions", zh: "活动与竞赛" },
     segments: [
-      { label: { en: "Regional Science Fair", zh: "区域科学竞赛" }, start: "21%", width: "49%", tone: "border border-primary/20 bg-surface-container-highest text-primary" },
+      { label: { en: "Regional Science Fair", zh: "区域科学竞赛" }, start: "21%", width: "49%", tone: "border border-primary/35 bg-[#E7EFE8] text-[#2E6E47]" },
     ],
     markers: [],
   },
@@ -67,7 +67,7 @@ const roleCards = [
   {
     title: { en: "For Parents", zh: "面向家长" },
     body: {
-      en: "Replace anxious check-ins with passive clarity. View progress at a glance and understand the strategy without hovering.",
+      en: "Replace anxious chasing with passive clarity. View progress at a glance and understand the strategy without hovering.",
       zh: "用被动可见的方式替代焦虑式追问，不用反复催促，也能一眼看懂进度和整体策略。",
     },
     icon: Users,
@@ -326,17 +326,17 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:gap-6 md:grid-cols-12">
-            <div className="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(46,50,48,0.06)] sm:p-6 lg:p-8 md:col-span-12 lg:col-span-8">
+            <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(46,50,48,0.06)] sm:p-6 lg:p-8 md:col-span-12 lg:col-span-8">
               <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="font-body text-lg font-bold sm:text-xl">{pickText(locale, "Yearly Journey Roadmap", "年度规划路线图")}</h3>
-                <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold text-on-surface-variant sm:gap-4 sm:text-xs">
+                <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold text-on-surface sm:gap-4 sm:text-xs">
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" />{pickText(locale, "Current", "当前")}</span>
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-tertiary" />{pickText(locale, "Upcoming", "即将到来")}</span>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="grid grid-cols-12 gap-1 border-b border-outline-variant/10 pb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/60 sm:gap-2 sm:text-[10px] sm:tracking-widest">
+                <div className="grid grid-cols-12 gap-1 border-b border-outline-variant/15 pb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/90 sm:gap-2 sm:text-[10px] sm:tracking-widest">
                   {monthLabels.map((label) => (
                     <div key={label}>{label}</div>
                   ))}
@@ -345,8 +345,8 @@ export default async function HomePage() {
                 <div className="space-y-3 sm:space-y-4">
                   {timelineRows.map((row) => (
                     <div key={row.title.en} className="relative">
-                      <div className="mb-1 text-[11px] font-bold opacity-60 sm:text-xs">{pickText(locale, row.title.en, row.title.zh)}</div>
-                      <div className="relative h-7 overflow-hidden rounded-full bg-surface-container sm:h-8">
+                      <div className="mb-1 text-[11px] font-bold text-on-surface-variant sm:text-xs">{pickText(locale, row.title.en, row.title.zh)}</div>
+                      <div className="relative h-7 overflow-hidden rounded-full bg-[#E9E2D6] sm:h-8">
                         {row.segments.map((segment) => (
                           <div
                             key={segment.label.en}

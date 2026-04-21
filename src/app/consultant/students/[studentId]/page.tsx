@@ -3,7 +3,6 @@ import { ArrowLeft, ArrowRight, CalendarRange, GraduationCap, NotebookPen } from
 
 import {
   AdvisorNoteEditorControls,
-  CheckInEditorControls,
   ConsultantFloatingAiAssistant,
   ConsultantMeetingSummaryPanel,
   ConsultantMilestoneComposer,
@@ -20,16 +19,20 @@ import {
   TaskDeleteButton,
   TaskStatusControl,
 } from "@/components/client-tools";
+import { ReadonlyStudyCenterWorkspace } from "@/components/study-center";
 import { HeroBadge, RoleShell, StatCard, SummaryCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import {
   getConsultantOverviewData,
   getStudentApplicationProfileData,
   getStudentByIdData,
-  getStudentCheckInsData,
+  getStudentHomeworkTodayQuestion,
   getStudentLiveMetricsData,
   getStudentMilestonesData,
   getStudentNotesData,
+  getStudentStudyCenterData,
+  getStudentStudyCenterMetrics,
   getStudentTasksData,
+  getStudentVocabularyReviewQueue,
 } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
@@ -70,13 +73,16 @@ export default async function ConsultantStudentWorkspacePage({
     return null;
   }
 
-  const [tasks, milestones, checkIns, notes, metrics, applicationProfile] = await Promise.all([
+  const [tasks, milestones, notes, metrics, applicationProfile, studyCenter, studyCenterMetrics, reviewQueue, homeworkToday] = await Promise.all([
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
-    getStudentCheckInsData(student.id),
     getStudentNotesData(student.id),
     getStudentLiveMetricsData(student.id),
     getStudentApplicationProfileData(student.id),
+    getStudentStudyCenterData(student.id),
+    getStudentStudyCenterMetrics(student.id),
+    getStudentVocabularyReviewQueue(student.id),
+    getStudentHomeworkTodayQuestion(student.id),
   ]);
 
   const visibleRange = buildVisibleRange(tasks, milestones, currentView);
@@ -98,7 +104,7 @@ export default async function ConsultantStudentWorkspacePage({
     <RoleShell
       session={session}
       title={student.name}
-      subtitle={pickText(locale, "Consultant workspace for planning, deadlines, check-ins, and advisor notes.", "顾问工作台：集中处理学生规划、截止日期、打卡和顾问备注。")}
+      subtitle={pickText(locale, "Consultant workspace for planning, deadlines, learning center history, and advisor notes.", "顾问工作台：集中处理学生规划、截止日期、学习中心记录和顾问备注。")}
       activeHref="/consultant/students"
       hero={
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -140,8 +146,8 @@ export default async function ConsultantStudentWorkspacePage({
     >
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
         <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Live task completion using the same student-side calculation.", "和学生端使用同一套实时任务完成率计算。")} />
-        <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Current consecutive study rhythm.", "当前连续学习节奏。")} tone="tertiary" />
-        <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Average mastery across saved check-ins.", "根据已保存打卡记录计算平均掌握度。")} tone="secondary" />
+        <StatCard label={pickText(locale, "Study streak", "连续学习")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Current consecutive learning rhythm.", "当前连续学习节奏。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Learning quality", "学习质量")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Average signal across recent vocabulary and reading records.", "根据近期单词与阅读记录计算出的平均学习信号。")} tone="secondary" />
       </div>
 
       <div className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
@@ -255,7 +261,7 @@ export default async function ConsultantStudentWorkspacePage({
             <div className="space-y-4">
               <SummaryCard
                 title={pickText(locale, `${student.name} is aiming for ${student.dreamSchools[0] ?? "a target school list"}`, `${student.name} 当前目标是 ${student.dreamSchools[0] ?? "一组目标学校"}`)}
-                body={pickText(locale, `${student.phase} phase, ${student.intendedMajor} track, ${metrics.completion}% completion, ${metrics.checkInStreak} day streak, and ${metrics.masteryAverage}/5 mastery average.`, `当前阶段为 ${student.phase}，目标专业是 ${student.intendedMajor}，完成率 ${metrics.completion}% ，连续打卡 ${metrics.checkInStreak} 天，平均掌握度 ${metrics.masteryAverage}/5。`)}
+                body={pickText(locale, `${student.phase} phase, ${student.intendedMajor} track, ${metrics.completion}% completion, ${metrics.checkInStreak} day learning streak, and ${metrics.masteryAverage}/5 learning quality.`, `当前阶段为 ${student.phase}，目标专业是 ${student.intendedMajor}，完成率 ${metrics.completion}% ，连续学习 ${metrics.checkInStreak} 天，学习质量 ${metrics.masteryAverage}/5。`)}
                 footer={pickText(locale, "This card gives the consultant a fast read before making edits.", "这张卡片用于帮助顾问在修改前快速把握学生现状。")}
               />
               <div className="grid gap-4 sm:grid-cols-2">
@@ -398,48 +404,19 @@ export default async function ConsultantStudentWorkspacePage({
         </PreviewFoldSection>
 
         <PreviewFoldSection
-          id="checkins"
-          title={pickText(locale, "Recent Check-ins", "近期打卡")}
-          eyebrow={pickText(locale, "Directly editable", "可直接编辑")}
-          description={pickText(locale, "Review recent learning rhythm and make quick edits without leaving the student workspace.", "在同一个工作台里快速查看近期学习节奏并直接修改。")}
+          id="study-center"
+          title={pickText(locale, "Learning Center", "学习中心")}
+          eyebrow={pickText(locale, "Read-only student training history", "学生训练历史，只读查看")}
+          description={pickText(locale, "Review vocabulary rhythm, AI question practice, and reading training in one place without switching into the student account.", "在同一个工作台里查看单词节奏、AI 出题批改和阅读训练，不需要切换到学生账号。")}
           defaultOpen
-          previewHeightClassName="max-h-[24rem]"
+          previewHeightClassName="max-h-[30rem]"
         >
-          <div className="space-y-4">
-            {checkIns.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
-                {pickText(locale, "No check-ins recorded for this student yet.", "这个学生还没有打卡记录。")}
-              </div>
-            ) : (
-              checkIns.map((record) => (
-                <div key={record.id} className="rounded-2xl bg-surface-container-low p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-bold text-foreground">
-                        {record.curriculum} · {record.chapter}
-                      </p>
-                      <p className="mt-1 text-xs text-secondary sm:text-sm">{record.notes}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-serif text-xl font-bold text-primary sm:text-2xl">{record.mastery}/5</div>
-                      <div className="text-[10px] uppercase tracking-[0.18em] text-outline sm:text-xs">{record.date}</div>
-                    </div>
-                  </div>
-                  <CheckInEditorControls
-                    checkIn={{
-                      id: record.id,
-                      curriculum: record.curriculum,
-                      chapter: record.chapter,
-                      mastery: record.mastery,
-                      date: record.date,
-                      notes: record.notes,
-                    }}
-                    endpointBase="/api/consultant/checkins"
-                  />
-                </div>
-              ))
-            )}
-          </div>
+          <ReadonlyStudyCenterWorkspace
+            metrics={studyCenterMetrics}
+            studyCenter={studyCenter}
+            reviewQueue={reviewQueue}
+            homeworkToday={homeworkToday}
+          />
         </PreviewFoldSection>
 
         <PreviewFoldSection
@@ -505,7 +482,7 @@ export default async function ConsultantStudentWorkspacePage({
             <div className="space-y-4">
               <SummaryCard
                 title={pickText(locale, `${student.name} is currently in ${student.phase}`, `${student.name} 当前处于 ${student.phase}`)}
-                body={pickText(locale, `A parent opening the family dashboard should mainly see three things: ${metrics.completion}% progress, ${metrics.checkInStreak} day check-in rhythm, and the next deadline "${currentStudentSignal.nextDeadlineTitle}" on ${currentStudentSignal.nextDeadlineLabel}.`, `家长打开仪表盘时，最重要的是看到这三件事：当前进度 ${metrics.completion}%、连续打卡 ${metrics.checkInStreak} 天，以及下一个截止日期“${currentStudentSignal.nextDeadlineTitle}”（${currentStudentSignal.nextDeadlineLabel}）。`)}
+                body={pickText(locale, `A parent opening the family dashboard should mainly see three things: ${metrics.completion}% progress, ${metrics.checkInStreak} day learning rhythm, and the next deadline "${currentStudentSignal.nextDeadlineTitle}" on ${currentStudentSignal.nextDeadlineLabel}.`, `家长打开仪表盘时，最重要的是看到这三件事：当前进度 ${metrics.completion}%、连续学习 ${metrics.checkInStreak} 天，以及下一个截止日期“${currentStudentSignal.nextDeadlineTitle}”（${currentStudentSignal.nextDeadlineLabel}）。`)}
                 footer={pickText(locale, "Keep the family-facing message calm, specific, and grounded in actual progress.", "家长可见的信息要尽量平静、具体，并且基于真实进度。")}
               />
               <div className="grid gap-4 sm:grid-cols-2">
@@ -525,13 +502,13 @@ export default async function ConsultantStudentWorkspacePage({
               <div className="rounded-2xl bg-surface-container-low p-5">
                 <p className="font-bold text-foreground">{pickText(locale, "Why this student is ordered here", "这个学生为什么排在这里")}</p>
                 <p className="mt-2 text-sm leading-7 text-secondary">
-                  {pickText(locale, "Risk sorting now considers completion, streak, mastery, open work, and deadline pressure together instead of only looking at one number.", "风险排序现在会综合考虑完成率、连续打卡、掌握度、未完成任务和截止日期压力，而不是只看单一指标。")}
+                  {pickText(locale, "Risk sorting now considers completion, study rhythm, learning quality, open work, and deadline pressure together instead of only looking at one number.", "风险排序现在会综合考虑完成率、学习节奏、学习质量、未完成任务和截止日期压力，而不是只看单一指标。")}
                 </p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-5">
                 <p className="font-bold text-foreground">{pickText(locale, "Next best consultant move", "下一步最适合的顾问动作")}</p>
                 <p className="mt-2 text-sm leading-7 text-secondary">
-                  {pickText(locale, "If the next deadline is close, use a template to create structured work immediately. If study rhythm is weak, review check-ins and leave an advisor note before changing the plan.", "如果下一个截止日期很近，就优先用模板快速创建结构化任务；如果学习节奏偏弱，就先查看打卡并写顾问备注，再决定是否调整计划。")}
+                  {pickText(locale, "If the next deadline is close, use a template to create structured work immediately. If study rhythm is weak, review the learning center and leave an advisor note before changing the plan.", "如果下一个截止日期很近，就优先用模板快速创建结构化任务；如果学习节奏偏弱，就先查看学习中心并写顾问备注，再决定是否调整计划。")}
                 </p>
               </div>
             </div>

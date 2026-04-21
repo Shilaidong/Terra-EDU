@@ -83,8 +83,8 @@ export default async function ParentDashboardPage({
     >
       <div className="grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">
         <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${student.completion}%`} hint={pickText(locale, "Calculated from completed tasks without editing privileges.", "根据已完成任务实时计算，家长端为只读展示。")} />
-        <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${student.checkInStreak} days`, `${student.checkInStreak} 天`)} hint={pickText(locale, "Calculated from consecutive saved check-in dates.", "根据连续打卡日期实时计算。")} tone="tertiary" />
-        <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${student.masteryAverage}/5`} hint={pickText(locale, "Calculated from saved mastery scores in student check-ins.", "根据学生打卡中的掌握度分数实时计算。")} tone="secondary" />
+        <StatCard label={pickText(locale, "Study streak", "连续学习")} value={pickText(locale, `${student.checkInStreak} days`, `${student.checkInStreak} 天`)} hint={pickText(locale, "Calculated from any recorded learning session in the study center.", "根据学习中心任一模块的记录实时计算。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Learning quality", "学习质量")} value={`${student.masteryAverage}/5`} hint={pickText(locale, "Calculated from recent vocabulary and reading training quality signals.", "根据近期单词和阅读训练的质量信号实时计算。")} tone="secondary" />
       </div>
 
       <div className="mt-6 sm:mt-8">
@@ -151,7 +151,7 @@ export default async function ParentDashboardPage({
           <SectionCard title={pickText(locale, "Parent View Guidance", "家长查看建议")} eyebrow={pickText(locale, "What to watch", "查看重点")}>
             <SummaryCard
               title={pickText(locale, "Focus on rhythm, not constant intervention", "关注节奏，而不是频繁干预")}
-              body={pickText(locale, "Use this dashboard to spot deadline clusters, confirm steady study cadence, and stay aligned with the consultant's latest notes. The student remains the editor of tasks and check-ins.", "你可以用这个页面关注截止日期集中情况、确认学习节奏是否稳定，并查看顾问最新备注。任务和打卡仍由学生本人维护。")}
+              body={pickText(locale, "Use this dashboard to spot deadline clusters, confirm steady study cadence, and stay aligned with the consultant's latest notes. The student remains the editor of tasks and the learning center.", "你可以用这个页面关注截止日期集中情况、确认学习节奏是否稳定，并查看顾问最新备注。任务和学习中心记录仍由学生本人维护。")}
               footer={pickText(locale, "This view is intentionally read-only so family visibility stays clear and low-friction.", "这个页面刻意保持只读，方便家长清晰查看而不过度干扰。")}
             />
           </SectionCard>

@@ -4,16 +4,16 @@ import { AiChatWidget, AiRecommendationPanel, LogoutButton } from "@/components/
 import { HeroBadge, InfoPill, RoleShell, SectionCard, StatCard, TaskGanttChart, TaskList, TimelineRail } from "@/components/terra-shell";
 import {
   getCurrentStudentData,
-  getStudentCheckInsData,
   getStudentLiveMetricsData,
   getStudentMilestonesData,
   getStudentNotesData,
+  getStudentStudyCenterData,
   getStudentTasksData,
 } from "@/lib/data";
 import { pickText } from "@/lib/locale";
 import { getLocale } from "@/lib/locale-server";
 import { requireSession } from "@/lib/server/guards";
-import type { CheckInRecord, Milestone, Task } from "@/lib/types";
+import type { Milestone, StudyCenterData, Task } from "@/lib/types";
 
 export default async function StudentDashboardPage() {
   const locale = await getLocale();
@@ -24,10 +24,10 @@ export default async function StudentDashboardPage() {
     return null;
   }
 
-  const [tasks, milestones, checkIns, notes, metrics] = await Promise.all([
+  const [tasks, milestones, studyCenter, notes, metrics] = await Promise.all([
     getStudentTasksData(student.id),
     getStudentMilestonesData(student.id),
-    getStudentCheckInsData(student.id),
+    getStudentStudyCenterData(student.id),
     getStudentNotesData(student.id),
     getStudentLiveMetricsData(student.id),
   ]);
@@ -38,7 +38,7 @@ export default async function StudentDashboardPage() {
   );
   const activeLaneCount =
     new Set(ganttTasks.map((task) => task.timelineLane)).size + (ganttMilestones.length > 0 ? 1 : 0);
-  const completionHighlights = buildCompletionHighlights(locale, tasks, milestones, checkIns);
+  const completionHighlights = buildCompletionHighlights(locale, tasks, milestones, studyCenter);
   const praiseLine = pickPraiseLine(locale, student.name, completionHighlights.length);
 
   return (
@@ -56,8 +56,8 @@ export default async function StudentDashboardPage() {
     >
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
         <StatCard label={pickText(locale, "Task completion", "任务完成率")} value={`${metrics.completion}%`} hint={pickText(locale, "Calculated from completed tasks against the full task list.", "根据全部任务中的已完成数量实时计算。")} />
-        <StatCard label={pickText(locale, "Check-in streak", "连续打卡")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Calculated from consecutive check-in dates.", "根据连续打卡日期实时计算。")} tone="tertiary" />
-        <StatCard label={pickText(locale, "Mastery average", "平均掌握度")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Calculated from saved mastery scores in check-ins.", "根据已保存的打卡掌握度分数实时计算。")} tone="secondary" />
+        <StatCard label={pickText(locale, "Study streak", "连续学习")} value={pickText(locale, `${metrics.checkInStreak} days`, `${metrics.checkInStreak} 天`)} hint={pickText(locale, "Calculated from any recorded learning session across the study center.", "根据学习中心任一模块的记录实时计算。")} tone="tertiary" />
+        <StatCard label={pickText(locale, "Learning quality", "学习质量")} value={`${metrics.masteryAverage}/5`} hint={pickText(locale, "Calculated from recent vocabulary and reading training quality signals.", "根据近期单词和阅读训练的质量信号实时计算。")} tone="secondary" />
       </div>
 
       <div className="mt-6 sm:mt-8">
@@ -113,7 +113,7 @@ export default async function StudentDashboardPage() {
             studentId={student.id}
             page="/student/dashboard"
             feature="student_dashboard_recommendation"
-            prompt="请根据当前任务、截止日期和打卡节奏，生成这位学生本周最重要的行动建议。"
+            prompt="请根据当前任务、截止日期和学习中心训练节奏，生成这位学生本周最重要的行动建议。"
             title={pickText(locale, "Weekly Action Suggestions", "本周行动建议")}
             description={pickText(
               locale,
@@ -160,8 +160,8 @@ export default async function StudentDashboardPage() {
               <div className="rounded-2xl border border-dashed border-primary/20 bg-white px-5 py-8 text-sm text-secondary">
                 {pickText(
                   locale,
-                  "Once you complete tasks, deadlines, or solid study check-ins, your recent wins will show up here.",
-                  "完成任务、截止日期或表现不错的学习打卡后，这里就会开始显示你的最近成果。"
+                  "Once you complete tasks, deadlines, or strong study center sessions, your recent wins will show up here.",
+                  "完成任务、截止日期，或者留下表现不错的学习中心记录后，这里就会开始显示你的最近成果。"
                 )}
               </div>
             )}
@@ -219,7 +219,12 @@ function addMonths(date: Date, amount: number) {
   return new Date(date.getFullYear(), date.getMonth() + amount, 1);
 }
 
-function buildCompletionHighlights(locale: "en" | "zh", tasks: Task[], milestones: Milestone[], checkIns: CheckInRecord[]) {
+function buildCompletionHighlights(
+  locale: "en" | "zh",
+  tasks: Task[],
+  milestones: Milestone[],
+  studyCenter: StudyCenterData
+) {
   const completedTasks = tasks
     .filter((task) => task.status === "done")
     .sort((left, right) => right.dueDate.localeCompare(left.dueDate))
@@ -242,18 +247,38 @@ function buildCompletionHighlights(locale: "en" | "zh", tasks: Task[], milestone
       note: pickText(locale, "A key deadline or milestone is already complete.", "一个重要的节点已经顺利完成了。"),
     }));
 
-  const strongCheckIns = checkIns
-    .filter((record) => record.mastery >= 4)
-    .sort((left, right) => right.date.localeCompare(left.date))
-    .slice(0, 1)
-    .map((record) => ({
-      type: pickText(locale, "Check-in", "打卡"),
-      date: record.date,
-      title: `${record.curriculum} · ${record.chapter}`,
-      note: pickText(locale, `You logged a strong ${record.mastery}/5 mastery check-in here.`, `这里留下了一次表现不错的 ${record.mastery}/5 学习打卡。`),
-    }));
+  const strongLearningSignals = [
+    ...studyCenter.vocabularyAttempts
+      .filter((record) => record.correct)
+      .sort((left, right) => right.date.localeCompare(left.date))
+      .slice(0, 1)
+      .map((record) => ({
+        type: pickText(locale, "Vocabulary", "单词背诵"),
+        date: record.date,
+        title: record.prompt,
+        note: pickText(locale, "You answered this vocabulary review correctly and kept the memory curve moving.", "这次单词复习答对了，说明你的记忆曲线在稳定推进。"),
+      })),
+    ...studyCenter.readingQuizAttempts
+      .filter((record) => record.perfect || record.correctCount / Math.max(record.totalQuestions, 1) >= 0.8)
+      .sort((left, right) => right.date.localeCompare(left.date))
+      .slice(0, 1)
+      .map((record) => ({
+        type: pickText(locale, "Reading", "应试阅读"),
+        date: record.date,
+        title: record.title,
+        note: pickText(locale, `You answered ${record.correctCount}/${record.totalQuestions} reading questions correctly here.`, `这里完成了一次 ${record.correctCount}/${record.totalQuestions} 的阅读训练。`),
+      })),
+    ...studyCenter.homeworkAttempts
+      .slice(0, 1)
+      .map((record) => ({
+        type: pickText(locale, "AI Q&A", "AI 出题批改"),
+        date: record.date,
+        title: record.subject,
+        note: pickText(locale, record.correct ? "A daily question was answered correctly and logged here." : "A daily question attempt has been logged here for follow-up review.", record.correct ? "这里记录了一次答对的每日题目训练。" : "这里记录了一次每日题目训练，后续可以继续复盘。"),
+      })),
+  ];
 
-  return [...completedTasks, ...completedMilestones, ...strongCheckIns].slice(0, 4);
+  return [...completedTasks, ...completedMilestones, ...strongLearningSignals].slice(0, 4);
 }
 
 function pickPraiseLine(locale: "en" | "zh", studentName: string, completedCount: number) {
