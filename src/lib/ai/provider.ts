@@ -19,6 +19,7 @@ import type {
   VocabularyWordItem,
   VocabularyStudyRecord,
 } from "@/lib/types";
+import { structuredLog } from "@/lib/observability";
 
 export type TerraAiProvider = "mock" | "minimax_anthropic";
 export type AiWorkflowKind =
@@ -62,11 +63,11 @@ export const AI_DISCLAIMER =
   "以下内容由 AI 生成，仅供参考；如涉及重要申请决策，请与顾问确认。";
 
 export function getAiProviderConfig() {
-  const baseUrl = process.env.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic";
-  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.MINIMAX_API_KEY || "";
-  const model = process.env.TERRA_AI_MODEL || "MiniMax-M2.7";
-  const mode = process.env.TERRA_AI_PROVIDER || "auto";
-  const promptVersion = process.env.TERRA_AI_PROMPT_VERSION || "minimax-m2.7-v1";
+  const baseUrl = (process.env.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic").trim();
+  const apiKey = (process.env.ANTHROPIC_API_KEY || process.env.MINIMAX_API_KEY || "").trim();
+  const model = (process.env.TERRA_AI_MODEL || "MiniMax-M2.7").trim();
+  const mode = (process.env.TERRA_AI_PROVIDER || "auto").trim();
+  const promptVersion = (process.env.TERRA_AI_PROMPT_VERSION || "minimax-m2.7-v1").trim();
   const ready = Boolean(apiKey);
 
   return {
@@ -79,6 +80,26 @@ export function getAiProviderConfig() {
     model,
     promptVersion,
   };
+}
+
+function createMiniMaxStageError(stage: string, message: string) {
+  return new Error(`[MiniMax:${stage}] ${message}`);
+}
+
+function previewText(value: string, limit = 120) {
+  return value.length > limit ? `${value.slice(0, limit)}...` : value;
+}
+
+function assertHeaderByteString(name: string, value: string) {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code > 255) {
+      throw createMiniMaxStageError(
+        "header_validation",
+        `Header ${name} contains non-ByteString character ${code} at index ${index}.`
+      );
+    }
+  }
 }
 
 export async function generateRecommendationPayload(input: {
@@ -696,18 +717,43 @@ async function callMiniMaxJson<T>({
   const config = getAiProviderConfig();
 
   if (!config.apiKey) {
-    throw new Error("MiniMax API key is not configured.");
+    throw createMiniMaxStageError("config", "MiniMax API key is not configured.");
   }
 
-  const endpoint = new URL("v1/messages", ensureTrailingSlash(config.baseUrl)).toString();
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": config.apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
+  let endpoint = "";
+  try {
+    endpoint = new URL("v1/messages", ensureTrailingSlash(config.baseUrl)).toString();
+  } catch (error) {
+    throw createMiniMaxStageError(
+      "endpoint",
+      error instanceof Error ? error.message : "Failed to build MiniMax endpoint."
+    );
+  }
+
+  const requestHeaders = {
+    "Content-Type": "application/json",
+    "x-api-key": config.apiKey,
+    "anthropic-version": "2023-06-01",
+  };
+
+  try {
+    Object.entries(requestHeaders).forEach(([name, value]) => assertHeaderByteString(name, value));
+  } catch (error) {
+    structuredLog({
+      level: "error",
+      source: "minimax",
+      stage: "header_validation",
+      endpoint,
+      model: config.model,
+      prompt_preview: previewText(user, 80),
+      error: error instanceof Error ? error.message : "Unknown header validation error",
+    });
+    throw error;
+  }
+
+  let requestBody = "";
+  try {
+    requestBody = JSON.stringify({
       model: config.model,
       max_tokens: maxTokens,
       temperature: 0.4,
@@ -723,20 +769,97 @@ async function callMiniMaxJson<T>({
           ],
         },
       ],
-    }),
-  });
+    });
+  } catch (error) {
+    throw createMiniMaxStageError(
+      "request_body",
+      error instanceof Error ? error.message : "Failed to serialize MiniMax request body."
+    );
+  }
+
+  let encodedBody: Blob;
+  try {
+    encodedBody = new Blob([new TextEncoder().encode(requestBody)], {
+      type: "application/json",
+    });
+  } catch (error) {
+    throw createMiniMaxStageError(
+      "request_body_encode",
+      error instanceof Error ? error.message : "Failed to encode MiniMax request body."
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: requestHeaders,
+      body: encodedBody,
+    });
+  } catch (error) {
+    structuredLog({
+      level: "error",
+      source: "minimax",
+      stage: "fetch_request",
+      endpoint,
+      model: config.model,
+      prompt_preview: previewText(user, 80),
+      error: error instanceof Error ? error.message : "Unknown fetch error",
+    });
+    throw createMiniMaxStageError(
+      "fetch_request",
+      error instanceof Error ? error.message : "MiniMax fetch failed before response."
+    );
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`MiniMax request failed: ${response.status} ${errorText}`);
+    structuredLog({
+      level: "error",
+      source: "minimax",
+      stage: "response_status",
+      endpoint,
+      model: config.model,
+      status: response.status,
+      error: previewText(errorText, 200),
+    });
+    throw createMiniMaxStageError(
+      "response_status",
+      `MiniMax request failed: ${response.status} ${errorText}`
+    );
   }
 
-  const payload = (await response.json()) as AnthropicMessagesResponse;
-  const text = extractText(payload);
+  let payload: AnthropicMessagesResponse;
+  try {
+    payload = (await response.json()) as AnthropicMessagesResponse;
+  } catch (error) {
+    throw createMiniMaxStageError(
+      "response_json",
+      error instanceof Error ? error.message : "Failed to parse MiniMax JSON response."
+    );
+  }
+
+  let text = "";
+  try {
+    text = extractText(payload);
+  } catch (error) {
+    throw createMiniMaxStageError(
+      "response_text",
+      error instanceof Error ? error.message : "Failed to extract MiniMax text content."
+    );
+  }
   const parsed = safeJsonParse<T>(text);
 
   if (!parsed) {
-    throw new Error("MiniMax returned non-JSON content.");
+    structuredLog({
+      level: "error",
+      source: "minimax",
+      stage: "response_shape",
+      endpoint,
+      model: payload.model || config.model,
+      text_preview: previewText(text, 240),
+    });
+    throw createMiniMaxStageError("response_shape", "MiniMax returned non-JSON content.");
   }
 
   return {
