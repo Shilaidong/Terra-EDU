@@ -70,12 +70,13 @@ export default async function StudentDashboardPage() {
         </SectionCard>
       </div>
 
-      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
         <SectionCard
           title={pickText(locale, "Today's Tasks", "当前任务")}
           eyebrow={pickText(locale, "Student workflow", "学生流程")}
+          className="self-start"
         >
-          <div className="max-h-[22rem] overflow-y-auto pr-1">
+          <div className="h-[22rem] overflow-y-auto rounded-2xl bg-surface-container-low p-4 pr-3">
             <TaskList tasks={tasks} />
           </div>
         </SectionCard>
@@ -95,12 +96,13 @@ export default async function StudentDashboardPage() {
         </SectionCard>
       </div>
 
-      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <SectionCard
           title={pickText(locale, "Recent Milestones", "近期截止日期")}
           eyebrow={pickText(locale, "Timeline", "时间线")}
+          className="self-start"
         >
-          <div className="max-h-[20rem] overflow-y-auto pr-1">
+          <div className="h-[20rem] overflow-y-auto rounded-2xl bg-surface-container-low p-4 pr-3">
             <TimelineRail milestones={milestones} />
           </div>
         </SectionCard>

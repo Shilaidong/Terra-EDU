@@ -107,14 +107,15 @@ export default async function StudentTimelinePage({
         </SectionCard>
       </div>
 
-      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <SectionCard
           title={pickText(locale, "Task Timeline", "任务时间线")}
           eyebrow={pickText(locale, "Active planning", "当前计划")}
+          className="self-start"
         >
           <StudentTimelineTaskComposer studentId={student.id} />
           <div className="mt-5 border-t border-black/5 pt-5 sm:mt-6 sm:pt-6">
-            <div className="max-h-[24rem] overflow-y-auto pr-1">
+            <div className="h-[24rem] overflow-y-auto rounded-2xl bg-surface-container-low p-4 pr-3">
               <TaskList
                 tasks={visibleTasks}
                 action={(taskId) => (
@@ -134,10 +135,11 @@ export default async function StudentTimelinePage({
         <SectionCard
           title={pickText(locale, "Milestone Rail", "截止日期轨道")}
           eyebrow={pickText(locale, "Key dates", "关键日期")}
+          className="self-start"
         >
           <StudentMilestoneComposer studentId={student.id} />
           <div className="mt-5 border-t border-black/5 pt-5 sm:mt-6 sm:pt-6">
-            <div className="max-h-[22rem] overflow-y-auto pr-1">
+            <div className="h-[22rem] overflow-y-auto rounded-2xl bg-surface-container-low p-4 pr-3">
               <TimelineRail
                 milestones={visibleMilestones}
                 action={(milestoneId) => {

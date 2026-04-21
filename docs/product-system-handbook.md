@@ -298,16 +298,17 @@
 
 ### 7.3 示例账号
 
-当前 demo store 里存在 4 个基础账号：
+当前对外演示使用 3 个基础角色账号：
 
 - `student@terra.edu`
 - `parent@terra.edu`
 - `consultant@terra.edu`
-- `admin@terra.edu`
 
-默认密码是：
+演示环境默认密码统一为：
 
 - `terra123`
+
+管理员账号属于内部运维入口，不在对外文档里公开展示。
 
 ---
 
