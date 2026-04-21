@@ -62,9 +62,14 @@ type StudentContextPayload = {
 export const AI_DISCLAIMER =
   "以下内容由 AI 生成，仅供参考；如涉及重要申请决策，请与顾问确认。";
 
+function sanitizeAsciiSecret(value: string) {
+  return value.replace(/[^\x21-\x7e]+/g, "");
+}
+
 export function getAiProviderConfig() {
   const baseUrl = (process.env.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic").trim();
-  const apiKey = (process.env.ANTHROPIC_API_KEY || process.env.MINIMAX_API_KEY || "").trim();
+  const rawApiKey = (process.env.ANTHROPIC_API_KEY || process.env.MINIMAX_API_KEY || "").trim();
+  const apiKey = sanitizeAsciiSecret(rawApiKey);
   const model = (process.env.TERRA_AI_MODEL || "MiniMax-M2.7").trim();
   const mode = (process.env.TERRA_AI_PROVIDER || "auto").trim();
   const promptVersion = (process.env.TERRA_AI_PROMPT_VERSION || "minimax-m2.7-v1").trim();
