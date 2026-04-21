@@ -66,6 +66,14 @@ function sanitizeAsciiSecret(value: string) {
   return value.replace(/[^\x21-\x7e]+/g, "");
 }
 
+function toAuthorizationHeader(apiKey: string) {
+  if (/^Bearer\s+/i.test(apiKey)) {
+    return apiKey;
+  }
+
+  return `Bearer ${apiKey}`;
+}
+
 export function getAiProviderConfig() {
   const baseUrl = (process.env.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic").trim();
   const rawApiKey = (process.env.ANTHROPIC_API_KEY || process.env.MINIMAX_API_KEY || "").trim();
@@ -737,7 +745,7 @@ async function callMiniMaxJson<T>({
 
   const requestHeaders = {
     "Content-Type": "application/json",
-    "x-api-key": config.apiKey,
+    Authorization: toAuthorizationHeader(config.apiKey),
     "anthropic-version": "2023-06-01",
   };
 
