@@ -1,4 +1,4 @@
-# 学生完整资料导入说明
+# 学生完整资料与学习中心导入说明
 
 这个模板用于管理员导入一个学生的完整资料包。  
 建议一个 Excel 文件只导入一位学生。
@@ -12,6 +12,7 @@
 - 学生基础资料和申请档案会更新
 - 任务、截止日期、备注会按匹配规则补充或更新
 - 绑定关系只会新增，不会自动解绑
+- 学习中心会导入成可直接开始练习的内容，而不是旧打卡记录
 
 ## Sheet 列表
 
@@ -25,6 +26,10 @@
 6. `milestones`
 7. `notes`
 8. `bindings`
+9. `vocabulary_packs`
+10. `vocabulary_words`
+11. `homework_questions`
+12. `reading_passages`
 
 ## 1. student_account
 
@@ -207,23 +212,108 @@
 | `kind` | 是 | `parent` / `consultant` | 绑定类型 |
 | `email` | 是 | `parent@example.com` | 已存在账号邮箱 |
 
+## 9. vocabulary_packs
+
+用途：
+- 学习中心 `单词背诵` 的词包配置
+
+填写规则：
+- 一行一个词包
+- `pack_name` 必填
+- 如果同名词包已经存在，系统会更新该词包配置，不会新建重复词包
+
+字段：
+
+| 列名 | 是否必填 | 格式/示例 | 说明 |
+|---|---|---|---|
+| `pack_name` | 是 | `托福核心词汇 A1` | 词包名称 |
+| `daily_new_count` | 否 | `12` | 每天新背多少个 |
+| `daily_review_count` | 否 | `24` | 每天复习多少个 |
+| `active` | 否 | `true` / `false` | 是否启用这个词包 |
+
+## 10. vocabulary_words
+
+用途：
+- 学习中心 `单词背诵` 的具体单词内容
+
+填写规则：
+- 一行一个单词
+- 必须带 `pack_name`
+- 系统会按 `pack_name + word` 去匹配，不重复新增
+
+字段：
+
+| 列名 | 是否必填 | 格式/示例 | 说明 |
+|---|---|---|---|
+| `pack_name` | 是 | `托福核心词汇 A1` | 对应词包名称 |
+| `word` | 是 | `abandon` | 英文单词 |
+| `meaning` | 是 | `放弃；遗弃` | 中文释义 |
+| `notes` | 否 | `常见于阅读题` | 备注 |
+| `sort_order` | 否 | `1` | 排序号 |
+| `completed` | 否 | `false` | 是否已完成 |
+
+## 11. homework_questions
+
+用途：
+- 学习中心 `AI 出题批改` 的题库
+
+填写规则：
+- 一行一题
+- 系统按 `subject + prompt` 匹配，不重复新增
+- 每天会从未完成题里随机抽一道
+
+字段：
+
+| 列名 | 是否必填 | 格式/示例 | 说明 |
+|---|---|---|---|
+| `subject` | 是 | `Biology` | 科目 |
+| `prompt` | 是 | `What is the main function of mitochondria?` | 题目内容 |
+| `correct_answer` | 是 | `They generate ATP for the cell.` | 正确答案 |
+| `explanation` | 否 | `Focus on ATP and energy production.` | 解析 |
+| `sort_order` | 否 | `1` | 排序号 |
+| `completed` | 否 | `false` | 是否已完成 |
+
+## 12. reading_passages
+
+用途：
+- 学习中心 `应试阅读` 的文章库
+
+填写规则：
+- 一行一篇文章
+- 系统按 `title` 匹配，不重复新增
+- 学生导入后可以点击“生成阅读问题”来生成 5 道选择题
+
+字段：
+
+| 列名 | 是否必填 | 格式/示例 | 说明 |
+|---|---|---|---|
+| `title` | 是 | `Urban Farming and Food Security` | 文章标题 |
+| `passage` | 是 | `Long-form reading passage...` | 文章正文 |
+| `source` | 否 | `Cambridge reading drill` | 来源 |
+| `sort_order` | 否 | `1` | 排序号 |
+
 ## 推荐使用顺序
 
 1. 先让学生/家长/顾问账号注册好  
 2. 管理员在系统里确认顾问、家长邮箱存在  
 3. 下载模板  
 4. 填好各个 sheet  
-5. 回到管理员后台导入  
-6. 查看导入结果里的 warning  
+5. 如果要启用学习中心，再补：
+   - `vocabulary_packs`
+   - `vocabulary_words`
+   - `homework_questions`
+   - `reading_passages`
+6. 回到管理员后台导入  
+7. 查看导入结果里的 warning  
 
-## AI 识别草稿现在有没有必要？
+## 现在这份模板最适合什么场景？
 
-当前阶段不必须。
+适合你把系统外已有的学生资料，一次性冷启动导入到平台里，包括：
+- 基础学生信息
+- 申请档案
+- 竞赛和活动
+- 时间线任务和截止日期
+- 顾问备注
+- 学习中心训练内容
 
-更推荐你先用这个模板导入，原因是：
-- 更稳定
-- 更可控
-- 更适合已有完整方案和材料记录的迁移
-- 不会因为 AI 误识别把结构化字段弄乱
-
-等你这套模板导入稳定跑顺了，再考虑做“AI 识别成草稿，再人工确认导入”会更合适。
+这样导入后，学生、家长、顾问三端就都能直接看到比较完整的内容，不需要再从零手工补录。

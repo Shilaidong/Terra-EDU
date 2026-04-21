@@ -29,6 +29,10 @@ const sheetAliases = {
   milestones: ["milestones"],
   notes: ["notes"],
   bindings: ["bindings"],
+  vocabulary_packs: ["vocabulary_packs"],
+  vocabulary_words: ["vocabulary_words"],
+  homework_questions: ["homework_questions"],
+  reading_passages: ["reading_passages"],
 } as const;
 
 export async function POST(request: Request) {
@@ -287,6 +291,23 @@ export async function POST(request: Request) {
       rows: getSheetRows(workbook, "bindings"),
       warnings,
     });
+    const { packCount: vocabularyPacksImported, wordCount: vocabularyWordsImported } = await importVocabularySheets({
+      supabase,
+      studentId,
+      packRows: getSheetRows(workbook, "vocabulary_packs"),
+      wordRows: getSheetRows(workbook, "vocabulary_words"),
+      warnings,
+    });
+    const homeworkQuestionsImported = await importHomeworkQuestionSheets({
+      supabase,
+      studentId,
+      rows: getSheetRows(workbook, "homework_questions"),
+    });
+    const readingPassagesImported = await importReadingPassageSheets({
+      supabase,
+      studentId,
+      rows: getSheetRows(workbook, "reading_passages"),
+    });
 
     if (!createdUser && !asString(studentAccountRow.password)) {
       warnings.push("Existing student account reused. Password was not changed by this import.");
@@ -323,6 +344,10 @@ export async function POST(request: Request) {
         notesImported,
         parentBindings,
         consultantBindings,
+        vocabularyPacksImported,
+        vocabularyWordsImported,
+        homeworkQuestionsImported,
+        readingPassagesImported,
         warnings,
       },
     });
@@ -547,6 +572,173 @@ async function importBindings({
   return { parentBindings, consultantBindings };
 }
 
+async function importVocabularySheets({
+  supabase,
+  studentId,
+  packRows,
+  wordRows,
+  warnings,
+}: {
+  supabase: NonNullable<ReturnType<typeof getSupabaseAdminClient>>;
+  studentId: string;
+  packRows: Row[];
+  wordRows: Row[];
+  warnings: string[];
+}) {
+  const validPackRows = packRows.filter((row) => asString(row.pack_name));
+  if (!validPackRows.length) {
+    return { packCount: 0, wordCount: 0 };
+  }
+
+  const { data: existingPacksRows } = await supabase.from("vocabulary_packs").select("*").eq("student_id", studentId);
+  const existingPacks = existingPacksRows ?? [];
+
+  const packPayload = validPackRows.map((row) => {
+    const packName = asString(row.pack_name) ?? "Imported vocabulary pack";
+    const matched = existingPacks.find((item) => String(item.name) === packName);
+    return {
+      id: matched?.id ?? crypto.randomUUID(),
+      student_id: studentId,
+      name: packName,
+      daily_new_count: asNumber(row.daily_new_count) ?? 10,
+      daily_review_count: asNumber(row.daily_review_count) ?? 20,
+      total_words: 0,
+      active: normalizeBoolean(row.active, true),
+      created_at: matched?.created_at ?? new Date().toISOString(),
+    };
+  });
+
+  await supabase.from("vocabulary_packs").upsert(packPayload);
+
+  const packMap = new Map(packPayload.map((item) => [String(item.name), String(item.id)]));
+  const validWordRows = wordRows.filter((row) => asString(row.word) && asString(row.meaning) && asString(row.pack_name));
+  const { data: existingWordRows } = await supabase.from("vocabulary_word_items").select("*").eq("student_id", studentId);
+  const existingWords = existingWordRows ?? [];
+
+  const wordPayload: Record<string, unknown>[] = [];
+  for (const row of validWordRows) {
+    const packName = asString(row.pack_name) ?? "";
+    const packId = packMap.get(packName);
+    if (!packId) {
+      warnings.push(`Skipped vocabulary word "${asString(row.word) ?? "Untitled"}" because pack "${packName}" was not found.`);
+      continue;
+    }
+    const word = asString(row.word) ?? "";
+    const matched = existingWords.find(
+      (item) => String(item.pack_id) === packId && String(item.word) === word
+    );
+    wordPayload.push({
+      id: matched?.id ?? crypto.randomUUID(),
+      student_id: studentId,
+      pack_id: packId,
+      word,
+      meaning: asString(row.meaning) ?? "",
+      notes: asString(row.notes) ?? "",
+      sort_order: asNumber(row.sort_order) ?? wordPayload.length + 1,
+      introduced_on: null,
+      next_review_on: null,
+      review_stage: 0,
+      total_attempts: matched?.total_attempts ?? 0,
+      correct_attempts: matched?.correct_attempts ?? 0,
+      completed: normalizeBoolean(row.completed, Boolean(matched?.completed)),
+    });
+  }
+
+  if (wordPayload.length > 0) {
+    await supabase.from("vocabulary_word_items").upsert(wordPayload);
+  }
+
+  const totalsByPack = new Map<string, number>();
+  for (const item of wordPayload) {
+    const packId = String(item.pack_id);
+    totalsByPack.set(packId, (totalsByPack.get(packId) ?? 0) + 1);
+  }
+  for (const pack of packPayload) {
+    await supabase
+      .from("vocabulary_packs")
+      .update({ total_words: totalsByPack.get(String(pack.id)) ?? 0 })
+      .eq("id", pack.id);
+  }
+
+  return { packCount: packPayload.length, wordCount: wordPayload.length };
+}
+
+async function importHomeworkQuestionSheets({
+  supabase,
+  studentId,
+  rows,
+}: {
+  supabase: NonNullable<ReturnType<typeof getSupabaseAdminClient>>;
+  studentId: string;
+  rows: Row[];
+}) {
+  const validRows = rows.filter((row) => asString(row.subject) && asString(row.prompt) && asString(row.correct_answer));
+  if (!validRows.length) {
+    return 0;
+  }
+
+  const { data: existingRows } = await supabase.from("homework_question_items").select("*").eq("student_id", studentId);
+  const existing = existingRows ?? [];
+
+  const payload = validRows.map((row, index) => {
+    const subject = asString(row.subject) ?? "Imported subject";
+    const prompt = asString(row.prompt) ?? "Imported prompt";
+    const matched = existing.find(
+      (item) => String(item.subject) === subject && String(item.prompt) === prompt
+    );
+
+    return {
+      id: matched?.id ?? crypto.randomUUID(),
+      student_id: studentId,
+      subject,
+      prompt,
+      correct_answer: asString(row.correct_answer) ?? "",
+      explanation: asString(row.explanation) ?? "",
+      sort_order: asNumber(row.sort_order) ?? index + 1,
+      completed: normalizeBoolean(row.completed, Boolean(matched?.completed)),
+      created_at: matched?.created_at ?? new Date().toISOString(),
+    };
+  });
+
+  await supabase.from("homework_question_items").upsert(payload);
+  return payload.length;
+}
+
+async function importReadingPassageSheets({
+  supabase,
+  studentId,
+  rows,
+}: {
+  supabase: NonNullable<ReturnType<typeof getSupabaseAdminClient>>;
+  studentId: string;
+  rows: Row[];
+}) {
+  const validRows = rows.filter((row) => asString(row.title) && asString(row.passage));
+  if (!validRows.length) {
+    return 0;
+  }
+
+  const { data: existingRows } = await supabase.from("reading_passage_items").select("*").eq("student_id", studentId);
+  const existing = existingRows ?? [];
+
+  const payload = validRows.map((row, index) => {
+    const title = asString(row.title) ?? "Imported passage";
+    const matched = existing.find((item) => String(item.title) === title);
+    return {
+      id: matched?.id ?? crypto.randomUUID(),
+      student_id: studentId,
+      title,
+      passage: asString(row.passage) ?? "",
+      source: asString(row.source) ?? "",
+      sort_order: asNumber(row.sort_order) ?? index + 1,
+      created_at: matched?.created_at ?? new Date().toISOString(),
+    };
+  });
+
+  await supabase.from("reading_passage_items").upsert(payload);
+  return payload.length;
+}
+
 function getSheetRows(workbook: XLSX.WorkBook, target: keyof typeof sheetAliases) {
   const aliases = sheetAliases[target] as readonly string[];
   const sheetName = workbook.SheetNames.find((name) =>
@@ -708,6 +900,24 @@ function normalizeBindingKind(value: unknown) {
     return normalized;
   }
   return null;
+}
+
+function normalizeBoolean(value: unknown, fallback = false) {
+  const normalized = asString(value)?.toLowerCase();
+  if (!normalized) return fallback;
+  if (["true", "1", "yes", "y"].includes(normalized)) return true;
+  if (["false", "0", "no", "n"].includes(normalized)) return false;
+  return fallback;
+}
+
+function asNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  const text = asString(value);
+  if (!text) return undefined;
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function requiredString(row: Row, key: string) {

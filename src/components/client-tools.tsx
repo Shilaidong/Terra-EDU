@@ -895,6 +895,10 @@ export function AdminStudentImportManager() {
     notesImported?: number;
     parentBindings?: number;
     consultantBindings?: number;
+    vocabularyPacksImported?: number;
+    vocabularyWordsImported?: number;
+    homeworkQuestionsImported?: number;
+    readingPassagesImported?: number;
     warnings?: string[];
   } | null>(null);
 
@@ -909,8 +913,8 @@ export function AdminStudentImportManager() {
         </h3>
         <p className="mt-2 text-sm leading-7 text-secondary">
           {t(
-            "Use the template workbook, fill each sheet outside the platform, then upload it here. The importer updates the student profile, application profile, competitions, activities, tasks, milestones, notes, and optional bindings.",
-            "使用模板工作簿，在系统外填好各个 sheet 后上传到这里。导入会更新学生基础资料、申请档案、竞赛、活动、任务、截止日期、顾问备注，以及可选的绑定关系。"
+            "Use the template workbook, fill each sheet outside the platform, then upload it here. The importer updates the student profile, application profile, tasks, milestones, notes, bindings, and the three study-center modules.",
+            "使用模板工作簿，在系统外填好各个 sheet 后上传到这里。导入会更新学生基础资料、申请档案、任务、截止日期、顾问备注、绑定关系，以及学习中心的三个模块。"
           )}
         </p>
 
@@ -933,8 +937,8 @@ export function AdminStudentImportManager() {
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           {[
-            t("Required sheet names: student_account, application_profile, competitions, activities, tasks, milestones, notes, bindings.", "固定 sheet 名称：student_account、application_profile、competitions、activities、tasks、milestones、notes、bindings。"),
-            t("The importer is merge-first. Student profile and application profile are updated; tasks, milestones, notes, and bindings are added or matched without hard deleting existing data.", "导入默认偏向合并。学生资料和申请档案会更新；任务、截止日期、备注、绑定会按匹配规则补充，不会先把旧数据整批删除。"),
+            t("Required sheet names: student_account, application_profile, competitions, activities, tasks, milestones, notes, bindings, vocabulary_packs, vocabulary_words, homework_questions, reading_passages.", "固定 sheet 名称：student_account、application_profile、competitions、activities、tasks、milestones、notes、bindings、vocabulary_packs、vocabulary_words、homework_questions、reading_passages。"),
+            t("The importer is merge-first. Student/application data update in place; tasks, milestones, notes, bindings, and study-center content are added or matched without hard deleting existing data.", "导入默认偏向合并。学生资料和申请档案会更新；任务、截止日期、备注、绑定，以及学习中心内容会按匹配规则补充，不会先把旧数据整批删除。"),
           ].map((item) => (
             <div key={item} className="rounded-2xl bg-surface-container-low px-4 py-3 text-sm leading-7 text-secondary">
               {item}
@@ -970,6 +974,10 @@ export function AdminStudentImportManager() {
               notesImported: number;
               parentBindings: number;
               consultantBindings: number;
+              vocabularyPacksImported: number;
+              vocabularyWordsImported: number;
+              homeworkQuestionsImported: number;
+              readingPassagesImported: number;
               warnings: string[];
             }>("/api/admin/student-import", {
               method: "POST",
@@ -1030,6 +1038,10 @@ export function AdminStudentImportManager() {
               <p>{t(`Tasks imported: ${details.tasksImported ?? 0}`, `导入任务：${details.tasksImported ?? 0}`)}</p>
               <p>{t(`Milestones imported: ${details.milestonesImported ?? 0}`, `导入截止日期：${details.milestonesImported ?? 0}`)}</p>
               <p>{t(`Notes imported: ${details.notesImported ?? 0}`, `导入备注：${details.notesImported ?? 0}`)}</p>
+              <p>{t(`Vocabulary packs imported: ${details.vocabularyPacksImported ?? 0}`, `导入单词词包：${details.vocabularyPacksImported ?? 0}`)}</p>
+              <p>{t(`Vocabulary words imported: ${details.vocabularyWordsImported ?? 0}`, `导入单词数量：${details.vocabularyWordsImported ?? 0}`)}</p>
+              <p>{t(`Homework questions imported: ${details.homeworkQuestionsImported ?? 0}`, `导入题库题目：${details.homeworkQuestionsImported ?? 0}`)}</p>
+              <p>{t(`Reading passages imported: ${details.readingPassagesImported ?? 0}`, `导入阅读文章：${details.readingPassagesImported ?? 0}`)}</p>
               <p>{t(`Parent bindings added: ${details.parentBindings ?? 0}`, `新增家长绑定：${details.parentBindings ?? 0}`)}</p>
               <p>{t(`Consultant bindings added: ${details.consultantBindings ?? 0}`, `新增顾问绑定：${details.consultantBindings ?? 0}`)}</p>
             </div>
