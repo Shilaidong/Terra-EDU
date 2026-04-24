@@ -290,8 +290,8 @@ export default async function HomePage() {
           <div className="relative">
             <div className="overflow-hidden rounded-[1.5rem] shadow-2xl sm:rounded-[2rem] lg:rotate-2">
               <img
-                alt={pickText(locale, "Student and parent collaborating", "学生与家长共同查看规划")}
-                src="/api/assets/home-hero"
+                alt={pickText(locale, "Students, parents, and mentors planning together", "学生、家长与顾问共同规划未来")}
+                src="/home-hero-collage.png"
                 className="aspect-square h-full w-full object-cover"
               />
             </div>
